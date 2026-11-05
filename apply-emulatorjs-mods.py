@@ -34,11 +34,14 @@ Quy tac — CHI THEM NUT, KHONG VIET LAI BO NUT GOC:
      chay lai khong them trung.
   5. Tat menu tu mo khi load game (Hai chot 06/11): menu duoi cua
      EmulatorJS (Restart/Pause/Save State...) tu hien ra khi moi
-     vao game — day la loi cua ban goc (da sua cho Safari o 4.0.9
-     nhung tren Chrome Android van bi). Patch ham show() trong
-     createBottomMenuBar() thanh khong lam gi: menu chi mo khi
-     bam nut ☰ goc tren phai (menu.toggle() khong dung show() nen
-     van mo duoc binh thuong).
+     vao game. NGUYEN NHAN THAT: trong emulator.js, khi game bat
+     dau chay thi code goc goi `this.frontend.menu.open()` — mo
+     menu moi lan vao game (roi tu tat sau 3 giay). Patch show()
+     o frontend.js khong du vi duong mo chinh la dong nay (da
+     kiem chung: an danh van thay menu vi dong nay chua bi patch).
+     Sua: xoa dong menu.open() do trong emulator.js + patch them
+     ham show() o frontend.js lam lop phong thu thu hai. Menu
+     chi mo khi bam nut ☰ goc tren phai (menu.toggle()).
   6. Chay lai lan 2 khong them trung (idempotent). Neu ban goc doi
      ten ham / doi cau truc khien khong tim thay neo (anchor),
      script thoat loi (exit 2) — workflow DUNG lai, khong mo PR
@@ -269,6 +272,26 @@ def patch_css(path):
     return 0
 
 
+# --- 5b. Tat menu tu mo: xoa dong menu.open() trong emulator.js ---
+# Dong nay chay moi lan game bat dau (sau this.started = true),
+# mo menu duoi roi tu tat sau 3 giay — day moi la duong mo chinh.
+MENU_OPEN_OLD = "            this.frontend.menu.open();\n"
+MENU_OPEN_NEW = "            // HAI: tat tu mo menu khi load game — chi mo khi bam nut ☰\n"
+
+
+def patch_emulator(path):
+    text = open(path, encoding="utf-8").read()
+    if "HAI: tat tu mo menu" in text:
+        print("Menu tu mo (emulator.js): da tat roi, bo qua")
+        return 0
+    if MENU_OPEN_OLD not in text:
+        print("LOI: khong tim thay dong frontend.menu.open() — ban goc doi emulator.js roi", file=sys.stderr)
+        return 2
+    open(path, "w", encoding="utf-8").write(text.replace(MENU_OPEN_OLD, MENU_OPEN_NEW, 1))
+    print("DA DOI: Menu: da xoa dong menu.open() khi game bat dau (emulator.js)")
+    return 0
+
+
 if __name__ == "__main__":
     import os
     _p = sys.argv[1] if len(sys.argv) > 1 else "src/frontend.js"
@@ -277,4 +300,6 @@ if __name__ == "__main__":
         sys.exit(patch_gamepad(_p))
     if _b == "emulator.css":
         sys.exit(patch_css(_p))
+    if _b == "emulator.js":
+        sys.exit(patch_emulator(_p))
     sys.exit(main(_p))
