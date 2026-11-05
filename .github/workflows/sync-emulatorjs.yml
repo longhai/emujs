@@ -37,6 +37,16 @@
 name: Sync EmulatorJS (chon loc)
 
 on:
+  # Tu dong chay ngay khi Hai up file script mod (hoac file yml nay) len
+  # main — khoi phai bam Run tay nua (Hai bao met 06/11). Workflow chi
+  # dong bo that khi buoc kiem tra thay mod thieu / ben goc co moi, nen
+  # up file khong lien quan se khong kich hoat. Khong so lap vo han:
+  # PR dong bo gop vao main khong doi 2 file nay, nen khong kich hoat
+  # lai chinh no.
+  push:
+    paths:
+      - "apply-emulatorjs-mods.py"
+      - ".github/workflows/sync-emulatorjs.yml"
   schedule:
     - cron: "0 3 * * *"  # moi ngay 03:00 UTC = 10:00 gio VN, kiem tra co ban moi khong
   workflow_dispatch:  # bam tay thi chay ngay, khong can doi lich
