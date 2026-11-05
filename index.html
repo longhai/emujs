@@ -68,7 +68,11 @@
     // Bo nguon nam o goc repo (trang nay), khong qua CDN, khong qua vendor/
     window.EJS_pathtodata = './';
     window.EJS_startOnLoaded = true;
-    window.EJS_color = '#111111';
+    // Màu chủ đạo của EmulatorJS — để xanh mặc định #1AAFFF.
+    // Trước đây đặt '#111111' (gần như đen) nên chữ hộp thoại
+    // "Are you sure you want to exit?", vệt volume... đều đen
+    // trên nền đen, nhìn không thấy chữ.
+    window.EJS_color = '#1AAFFF';
     const s = document.createElement('script');
     s.src = './loader.js';
     s.onerror = () => alert('Khong nap duoc loader.js — kiem tra file loader.js co o goc repo khong.');
