@@ -91,7 +91,7 @@ jobs:
             echo "Ly do: Hai bat buoc dong bo lai."
             NEEDS_SYNC=true
           fi
-          if ! grep -q "HAI: chi them nut thieu" src/frontend.js 2>/dev/null || ! grep -q "HAI: tat tu mo menu" src/frontend.js 2>/dev/null || ! grep -q "HAI: tat tu mo menu" src/emulator.js 2>/dev/null || ! grep -q "HAI: nut co mau v2" emulator.css 2>/dev/null || ! grep -q "HAI: volume hien ro" emulator.css 2>/dev/null; then
+          if ! grep -q "HAI: chi them nut thieu" src/frontend.js 2>/dev/null || ! grep -q "HAI: tat tu mo menu" src/frontend.js 2>/dev/null || ! grep -q "HAI: tat tu mo menu" src/emulator.js 2>/dev/null || ! grep -q "HAI: nut combo" src/frontend.js 2>/dev/null || ! grep -q "HAI: nut co mau v2" emulator.css 2>/dev/null || ! grep -q "HAI: nut combo mau" emulator.css 2>/dev/null || ! grep -q "HAI: nut md mau" emulator.css 2>/dev/null || ! grep -q "HAI: volume hien ro" emulator.css 2>/dev/null; then
             echo "Ly do: mod cua Hai (nut / mau nut) chua co trong code hien tai."
             NEEDS_SYNC=true
           fi
