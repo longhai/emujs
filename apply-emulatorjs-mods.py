@@ -42,7 +42,15 @@ Quy tac — CHI THEM NUT, KHONG VIET LAI BO NUT GOC:
      Sua: xoa dong menu.open() do trong emulator.js + patch them
      ham show() o frontend.js lam lop phong thu thu hai. Menu
      chi mo khi bam nut ☰ goc tren phai (menu.toggle()).
-  6. Chay lai lan 2 khong them trung (idempotent). Neu ban goc doi
+  6. Nut combo arcade (Hai chot 06/11): game thung chi co 4 nut
+     goc (Y/X/B/A) nen them 4 nut ket hop phia tren cum nut phai:
+     AB, CD, ABC, BCD — giong nut khach o trang online cua Hai.
+     Mapping Neo Geo: A=0, B=8, C=1, D=9 (nut X goc = C, Y goc = D).
+     API goc chi cho 1 input_value/nut nen script them truong moi
+     "combo": [..] vao nut, va patch cho xu ly cham/nha nut de
+     gui/nha tat ca nut trong combo cung luc (khong autofire).
+     Mau chu: AB cam, CD tim, ABC hong, BCD xanh ngoc.
+  7. Chay lai lan 2 khong them trung (idempotent). Neu ban goc doi
      ten ham / doi cau truc khien khong tim thay neo (anchor),
      script thoat loi (exit 2) — workflow DUNG lai, khong mo PR
      ghi de, Hai xem lai neo moi.
@@ -64,6 +72,19 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
             info.push(
                 { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true },
                 { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true }
+            );
+        }
+        // HAI: nut combo arcade — 1 nut bam nhieu nut cung luc (kieu nut
+        // khach o trang online: AB/CD/ABC/BCD). Mapping Neo Geo da xac
+        // minh: A=0, B=8, C=1, D=9 (nut X goc = C, nut Y goc = D).
+        // "combo" la truong moi do script them, xu ly o cho cham nut
+        // ben duoi (khong phai API goc cua EmulatorJS).
+        if (["arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
+            info.push(
+                { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": 0, "top": -50, "bold": true, "fontSize": 15, "input_value": 0, "combo": [0, 8] },
+                { "type": "button", "text": "CD", "id": "cd", "location": "right", "left": 70, "top": -50, "bold": true, "fontSize": 15, "input_value": 1, "combo": [1, 9] },
+                { "type": "button", "text": "ABC", "id": "abc", "location": "right", "left": 0, "top": -100, "bold": true, "fontSize": 14, "input_value": 0, "combo": [0, 8, 1] },
+                { "type": "button", "text": "BCD", "id": "bcd", "location": "right", "left": 70, "top": -100, "bold": true, "fontSize": 14, "input_value": 8, "combo": [8, 1, 9] }
             );
         }
 '''
@@ -127,6 +148,35 @@ def main(path):
             return 2
         text = text.replace(AUTOFIRE_OLD, AUTOFIRE_NEW, 1)
         changed.append("Turbo: da patch xu ly cham nut (autofire:true)")
+
+    # --- 3b. Patch xu ly cham nut de nut combo (arcade) gui nhieu
+    # nut cung luc. Chay SAU buoc turbo vi anchor la dong da patch
+    # turbo o tren; dong nha nut thi lay tu ban goc. ---
+    COMBO_DOWN_OLD = '''                        this.ejs.gameManager.simulateInput(0, value, downValue);
+                        if ((info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo'''
+    COMBO_DOWN_NEW = '''                        // HAI: nut combo — bam 1 nut ma gui nhieu nut cung luc (arcade AB/CD/ABC/BCD)
+                        (info[i].combo || [value]).forEach((v) => this.ejs.gameManager.simulateInput(0, v, downValue));
+                        if (!info[i].combo && (info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo'''
+    COMBO_UP_OLD = '''                        window.setTimeout(() => {
+                            this.ejs.stopAutofire(0, value);
+                            this.ejs.gameManager.simulateInput(0, value, 0);
+                        })'''
+    COMBO_UP_NEW = '''                        window.setTimeout(() => {
+                            (info[i].combo || [value]).forEach((v) => { this.ejs.stopAutofire(0, v); this.ejs.gameManager.simulateInput(0, v, 0); }); // HAI: nut combo
+                        })'''
+    # Chu y: phai kiem tra dau hieu cua CHO XU LY (dong comment trong
+    # handler), khong kiem tra "HAI: nut combo" chung chung — vi khoi
+    # nut moi chen o tren cung co chu do trong comment, kiem tra chung
+    # se bo qua nham buoc nay (loi gap khi test 06/11).
+    if "HAI: nut combo — bam 1 nut" in text:
+        print("Nut combo: xu ly cham nut da co combo, bo qua")
+    else:
+        if COMBO_DOWN_OLD not in text or COMBO_UP_OLD not in text:
+            print("LOI: khong tim thay dong xu ly cham/nha nut — ban goc doi xu ly nut roi", file=sys.stderr)
+            return 2
+        text = text.replace(COMBO_DOWN_OLD, COMBO_DOWN_NEW, 1)
+        text = text.replace(COMBO_UP_OLD, COMBO_UP_NEW, 1)
+        changed.append("Nut combo: da patch xu ly cham nut (arcade AB/CD/ABC/BCD)")
 
     if changed:
         open(path, "w", encoding="utf-8").write(text)
@@ -228,6 +278,24 @@ BUTTON_COLOR_CSS = '''
 .ejs_virtualGamepad_button_down { filter: brightness(1.4); }
 '''
 
+# Mau chu cho nut combo arcade (AB/CD/ABC/BCD) — giong kieu nut
+# khach o trang online cua Hai.
+COMBO_COLOR_CSS = '''
+/* HAI: nut combo mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_virtualGamepad_button.b_ab { color: #ff9800 !important; }
+.ejs_virtualGamepad_button.b_cd { color: #ab47bc !important; }
+.ejs_virtualGamepad_button.b_abc { color: #ec407a !important; }
+.ejs_virtualGamepad_button.b_bcd { color: #26a69a !important; }
+'''
+
+# Mau chu cho 2 nut con lai cua tay Sega MD (A/B/X/Y da co mau
+# kieu Xbox roi, chi thieu C va Z — anh Hai gui 06:27).
+MD_COLOR_CSS = '''
+/* HAI: nut md mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_virtualGamepad_button.b_c { color: #ff9800 !important; }
+.ejs_virtualGamepad_button.b_z { color: #ab47bc !important; }
+'''
+
 # Thanh truot volume: ban goc to mau xanh bang currentColor +
 # bien --value, ma --value chi duoc JS gan khi doi volume — luc
 # moi load chua gan nen thanh truot toi thui, nut tron cung kho
@@ -259,6 +327,16 @@ def patch_css(path):
             print("Mau nut: da go mau cu v1, chen mau v2")
         out += "\n" + BUTTON_COLOR_CSS
         changed.append("Mau nut: da chen mau chu A xanh la / B do / X xanh duong / Y vang")
+    if "HAI: nut combo mau" in text:
+        print("Mau nut combo: da co roi, bo qua")
+    else:
+        out += COMBO_COLOR_CSS
+        changed.append("Mau nut combo: da chen mau chu AB/CD/ABC/BCD")
+    if "HAI: nut md mau" in text:
+        print("Mau nut MD: da co roi, bo qua")
+    else:
+        out += MD_COLOR_CSS
+        changed.append("Mau nut MD: da chen mau chu C/Z")
     if "HAI: volume hien ro" in text:
         print("Volume: da co roi, bo qua")
     else:
