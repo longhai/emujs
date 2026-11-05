@@ -1,43 +1,35 @@
-# Sync EmulatorJS co chon loc — giu lai file minh mod + giu bo cuc rieng cua Hai
+# Sync EmulatorJS — bo nguon nam thang o goc repo cua Hai
 # Dat file nay vao: .github/workflows/sync-emulatorjs.yml trong repo cua Hai
 # Chay: tu dong moi tuan (chu nhat) + bam nut Run workflow bat cu luc nao
 #
-# BO CUC KHAC NHAU — day la diem quan trong nhat:
-# Trang goc ben EmulatorJS: index.html o goc repo + build.js + docs/ + package.json
-# Trang cua Hai: 1 file emulatorjs.html / emulatorjs-online.html o goc,
-#   giao dien tieng Viet, hop tha ROM, toolbar, popup Cai dat, PWA,
-#   tu nap ?rom=, EJS_pathtodata tro ve CDN. KHONG giong trang goc.
-# Vi vay workflow KHONG copy nguyen thu muc data/ cua goc sang,
-# ma map tung file goc sang dung cho cua Hai (xem bang MAPPING duoi).
-# Nhung thu KHONG copy: index.html goc, build.js, docs/, package.json,
-# serve.py, update.js, .github/, .vscode/ — giu nguyen bo cuc cua Hai.
+# BO CUC PHANG, KHONG LONG NHAU — Hai chot 05/11:
+# Bo nguon EmulatorJS nam thang o goc repo, nhu cua chinh Hai, khong
+# nam trong vendor/emulatorjs-data/ nua:
+#   loader.js, emulator.css, version.json, src/, localization/, cores/
+#   o thang goc repo. Trang choi cua Hai chi can tro EJS_pathtodata ve
+#   goc repo nay la chay, khong qua nhieu thu muc.
+# Thu muc 'upstream' mau xanh tren GitHub la ban checkout tam cua repo
+# goc, no chi la con tro submodule rong, khong co file that — workflow
+# xoa no di truoc khi mo PR, khong de no len kho nua.
+# Thu muc vendor/ cu (ban sync truoc) cung duoc xoa trong PR nay.
 #
-# MAPPING (goc -> cho cua Hai):
-#   data/loader.js            -> vendor/emulatorjs-data/loader.js
-#   data/emulator.css         -> vendor/emulatorjs-data/emulator.css
-#   data/version.json         -> vendor/emulatorjs-data/version.json
-#   data/src/*.js             -> vendor/emulatorjs-data/src/*.js
-#   data/localization/*       -> vendor/emulatorjs-data/localization/*
-#   index.html (goc)          -> KHONG COPY, giu emulatorjs.html cua Hai
-#   roms/ bios/ nes/ (cua Hai)-> workflow KHONG cham toi
-# Sau khi sync xong, chi can doi 1 dong trong file cua Hai:
-#   EJS_pathtodata: "https://cdn.emulatorjs.org/stable/data/"
-#   -> "./vendor/emulatorjs-data/" (hoac duong dan Pages tuong ung)
+# MAPPING (goc -> goc repo cua Hai):
+#   data/loader.js            -> loader.js
+#   data/emulator.css         -> emulator.css
+#   data/version.json         -> version.json
+#   data/src/*.js             -> src/*.js
+#   data/localization/*       -> localization/*
+#   index.html (goc)          -> KHONG COPY
+#   build.js, docs/, package.json, serve.py, update.js -> KHONG COPY
+#   LICENSE goc               -> KHONG COPY de (giu LICENSE cua Hai)
+# Sau khi sync xong, trang choi cua Hai chi can:
+#   EJS_pathtodata: "./" (neu trang nam cung repo) hoac duong dan
+#   toi goc repo nay (vd GitHub Pages cua repo emujs).
 #
-# Cach giu sua thang vao file goc (vi du moi: PS1 L/R + NES Turbo):
-#  - KHONG dung patch cung (git apply) nua, vi ban goc chi can doi vai
-#    dong quanh cho sua la patch hong. Thay vao do dung script
-#    apply-emulatorjs-mods.py: sau khi tai code goc moi ve, script
-#    tim neo (anchor) trong frontend.js va chen lai nut mod.
-#    Script chay lai lan 2 khong them trung. Neu ban goc doi ten ham
-#    / doi bo cuc khien khong tim thay neo, script thoat loi,
-#    workflow DUNG lai, khong mo PR ghi de.
-#  - File .html cua Hai (emulatorjs.html, ...) KHONG nam trong danh
-#    sach copy, workflow khong bao gio ghi de chung.
-# Luu y: repo goc EmulatorJS/EmulatorJS (GPL-3.0, hien 4.2.3) chi chua
-# data/loader.js, data/emulator.css, data/src/*.js, data/localization/.
-# File core .wasm/.data KHONG nam trong repo goc — chung la goi npm
-# @emulatorjs/cores, chay tren CDN. Buoc tai core o cuoi la tuy chon.
+# Cach giu sua thang vao file goc (PS1 L/R + NES Turbo + tay cam):
+#   apply-emulatorjs-mods.py tim neo trong src/frontend.js va
+#   src/gamepad.js roi chen lai nut mod. Chay lai khong them trung.
+#   Tim khong thay neo -> workflow DUNG, khong mo PR ghi de.
 
 name: Sync EmulatorJS (chon loc)
 
@@ -64,7 +56,6 @@ jobs:
           path: upstream
           sparse-checkout: |
             data
-            LICENSE
           sparse-checkout-cone-mode: false
 
       - name: Ghi nho ban goc dang dung
@@ -72,44 +63,54 @@ jobs:
           cat upstream/data/version.json
           echo "UPSTREAM_VERSION=$(jq -r .version upstream/data/version.json)" >> $GITHUB_ENV
 
-      - name: Copy co chon loc vao vendor/emulatorjs-data/
+      - name: Copy bo nguon ve thang goc repo
         run: |
-          mkdir -p vendor/emulatorjs-data
           # ALLOWLIST — chi nhung file nay moi duoc cap nhat theo goc.
-          # Them/bot dong o day la doi pham vi dong bo.
-          cp upstream/data/loader.js vendor/emulatorjs-data/
-          cp upstream/data/emulator.css vendor/emulatorjs-data/
-          cp upstream/data/version.json vendor/emulatorjs-data/
-          cp upstream/LICENSE vendor/emulatorjs-data/LICENSE 2>/dev/null || true
-          mkdir -p vendor/emulatorjs-data/src vendor/emulatorjs-data/localization
-          cp upstream/data/src/*.js vendor/emulatorjs-data/src/
-          cp -r upstream/data/localization/. vendor/emulatorjs-data/localization/
+          cp upstream/data/loader.js ./
+          cp upstream/data/emulator.css ./
+          cp upstream/data/version.json ./
+          mkdir -p src localization
+          cp upstream/data/src/*.js src/
+          cp -r upstream/data/localization/. localization/
           # Ghi ban goc de lan sau so sanh
-          echo "$UPSTREAM_VERSION" > vendor/emulatorjs-data/.upstream-version
+          echo "$UPSTREAM_VERSION" > .upstream-version
+          # Xoa bo cuc cu + thu muc tam, khong de len PR:
+          # - vendor/ : bo cuc long nhau cua ban sync truoc
+          # - upstream/ : checkout tam, tren GitHub no hien thanh
+          #   thu muc xanh (submodule) rong, khong co file that
+          rm -rf vendor upstream
           echo "Da copy xong, ban goc: $UPSTREAM_VERSION"
+          ls -la
 
       # Tai code goc moi ve xong, tu dong them lai nut mod.
-      # Script tim neo trong frontend.js, chen PS1 L/R + NES Turbo,
+      # Script tim neo trong src/frontend.js, chen PS1 L/R + NES Turbo,
       # chay lai khong them trung. Tim khong thay neo -> loi, dung.
       - name: Tu dong them lai nut PS1 + NES Turbo + ky hieu tay cam
         run: |
-          python3 apply-emulatorjs-mods.py vendor/emulatorjs-data/src/frontend.js
-          python3 apply-emulatorjs-mods.py vendor/emulatorjs-data/src/gamepad.js
-          node --check vendor/emulatorjs-data/src/frontend.js
-          node --check vendor/emulatorjs-data/src/gamepad.js
+          python3 apply-emulatorjs-mods.py src/frontend.js
+          python3 apply-emulatorjs-mods.py src/gamepad.js
+          node --check src/frontend.js
+          node --check src/gamepad.js
 
-      # Tuy chon: tai chi core Hai dung, tu CDN stable.
-      # Bo comment khoi nay khi Hai muon tu host ca core, khong dung CDN nua.
-      # Danh sach hien tai theo file emulatorjs.html cua Hai:
-      # NES=fceumm, SNES=snes9x, arcade=fbneo, mame2003_plus,
-      # PS1=pcsx_rearmed, GBA=mgba, GB=gambatte, NDS=desmume, N64=mupen64plus_next
-      # - name: Tai core (tuy chon)
-      #   run: |
-      #     mkdir -p vendor/emulatorjs-data/cores
-      #     cd vendor/emulatorjs-data/cores
-      #     for core in fceumm snes9x fbneo mame2003_plus pcsx_rearmed mgba gambatte desmume mupen64plus_next; do
-      #       curl -fL -o "$core-wasm.data" "https://cdn.emulatorjs.org/stable/data/cores/$core-wasm.data" || echo "Khong tai duoc $core"
-      #     done
+      # Tu host DAY DU core — Hai chot 05/11: lay het, khong phu thuoc CDN luc choi.
+      # Luc sync, workflow doc danh sach tren CDN roi tai het ve repo
+      # (05/11: 187 file, tong ~283MB — 46 core ban thuong + 46 legacy +
+      # 48 thread + 47 thread-legacy, gom ca ppsspp/dosbox_pure chi co ban
+      # thread; file lon nhat fbneo ~8MB, moi file deu <100MB nen GitHub
+      # cho luu). Sau do trang choi nap core tu repo cua Hai, khong goi CDN nua.
+      # Lay danh sach dong tu trang index cua CDN, co core moi la tu co, khong
+      # can sua lai workflow.
+      - name: Tai day du core ve tu host (khong phu thuoc CDN)
+        run: |
+          mkdir -p cores
+          cd cores
+          curl -s "https://cdn.emulatorjs.org/stable/data/cores/" | grep -o 'href="[^"]*-wasm\.data"' | sed 's/href="//;s/"//' | sort -u > /tmp/core-files.txt
+          wc -l /tmp/core-files.txt
+          while read -r f; do
+            curl -fL -o "$f" "https://cdn.emulatorjs.org/stable/data/cores/$f" || echo "Khong tai duoc $f"
+          done < /tmp/core-files.txt
+          ls | wc -l
+          du -sh .
 
       - name: Mo PR neu co thay doi
         uses: peter-evans/create-pull-request@v6
@@ -117,12 +118,12 @@ jobs:
           title: "Sync EmulatorJS ${{ env.UPSTREAM_VERSION }} (chon loc, giu mod nut bam)"
           body: |
             Dong bo co chon loc tu EmulatorJS/EmulatorJS.
-            - Chi copy theo bang MAPPING vao vendor/emulatorjs-data/:
-              loader.js, emulator.css, version.json, src/*.js, localization/
+            - Bo nguon nam thang o goc repo: loader.js, emulator.css,
+              version.json, src/*.js, localization/, cores/
             - Khong copy: index.html goc, build.js, docs/, package.json
-            - Khong cham toi: emulatorjs.html, emulatorjs-online.html,
-              roms/, bios/, custom/ — giu nguyen bo cuc cua Hai
+            - Da xoa vendor/ cu va thu muc upstream (submodule rong)
             - Da chay apply-emulatorjs-mods.py: them lai PS1 L/R + NES Turbo
+            - Da tai day du core (187 file, ~283MB) ve cores/ de tu host, khong phu thuoc CDN
             - Kiem tra ky phan nut bam truoc khi gop.
           branch: sync/emulatorjs-${{ env.UPSTREAM_VERSION }}
           commit-message: "Sync EmulatorJS ${{ env.UPSTREAM_VERSION }} (selective)"
