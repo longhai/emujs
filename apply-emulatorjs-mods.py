@@ -80,11 +80,20 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
         // "combo" la truong moi do script them, xu ly o cho cham nut
         // ben duoi (khong phai API goc cua EmulatorJS).
         if (["arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
+            // Vi tri: 1 hang 4 nut nam NGAY TREN cum nut phai (top:-45),
+            // ngon cai voi toi ma khong phai voi len cao. Ban dau xep 2
+            // hang (hang tren top:-100) thi nut ABC/BCD nam giua man
+            // hinh, che game va kho bam — Hai bao kho choi 06/11 nen
+            // doi thanh 1 hang. Khong xep xuong duoi cum nut vi se
+            // de len nut Fast/Slow o man hinh hep.
+            // Hinh dang: "block": true nen nut combo la hinh chu nhat
+            // bo goc (cao 31px) giong nut Start/Select, khac voi nut
+            // tron A/B/X/Y — de phan biet nut ket hop voi nut don.
             info.push(
-                { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": 0, "top": -50, "bold": true, "fontSize": 15, "input_value": 0, "combo": [0, 8] },
-                { "type": "button", "text": "CD", "id": "cd", "location": "right", "left": 70, "top": -50, "bold": true, "fontSize": 15, "input_value": 1, "combo": [1, 9] },
-                { "type": "button", "text": "ABC", "id": "abc", "location": "right", "left": 0, "top": -100, "bold": true, "fontSize": 14, "input_value": 0, "combo": [0, 8, 1] },
-                { "type": "button", "text": "BCD", "id": "bcd", "location": "right", "left": 70, "top": -100, "bold": true, "fontSize": 14, "input_value": 8, "combo": [8, 1, 9] }
+                { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
+                { "type": "button", "text": "CD", "id": "cd", "location": "right", "left": -20, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
+                { "type": "button", "text": "ABC", "id": "abc", "location": "right", "left": 30, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
+                { "type": "button", "text": "BCD", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
             );
         }
 '''
