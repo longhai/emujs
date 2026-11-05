@@ -1863,6 +1863,16 @@
 .ejs_virtualGamepad_button.b_y { color: #fdd835 !important; }
 .ejs_virtualGamepad_button_down { filter: brightness(1.4); }
 
+/* HAI: nut combo mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_virtualGamepad_button.b_ab { color: #ff9800 !important; }
+.ejs_virtualGamepad_button.b_cd { color: #ab47bc !important; }
+.ejs_virtualGamepad_button.b_abc { color: #ec407a !important; }
+.ejs_virtualGamepad_button.b_bcd { color: #26a69a !important; }
+
+/* HAI: nut md mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_virtualGamepad_button.b_c { color: #ff9800 !important; }
+.ejs_virtualGamepad_button.b_z { color: #ab47bc !important; }
+
 /* HAI: volume hien ro — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_volume_parent input[type='range'] { --value: 50%; }
 .ejs_volume_parent input[type='range']::-webkit-slider-runnable-track { background-image: linear-gradient(to right, #1e88e5 var(--value, 50%), rgba(255,255,255,0.25) var(--value, 50%)) !important; }

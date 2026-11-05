@@ -2624,6 +2624,19 @@ class EJS_Frontend {
                 { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true }
             );
         }
+        // HAI: nut combo arcade — 1 nut bam nhieu nut cung luc (kieu nut
+        // khach o trang online: AB/CD/ABC/BCD). Mapping Neo Geo da xac
+        // minh: A=0, B=8, C=1, D=9 (nut X goc = C, nut Y goc = D).
+        // "combo" la truong moi do script them, xu ly o cho cham nut
+        // ben duoi (khong phai API goc cua EmulatorJS).
+        if (["arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
+            info.push(
+                { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": 0, "top": -50, "bold": true, "fontSize": 15, "input_value": 0, "combo": [0, 8] },
+                { "type": "button", "text": "CD", "id": "cd", "location": "right", "left": 70, "top": -50, "bold": true, "fontSize": 15, "input_value": 1, "combo": [1, 9] },
+                { "type": "button", "text": "ABC", "id": "abc", "location": "right", "left": 0, "top": -100, "bold": true, "fontSize": 14, "input_value": 0, "combo": [0, 8, 1] },
+                { "type": "button", "text": "BCD", "id": "bcd", "location": "right", "left": 70, "top": -100, "bold": true, "fontSize": 14, "input_value": 8, "combo": [8, 1, 9] }
+            );
+        }
         for (let i = 0; i < info.length; i++) {
             if (info[i].text) {
                 info[i].text = this.localization(info[i].text);
@@ -2706,13 +2719,13 @@ class EJS_Frontend {
                     if (e.type === "touchend" || e.type === "touchcancel") {
                         e.target.classList.remove("ejs_virtualGamepad_button_down");
                         window.setTimeout(() => {
-                            this.ejs.stopAutofire(0, value);
-                            this.ejs.gameManager.simulateInput(0, value, 0);
+                            (info[i].combo || [value]).forEach((v) => { this.ejs.stopAutofire(0, v); this.ejs.gameManager.simulateInput(0, v, 0); }); // HAI: nut combo
                         })
                     } else {
                         e.target.classList.add("ejs_virtualGamepad_button_down");
-                        this.ejs.gameManager.simulateInput(0, value, downValue);
-                        if ((info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo
+                        // HAI: nut combo — bam 1 nut ma gui nhieu nut cung luc (arcade AB/CD/ABC/BCD)
+                        (info[i].combo || [value]).forEach((v) => this.ejs.gameManager.simulateInput(0, v, downValue));
+                        if (!info[i].combo && (info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo
                             this.ejs.startAutofire(0, value, downValue);
                         }
                     }
