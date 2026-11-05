@@ -25,7 +25,12 @@ Quy tac — CHI THEM NUT, KHONG VIET LAI BO NUT GOC:
      nao cung chinh xac 100% (tay la, tay che do XInput, Safari
      chi bao "Standard Gamepad") — khi khong nhan ra thi ve
      ky hieu Xbox mac dinh, khong bao loi.
-  4. Chay lai lan 2 khong them trung (idempotent). Neu ban goc doi
+  4. Nut co mau — lam TRONG CODE giong nhu them nut (Hai chot 05/11):
+     chen them mau vao emulator.css goc (khong sua file index.html
+     rieng): A do, B xanh la, TA cam, TB xanh duong, L1/R1 tim,
+     L2/R2 tim dam, Start/Select xam. Nut co class b_<id> nen CSS
+     nham dung tung nut. Chen 1 lan, chay lai khong them trung.
+  5. Chay lai lan 2 khong them trung (idempotent). Neu ban goc doi
      ten ham / doi cau truc khien khong tim thay neo (anchor),
      script thoat loi (exit 2) — workflow DUNG lai, khong mo PR
      ghi de, Hai xem lai neo moi.
@@ -176,9 +181,40 @@ def patch_gamepad(path):
     return 0
 
 
+# --- 4. Nut co mau trong code: chen vao cuoi emulator.css goc ---
+BUTTON_COLOR_CSS = '''
+/* HAI: nut co mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_virtualGamepad_button.b_a { background: #e53935 !important; border-color: #ff8a80 !important; color: #fff !important; }
+.ejs_virtualGamepad_button.b_b { background: #43a047 !important; border-color: #a5d6a7 !important; color: #fff !important; }
+.ejs_virtualGamepad_button.b_ta { background: #fb8c00 !important; border-color: #ffcc80 !important; color: #fff !important; }
+.ejs_virtualGamepad_button.b_tb { background: #1e88e5 !important; border-color: #90caf9 !important; color: #fff !important; }
+.ejs_virtualGamepad_button.b_l1, .ejs_virtualGamepad_button.b_r1 { background: #8e24aa !important; border-color: #ce93d8 !important; color: #fff !important; }
+.ejs_virtualGamepad_button.b_l2, .ejs_virtualGamepad_button.b_r2 { background: #5e35b1 !important; border-color: #b39ddb !important; color: #fff !important; }
+.ejs_virtualGamepad_button.b_start, .ejs_virtualGamepad_button.b_select { background: #546e7a !important; border-color: #b0bec5 !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down { filter: brightness(1.4); }
+.ejs_dpad_main { opacity: .9; }
+'''
+
+
+def patch_css(path):
+    text = open(path, encoding="utf-8").read()
+    if "HAI: nut co mau" in text:
+        print("Mau nut: da co roi, bo qua")
+        return 0
+    if ".ejs_virtualGamepad_button" not in text:
+        print("LOI: khong tim thay .ejs_virtualGamepad_button trong emulator.css — ban goc doi CSS roi", file=sys.stderr)
+        return 2
+    open(path, "w", encoding="utf-8").write(text.rstrip() + "\n" + BUTTON_COLOR_CSS)
+    print("DA DOI: Mau nut: da chen mau A/B/TA/TB/L1/R1/L2/R2 vao emulator.css")
+    return 0
+
+
 if __name__ == "__main__":
     import os
-    _p = sys.argv[1] if len(sys.argv) > 1 else "vendor/emulatorjs-data/src/frontend.js"
-    if "gamepad" in os.path.basename(_p):
+    _p = sys.argv[1] if len(sys.argv) > 1 else "src/frontend.js"
+    _b = os.path.basename(_p)
+    if "gamepad" in _b:
         sys.exit(patch_gamepad(_p))
+    if _b == "emulator.css":
+        sys.exit(patch_css(_p))
     sys.exit(main(_p))
