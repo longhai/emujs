@@ -1085,7 +1085,7 @@ class EmulatorJS {
                     if (this.debug) console.warn("Could not fullscreen on load");
                 }
             }
-            this.frontend.menu.open();
+            // HAI: tat tu mo menu khi load game — chi mo khi bam nut ☰
             if (this.isSafari && (this.isMobile || this.hasTouchScreen)) {
                 // iPadOS can use a desktop Safari user agent, so touch support
                 // is a more reliable fallback than mobile user-agent detection.
