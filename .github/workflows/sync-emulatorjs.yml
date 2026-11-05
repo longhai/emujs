@@ -98,11 +98,12 @@ jobs:
       # Tai code goc moi ve xong, tu dong them lai nut mod.
       # Script tim neo trong src/frontend.js, chen PS1 L/R + NES Turbo,
       # chay lai khong them trung. Tim khong thay neo -> loi, dung.
-      - name: Tu dong them lai nut PS1 + NES Turbo + ky hieu tay cam
+      - name: Tu dong them lai nut PS1 + NES Turbo + ky hieu tay cam + mau nut
         if: env.NEEDS_SYNC == 'true'
         run: |
           python3 apply-emulatorjs-mods.py src/frontend.js
           python3 apply-emulatorjs-mods.py src/gamepad.js
+          python3 apply-emulatorjs-mods.py emulator.css
           node --check src/frontend.js
           node --check src/gamepad.js
 
