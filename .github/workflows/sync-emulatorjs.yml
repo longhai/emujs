@@ -91,7 +91,7 @@ jobs:
             echo "Ly do: Hai bat buoc dong bo lai."
             NEEDS_SYNC=true
           fi
-          if ! grep -q "HAI: chi them nut thieu" src/frontend.js 2>/dev/null || ! grep -q "HAI: tat tu mo menu" src/frontend.js 2>/dev/null || ! grep -q "HAI: nut co mau v2" emulator.css 2>/dev/null || ! grep -q "HAI: volume hien ro" emulator.css 2>/dev/null; then
+          if ! grep -q "HAI: chi them nut thieu" src/frontend.js 2>/dev/null || ! grep -q "HAI: tat tu mo menu" src/frontend.js 2>/dev/null || ! grep -q "HAI: tat tu mo menu" src/emulator.js 2>/dev/null || ! grep -q "HAI: nut co mau v2" emulator.css 2>/dev/null || ! grep -q "HAI: volume hien ro" emulator.css 2>/dev/null; then
             echo "Ly do: mod cua Hai (nut / mau nut) chua co trong code hien tai."
             NEEDS_SYNC=true
           fi
@@ -121,14 +121,16 @@ jobs:
       # Tai code goc moi ve xong, tu dong them lai nut mod.
       # Script tim neo trong src/frontend.js, chen PS1 L/R + NES Turbo,
       # chay lai khong them trung. Tim khong thay neo -> loi, dung.
-      - name: Tu dong them lai nut PS1 + NES Turbo + ky hieu tay cam + mau nut
+      - name: Tu dong them lai nut PS1 + NES Turbo + ky hieu tay cam + mau nut + tat menu tu mo
         if: env.NEEDS_SYNC == 'true'
         run: |
           python3 apply-emulatorjs-mods.py src/frontend.js
           python3 apply-emulatorjs-mods.py src/gamepad.js
+          python3 apply-emulatorjs-mods.py src/emulator.js
           python3 apply-emulatorjs-mods.py emulator.css
           node --check src/frontend.js
           node --check src/gamepad.js
+          node --check src/emulator.js
 
       # Tu host DAY DU core — Hai chot 05/11: lay het, khong phu thuoc CDN luc choi.
       # Luc sync, workflow doc danh sach tren CDN roi tai het ve repo
