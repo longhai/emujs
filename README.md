@@ -11,6 +11,3 @@ EmulatorJS tự host của Hải — đồng bộ có chọn lọc từ Emulator
   - Tay cầm thật: tự nhận Sony / Xbox / Switch qua Gamepad API, đổi ký hiệu cho đúng (Sony `✕ ○ □ △`, Xbox `A B X Y`, Switch `B A Y X`)
 - `.github/workflows/cleanup-old-files.yml` — dọn 1 lần duy nhất, xóa file EmulatorJS cũ (`data/`, `index.html`, `nes/`).
 
-## File cũ đã xóa
-
-File EmulatorJS cũ (bản cũ, ~30MB, commit `f6f68a2`) đã được xóa trong 1 commit dọn dẹp, vẫn còn trong lịch sử Git nếu cần xem lại.
