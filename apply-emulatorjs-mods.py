@@ -25,12 +25,21 @@ Quy tac — CHI THEM NUT, KHONG VIET LAI BO NUT GOC:
      nao cung chinh xac 100% (tay la, tay che do XInput, Safari
      chi bao "Standard Gamepad") — khi khong nhan ra thi ve
      ky hieu Xbox mac dinh, khong bao loi.
-  4. Nut co mau — lam TRONG CODE giong nhu them nut (Hai chot 05/11):
-     chen them mau vao emulator.css goc (khong sua file index.html
-     rieng): A do, B xanh la, TA cam, TB xanh duong, L1/R1 tim,
-     L2/R2 tim dam, Start/Select xam. Nut co class b_<id> nen CSS
-     nham dung tung nut. Chen 1 lan, chay lai khong them trung.
-  5. Chay lai lan 2 khong them trung (idempotent). Neu ban goc doi
+  4. Nut co mau — lam TRONG CODE giong nhu them nut (Hai chot 05/11,
+     sua lai 06/11): chen them mau vao emulator.css goc (khong sua
+     file index.html rieng). Mau la mau cua CHU, nen nut giu mac
+     dinh cua EmulatorJS, cho giong nut tren tay cam that:
+     A xanh la, B do, X xanh duong, Y vang; TA/TB cung mau A/B.
+     Nut co class b_<id> nen CSS nham dung tung nut. Chen 1 lan,
+     chay lai khong them trung.
+  5. Tat menu tu mo khi load game (Hai chot 06/11): menu duoi cua
+     EmulatorJS (Restart/Pause/Save State...) tu hien ra khi moi
+     vao game — day la loi cua ban goc (da sua cho Safari o 4.0.9
+     nhung tren Chrome Android van bi). Patch ham show() trong
+     createBottomMenuBar() thanh khong lam gi: menu chi mo khi
+     bam nut ☰ goc tren phai (menu.toggle() khong dung show() nen
+     van mo duoc binh thuong).
+  6. Chay lai lan 2 khong them trung (idempotent). Neu ban goc doi
      ten ham / doi cau truc khien khong tim thay neo (anchor),
      script thoat loi (exit 2) — workflow DUNG lai, khong mo PR
      ghi de, Hai xem lai neo moi.
@@ -84,6 +93,27 @@ def main(path):
             return 2
         text = text.replace(LOCALIZE_ANCHOR, APPEND_BLOCK + LOCALIZE_ANCHOR, 1)
         changed.append("PS1: da them L1/R1/L2/R2; NES: da them Turbo A / Turbo B")
+
+    # --- 4. Tat menu tu mo khi load game: show() chi dung cho
+    # tu mo khi click/chuot — nut ☰ goi menu.toggle() khong dung
+    # show() nen van mo duoc binh thuong. ---
+    MENU_SHOW_OLD = '''        const show = () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(hide, 3000);
+            this.elements.menu.classList.remove("ejs_menu_bar_hidden");
+        }'''
+    MENU_SHOW_NEW = '''        const show = () => {
+            // HAI: tat tu mo menu khi load / cham man hinh — chi mo khi bam nut ☰
+            return;
+        }'''
+    if "HAI: tat tu mo menu" in text:
+        print("Menu tu mo: da tat roi, bo qua")
+    else:
+        if MENU_SHOW_OLD not in text:
+            print("LOI: khong tim thay ham show() cua menu duoi — ban goc doi code roi", file=sys.stderr)
+            return 2
+        text = text.replace(MENU_SHOW_OLD, MENU_SHOW_NEW, 1)
+        changed.append("Menu: da tat tu mo khi load game (chi mo bang nut ☰)")
 
     # --- 3. Patch xu ly cham nut de TA/TB that su turbo ---
     if "info[i].autofire === true" in text:
@@ -182,30 +212,60 @@ def patch_gamepad(path):
 
 
 # --- 4. Nut co mau trong code: chen vao cuoi emulator.css goc ---
+# Hai chot 06/11: mau la mau cua CHU, nen nut giu mac dinh cua
+# EmulatorJS (xam mo), cho giong nut tren tay cam that:
+#   A xanh la, B do, X xanh duong, Y vang (kieu tay Xbox).
+# TA/TB la ban turbo cua A/B nen cung mau voi A/B.
 BUTTON_COLOR_CSS = '''
-/* HAI: nut co mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
-.ejs_virtualGamepad_button.b_a { background: #e53935 !important; border-color: #ff8a80 !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_b { background: #43a047 !important; border-color: #a5d6a7 !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_ta { background: #fb8c00 !important; border-color: #ffcc80 !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_tb { background: #1e88e5 !important; border-color: #90caf9 !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_l1, .ejs_virtualGamepad_button.b_r1 { background: #8e24aa !important; border-color: #ce93d8 !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_l2, .ejs_virtualGamepad_button.b_r2 { background: #5e35b1 !important; border-color: #b39ddb !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_start, .ejs_virtualGamepad_button.b_select { background: #546e7a !important; border-color: #b0bec5 !important; color: #fff !important; }
+/* HAI: nut co mau v2 (chu co mau, nen mac dinh) — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_virtualGamepad_button.b_a, .ejs_virtualGamepad_button.b_ta { color: #4caf50 !important; }
+.ejs_virtualGamepad_button.b_b, .ejs_virtualGamepad_button.b_tb { color: #e53935 !important; }
+.ejs_virtualGamepad_button.b_x { color: #1e88e5 !important; }
+.ejs_virtualGamepad_button.b_y { color: #fdd835 !important; }
 .ejs_virtualGamepad_button_down { filter: brightness(1.4); }
-.ejs_dpad_main { opacity: .9; }
+'''
+
+# Thanh truot volume: ban goc to mau xanh bang currentColor +
+# bien --value, ma --value chi duoc JS gan khi doi volume — luc
+# moi load chua gan nen thanh truot toi thui, nut tron cung kho
+# thay (anh Hai gui 05:04). Chen mau xanh co dinh + mac dinh
+# --value 50% (JS van ghi de duoc qua inline style khi keo).
+VOLUME_CSS = '''
+/* HAI: volume hien ro — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_volume_parent input[type='range'] { --value: 50%; }
+.ejs_volume_parent input[type='range']::-webkit-slider-runnable-track { background-image: linear-gradient(to right, #1e88e5 var(--value, 50%), rgba(255,255,255,0.25) var(--value, 50%)) !important; }
+.ejs_volume_parent input[type='range']::-webkit-slider-thumb { background: #fff !important; border: 1px solid #999 !important; }
+.ejs_volume_parent input[type='range']::-moz-range-progress { background: #1e88e5 !important; }
 '''
 
 
 def patch_css(path):
     text = open(path, encoding="utf-8").read()
-    if "HAI: nut co mau" in text:
-        print("Mau nut: da co roi, bo qua")
-        return 0
     if ".ejs_virtualGamepad_button" not in text:
         print("LOI: khong tim thay .ejs_virtualGamepad_button trong emulator.css — ban goc doi CSS roi", file=sys.stderr)
         return 2
-    open(path, "w", encoding="utf-8").write(text.rstrip() + "\n" + BUTTON_COLOR_CSS)
-    print("DA DOI: Mau nut: da chen mau A/B/TA/TB/L1/R1/L2/R2 vao emulator.css")
+    out = text.rstrip()
+    changed = []
+    if "HAI: nut co mau v2" in text:
+        print("Mau nut: da co roi, bo qua")
+    else:
+        # Neu file con mau cu v1 (nen to mau) thi go bo truoc khi chen v2
+        if "HAI: nut co mau" in text:
+            import re
+            out = re.sub(r"\n/\* HAI: nut co mau —.*?\n\.ejs_dpad_main \{ opacity: \.9; \}\n", "\n", out, flags=re.S)
+            print("Mau nut: da go mau cu v1, chen mau v2")
+        out += "\n" + BUTTON_COLOR_CSS
+        changed.append("Mau nut: da chen mau chu A xanh la / B do / X xanh duong / Y vang")
+    if "HAI: volume hien ro" in text:
+        print("Volume: da co roi, bo qua")
+    else:
+        out += VOLUME_CSS
+        changed.append("Volume: da chen mau xanh + nut tron trang cho thanh truot volume")
+    if changed:
+        open(path, "w", encoding="utf-8").write(out)
+        print("DA DOI: " + "; ".join(changed))
+    else:
+        print("Khong co gi doi — CSS mod da co san.")
     return 0
 
 

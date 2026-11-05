@@ -13,6 +13,18 @@
   button:disabled { opacity: .5; cursor: default; }
   #game { width: 100%; height: calc(100vh - 60px); }
   #note { padding: 8px 12px; font-size: 13px; color: #aaa; }
+  /* Nut co mau v2 — mau la mau cua CHU, nen nut giu mac dinh cua
+     EmulatorJS, cho giong nut tren tay cam that:
+     A xanh la, B do, X xanh duong, Y vang; TA/TB cung mau A/B. */
+  #game .ejs_virtualGamepad_button.b_a, #game .ejs_virtualGamepad_button.b_ta { color: #4caf50 !important; }
+  #game .ejs_virtualGamepad_button.b_b, #game .ejs_virtualGamepad_button.b_tb { color: #e53935 !important; }
+  #game .ejs_virtualGamepad_button.b_x { color: #1e88e5 !important; }
+  #game .ejs_virtualGamepad_button.b_y { color: #fdd835 !important; }
+  #game .ejs_virtualGamepad_button_down { filter: brightness(1.4); }
+  /* Thanh truot volume luon hien ro: xanh + nut tron trang. */
+  #game .ejs_volume_parent input[type='range'] { --value: 50%; }
+  #game .ejs_volume_parent input[type='range']::-webkit-slider-runnable-track { background-image: linear-gradient(to right, #1e88e5 var(--value, 50%), rgba(255,255,255,0.25) var(--value, 50%)) !important; }
+  #game .ejs_volume_parent input[type='range']::-webkit-slider-thumb { background: #fff !important; border: 1px solid #999 !important; }
 </style>
 </head>
 <body>
