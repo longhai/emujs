@@ -1,4 +1,108 @@
+# Sync EmulatorJS co chon loc — giu lai file minh mod + giu bo cuc rieng cua Hai
+# Dat file nay vao: .github/workflows/sync-emulatorjs.yml trong repo cua Hai
+# Chay: tu dong moi tuan (chu nhat) + bam nut Run workflow bat cu luc nao
+#
+# BO CUC KHAC NHAU — day la diem quan trong nhat:
+# Trang goc ben EmulatorJS: index.html o goc repo + build.js + docs/ + package.json
+# Trang cua Hai: 1 file emulatorjs.html / emulatorjs-online.html o goc,
+#   giao dien tieng Viet, hop tha ROM, toolbar, popup Cai dat, PWA,
+#   tu nap ?rom=, EJS_pathtodata tro ve CDN. KHONG giong trang goc.
+# Vi vay workflow KHONG copy nguyen thu muc data/ cua goc sang,
+# ma map tung file goc sang dung cho cua Hai (xem bang MAPPING duoi).
+# Nhung thu KHONG copy: index.html goc, build.js, docs/, package.json,
+# serve.py, update.js, .github/, .vscode/ — giu nguyen bo cuc cua Hai.
+#
+# MAPPING (goc -> cho cua Hai):
+#   data/loader.js            -> vendor/emulatorjs-data/loader.js
+#   data/emulator.css         -> vendor/emulatorjs-data/emulator.css
+#   data/version.json         -> vendor/emulatorjs-data/version.json
+#   data/src/*.js             -> vendor/emulatorjs-data/src/*.js
+#   data/localization/*       -> vendor/emulatorjs-data/localization/*
+#   index.html (goc)          -> KHONG COPY, giu emulatorjs.html cua Hai
+#   roms/ bios/ nes/ (cua Hai)-> workflow KHONG cham toi
+# Sau khi sync xong, chi can doi 1 dong trong file cua Hai:
+#   EJS_pathtodata: "https://cdn.emulatorjs.org/stable/data/"
+#   -> "./vendor/emulatorjs-data/" (hoac duong dan Pages tuong ung)
+#
+# Cach giu sua thang vao file goc (vi du moi: PS1 L/R + NES Turbo):
+#  - KHONG dung patch cung (git apply) nua, vi ban goc chi can doi vai
+#    dong quanh cho sua la patch hong. Thay vao do dung script
+#    apply-emulatorjs-mods.py: sau khi tai code goc moi ve, script
+#    tim neo (anchor) trong frontend.js va chen lai nut mod.
+#    Script chay lai lan 2 khong them trung. Neu ban goc doi ten ham
+#    / doi bo cuc khien khong tim thay neo, script thoat loi,
+#    workflow DUNG lai, khong mo PR ghi de.
+#  - File .html cua Hai (emulatorjs.html, ...) KHONG nam trong danh
+#    sach copy, workflow khong bao gio ghi de chung.
+# Luu y: repo goc EmulatorJS/EmulatorJS (GPL-3.0, hien 4.2.3) chi chua
+# data/loader.js, data/emulator.css, data/src/*.js, data/localization/.
+# File core .wasm/.data KHONG nam trong repo goc — chung la goi npm
+# @emulatorjs/cores, chay tren CDN. Buoc tai core o cuoi la tuy chon.
+
+name: Sync EmulatorJS (chon loc)
+
+on:
+  schedule:
+    - cron: "0 3 * * 0"  # chu nhat 03:00 UTC, kiem tra ban moi
+  workflow_dispatch:  # cho phep bam tay
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo cua Hai
+        uses: actions/checkout@v4
+
+      - name: Checkout EmulatorJS goc (chi lay data/)
+        uses: actions/checkout@v4
+        with:
+          repository: EmulatorJS/EmulatorJS
+          path: upstream
+          sparse-checkout: |
+            data
+            LICENSE
+          sparse-checkout-cone-mode: false
+
+      - name: Ghi nho ban goc dang dung
+        run: |
+          cat upstream/data/version.json
+          echo "UPSTREAM_VERSION=$(jq -r .version upstream/data/version.json)" >> $GITHUB_ENV
+
+      - name: Copy co chon loc vao vendor/emulatorjs-data/
+        run: |
+          mkdir -p vendor/emulatorjs-data
+          # ALLOWLIST — chi nhung file nay moi duoc cap nhat theo goc.
+          # Them/bot dong o day la doi pham vi dong bo.
+          cp upstream/data/loader.js vendor/emulatorjs-data/
+          cp upstream/data/emulator.css vendor/emulatorjs-data/
+          cp upstream/data/version.json vendor/emulatorjs-data/
+          cp upstream/LICENSE vendor/emulatorjs-data/LICENSE 2>/dev/null || true
+          mkdir -p vendor/emulatorjs-data/src vendor/emulatorjs-data/localization
+          cp upstream/data/src/*.js vendor/emulatorjs-data/src/
+          cp -r upstream/data/localization/. vendor/emulatorjs-data/localization/
+          # Ghi ban goc de lan sau so sanh
+          echo "$UPSTREAM_VERSION" > vendor/emulatorjs-data/.upstream-version
+          echo "Da copy xong, ban goc: $UPSTREAM_VERSION"
+
+      # Tai code goc moi ve xong, tu dong them lai nut mod.
+      # Script tim neo trong frontend.js, chen PS1 L/R + NES Turbo,
+      # chay lai khong them trung. Tim khong thay neo -> loi, dung.
+      - name: Tu dong them lai nut PS1 + NES Turbo + ky hieu tay cam
+        run: |
+          python3 apply-emulatorjs-mods.py vendor/emulatorjs-data/src/frontend.js
+          python3 apply-emulatorjs-mods.py vendor/emulatorjs-data/src/gamepad.js
+          node --check vendor/emulatorjs-data/src/frontend.js
+          node --check vendor/emulatorjs-data/src/gamepad.js
+
       # Tuy chon: tai chi core Hai dung, tu CDN stable.
+      # Bo comment khoi nay khi Hai muon tu host ca core, khong dung CDN nua.
+      # Danh sach hien tai theo file emulatorjs.html cua Hai:
+      # NES=fceumm, SNES=snes9x, arcade=fbneo, mame2003_plus,
+      # PS1=pcsx_rearmed, GBA=mgba, GB=gambatte, NDS=desmume, N64=mupen64plus_next
       # - name: Tai core (tuy chon)
       #   run: |
       #     mkdir -p vendor/emulatorjs-data/cores
