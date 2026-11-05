@@ -3,86 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EmulatorJS — Test (tu host)</title>
-<style>
-  body { margin: 0; background: #111; color: #eee; font-family: sans-serif; }
-  header { padding: 12px; background: #1c1c1c; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  header h1 { font-size: 18px; margin: 0 12px 0 0; }
-  select, button, input { padding: 8px; font-size: 15px; border-radius: 6px; border: 1px solid #444; background: #222; color: #eee; }
-  button { background: #2b7a2b; border: none; cursor: pointer; }
-  button:disabled { opacity: .5; cursor: default; }
-  #game { width: 100%; height: calc(100vh - 60px); }
-  #note { padding: 8px 12px; font-size: 13px; color: #aaa; }
-  /* Nut co mau v2 — mau la mau cua CHU, nen nut giu mac dinh cua
-     EmulatorJS, cho giong nut tren tay cam that:
-     A xanh la, B do, X xanh duong, Y vang; TA/TB cung mau A/B. */
-  #game .ejs_virtualGamepad_button.b_a, #game .ejs_virtualGamepad_button.b_ta { color: #4caf50 !important; }
-  #game .ejs_virtualGamepad_button.b_b, #game .ejs_virtualGamepad_button.b_tb { color: #e53935 !important; }
-  #game .ejs_virtualGamepad_button.b_x { color: #1e88e5 !important; }
-  #game .ejs_virtualGamepad_button.b_y { color: #fdd835 !important; }
-  #game .ejs_virtualGamepad_button_down { filter: brightness(1.4); }
-  /* Thanh truot volume luon hien ro: xanh + nut tron trang. */
-  #game .ejs_volume_parent input[type='range'] { --value: 50%; }
-  #game .ejs_volume_parent input[type='range']::-webkit-slider-runnable-track { background-image: linear-gradient(to right, #1e88e5 var(--value, 50%), rgba(255,255,255,0.25) var(--value, 50%)) !important; }
-  #game .ejs_volume_parent input[type='range']::-webkit-slider-thumb { background: #fff !important; border: 1px solid #999 !important; }
-</style>
+<title>Test mod EmulatorJS</title>
 </head>
 <body>
-<header>
-  <h1>🎮 EmulatorJS — Test tu host</h1>
-  <select id="core">
-    <option value="nes">NES — fceumm</option>
-    <option value="snes">SNES — snes9x</option>
-    <option value="arcade">Arcade — fbneo</option>
-    <option value="segaMD">Sega Mega Drive — genesis_plus_gx</option>
-    <option value="gba">GBA — mgba</option>
-    <option value="gb">GB/GBC — gambatte</option>
-    <option value="n64">N64 — mupen64plus_next</option>
-    <option value="psx">PS1 — pcsx_rearmed</option>
-    <option value="nds">NDS — desmume</option>
-  </select>
-  <input type="file" id="rom">
-  <button id="play" disabled>▶ Chơi</button>
-  <button id="fs">⛶ Toàn màn hình</button>
-</header>
+<select id="core">
+  <option value="nes">NES</option>
+  <option value="snes">SNES</option>
+  <option value="arcade">Arcade</option>
+  <option value="segaMD">Sega MD</option>
+  <option value="gba">GBA</option>
+  <option value="gb">GB/GBC</option>
+  <option value="n64">N64</option>
+  <option value="psx">PS1</option>
+  <option value="nds">NDS</option>
+</select>
+<input type="file" id="rom">
+<button onclick="play()">Chơi</button>
 <div id="game"></div>
-<div id="note">Bộ nguồn EmulatorJS nằm thẳng ở gốc repo này (loader.js, src/, cores/) — trang test này không gọi CDN. Chọn hệ máy, chọn file ROM rồi bấm Chơi. Muốn đổi ROM khác thì tải lại trang.</div>
 <script>
-  let romUrl = null;
-  const romInput = document.getElementById('rom');
-  const playBtn = document.getElementById('play');
-  romInput.addEventListener('change', () => {
-    const f = romInput.files[0];
-    if (!f) { playBtn.disabled = true; return; }
-    if (romUrl) URL.revokeObjectURL(romUrl);
-    romUrl = URL.createObjectURL(f);
-    playBtn.disabled = false;
-  });
-  playBtn.addEventListener('click', () => {
-    if (!romUrl) return;
-    playBtn.disabled = true;
-    // Cau hinh EmulatorJS — phai dat TRUOC khi nap loader.js
+  function play() {
     window.EJS_player = '#game';
     window.EJS_core = document.getElementById('core').value;
-    window.EJS_gameUrl = romUrl;
-    // Bo nguon nam o goc repo (trang nay), khong qua CDN, khong qua vendor/
+    window.EJS_gameUrl = URL.createObjectURL(document.getElementById('rom').files[0]);
     window.EJS_pathtodata = './';
     window.EJS_startOnLoaded = true;
-    // Màu chủ đạo của EmulatorJS — để xanh mặc định #1AAFFF.
-    // Trước đây đặt '#111111' (gần như đen) nên chữ hộp thoại
-    // "Are you sure you want to exit?", vệt volume... đều đen
-    // trên nền đen, nhìn không thấy chữ.
-    window.EJS_color = '#1AAFFF';
     const s = document.createElement('script');
     s.src = './loader.js';
-    s.onerror = () => alert('Khong nap duoc loader.js — kiem tra file loader.js co o goc repo khong.');
     document.body.appendChild(s);
-  });
-  document.getElementById('fs').addEventListener('click', () => {
-    const el = document.getElementById('game');
-    if (document.fullscreenElement) document.exitFullscreen();
-    else el.requestFullscreen && el.requestFullscreen();
-  });
+  }
 </script>
 </body>
 </html>
