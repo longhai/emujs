@@ -841,9 +841,8 @@ class EJS_Frontend {
         }
 
         const show = () => {
-            clearTimeout(timeout);
-            timeout = setTimeout(hide, 3000);
-            this.elements.menu.classList.remove("ejs_menu_bar_hidden");
+            // HAI: tat tu mo menu khi load / cham man hinh — chi mo khi bam nut ☰
+            return;
         }
 
         this.menu = {
