@@ -1856,13 +1856,15 @@
     align-items: center;
 }
 
-/* HAI: nut co mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
-.ejs_virtualGamepad_button.b_a { background: #e53935 !important; border-color: #ff8a80 !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_b { background: #43a047 !important; border-color: #a5d6a7 !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_ta { background: #fb8c00 !important; border-color: #ffcc80 !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_tb { background: #1e88e5 !important; border-color: #90caf9 !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_l1, .ejs_virtualGamepad_button.b_r1 { background: #8e24aa !important; border-color: #ce93d8 !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_l2, .ejs_virtualGamepad_button.b_r2 { background: #5e35b1 !important; border-color: #b39ddb !important; color: #fff !important; }
-.ejs_virtualGamepad_button.b_start, .ejs_virtualGamepad_button.b_select { background: #546e7a !important; border-color: #b0bec5 !important; color: #fff !important; }
+/* HAI: nut co mau v2 (chu co mau, nen mac dinh) — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_virtualGamepad_button.b_a, .ejs_virtualGamepad_button.b_ta { color: #4caf50 !important; }
+.ejs_virtualGamepad_button.b_b, .ejs_virtualGamepad_button.b_tb { color: #e53935 !important; }
+.ejs_virtualGamepad_button.b_x { color: #1e88e5 !important; }
+.ejs_virtualGamepad_button.b_y { color: #fdd835 !important; }
 .ejs_virtualGamepad_button_down { filter: brightness(1.4); }
-.ejs_dpad_main { opacity: .9; }
+
+/* HAI: volume hien ro — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_volume_parent input[type='range'] { --value: 50%; }
+.ejs_volume_parent input[type='range']::-webkit-slider-runnable-track { background-image: linear-gradient(to right, #1e88e5 var(--value, 50%), rgba(255,255,255,0.25) var(--value, 50%)) !important; }
+.ejs_volume_parent input[type='range']::-webkit-slider-thumb { background: #fff !important; border: 1px solid #999 !important; }
+.ejs_volume_parent input[type='range']::-moz-range-progress { background: #1e88e5 !important; }
