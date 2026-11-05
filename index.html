@@ -19,8 +19,10 @@
 </select>
 <input type="file" id="rom">
 <button onclick="play()">Chơi</button>
+  <div style="width: 640px; height: 480px; max-width: 100%;">
+  <div id="game"></div>
+  </div>
 <!-- Chi cho khung game co kich thuoc de hien hinh — day khong phai CSS mod (khong doi mau nut, volume, menu). Khong co dong nay thi khung game cao 0px nên chi nghe tiếng, không thấy hình. -->
-<div id="game" style="width:100%;height:100vh"></div>
 <script>
   function play() {
     window.EJS_player = '#game';
