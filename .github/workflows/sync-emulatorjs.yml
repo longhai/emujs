@@ -40,6 +40,12 @@ on:
   schedule:
     - cron: "0 3 * * *"  # moi ngay 03:00 UTC = 10:00 gio VN, kiem tra co ban moi khong
   workflow_dispatch:  # bam tay thi chay ngay, khong can doi lich
+    inputs:
+      force_sync:
+        description: "Bat buoc dong bo lai du ben goc khong doi (dung khi doi script mod / mau nut)"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -61,7 +67,7 @@ jobs:
             data
           sparse-checkout-cone-mode: false
 
-      - name: Kiem tra ben goc co thay doi khong
+      - name: Kiem tra co can dong bo khong
         run: |
           UPSTREAM_VERSION=$(jq -r .version upstream/data/version.json)
           UPSTREAM_SHA=$(cd upstream && git rev-parse HEAD)
@@ -69,12 +75,29 @@ jobs:
           echo "UPSTREAM_SHA=$UPSTREAM_SHA" >> $GITHUB_ENV
           echo "Ban goc: $UPSTREAM_VERSION, commit: $UPSTREAM_SHA"
           echo "Ban da luu: $(cat .upstream-version 2>/dev/null || echo chua-co), commit: $(cat .upstream-sha 2>/dev/null || echo chua-co)"
-          if [ "$UPSTREAM_SHA" = "$(cat .upstream-sha 2>/dev/null || echo '')" ]; then
-            echo "NEEDS_SYNC=false" >> $GITHUB_ENV
-            echo "Ben goc khong co gi moi — dung o day, khong dong bo, khong mo PR."
-          else
-            echo "NEEDS_SYNC=true" >> $GITHUB_ENV
-            echo "Ben goc co thay doi — dong bo ngay."
+          # Dong bo khi 1 trong 3 dieu kien dung:
+          # 1. Ben goc co commit moi (so voi .upstream-sha da luu)
+          # 2. Hai bam Run va tick "Bat buoc dong bo lai"
+          # 3. Mod cua Hai chua co trong code hien tai (vd moi them mau
+          #    nut vao script mod ma ben goc thi chua doi gi) — truong
+          #    hop nay xay ra 05/11: chay lai van dung vi ben goc
+          #    khong doi, mau nut khong vao duoc.
+          NEEDS_SYNC=false
+          if [ "$UPSTREAM_SHA" != "$(cat .upstream-sha 2>/dev/null || echo '')" ]; then
+            echo "Ly do: ben goc co thay doi."
+            NEEDS_SYNC=true
+          fi
+          if [ "${{ inputs.force_sync }}" = "true" ]; then
+            echo "Ly do: Hai bat buoc dong bo lai."
+            NEEDS_SYNC=true
+          fi
+          if ! grep -q "HAI: chi them nut thieu" src/frontend.js 2>/dev/null || ! grep -q "HAI: nut co mau" emulator.css 2>/dev/null; then
+            echo "Ly do: mod cua Hai (nut / mau nut) chua co trong code hien tai."
+            NEEDS_SYNC=true
+          fi
+          echo "NEEDS_SYNC=$NEEDS_SYNC" >> $GITHUB_ENV
+          if [ "$NEEDS_SYNC" = "false" ]; then
+            echo "Khong can dong bo — dung o day, khong mo PR."
           fi
 
       - name: Copy nguyen thu muc data/ ve goc repo
