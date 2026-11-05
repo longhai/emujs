@@ -91,8 +91,26 @@ jobs:
             echo "Ly do: Hai bat buoc dong bo lai."
             NEEDS_SYNC=true
           fi
-          if ! grep -q "HAI: chi them nut thieu" src/frontend.js 2>/dev/null || ! grep -q "HAI: tat tu mo menu" src/frontend.js 2>/dev/null || ! grep -q "HAI: tat tu mo menu" src/emulator.js 2>/dev/null || ! grep -q "HAI: nut combo" src/frontend.js 2>/dev/null || ! grep -q "HAI: nut co mau v2" emulator.css 2>/dev/null || ! grep -q "HAI: nut combo mau" emulator.css 2>/dev/null || ! grep -q "HAI: nut md mau" emulator.css 2>/dev/null || ! grep -q "HAI: volume hien ro" emulator.css 2>/dev/null; then
-            echo "Ly do: mod cua Hai (nut / mau nut) chua co trong code hien tai."
+          # 3. Mod cua Hai chua co trong code hien tai: chay THU script
+          #    len ban sao cua file hien tai (khong doi file that), roi
+          #    so sanh — neu script doi gi thi nghia la mod dang thieu.
+          #    Tu gio them mod moi chi can sua file .py, khong can sua
+          #    yml nua (khong can them dong grep cho tung marker).
+          mkdir -p /tmp/modcheck/src
+          cp src/frontend.js src/emulator.js src/gamepad.js /tmp/modcheck/src/ 2>/dev/null || true
+          cp emulator.css /tmp/modcheck/ 2>/dev/null || true
+          MOD_MISSING=false
+          for f in src/frontend.js src/emulator.js src/gamepad.js emulator.css; do
+            if [ "$f" = "emulator.css" ]; then copy="/tmp/modcheck/emulator.css"; else copy="/tmp/modcheck/src/$(basename "$f")"; fi
+            if [ ! -f "$copy" ]; then MOD_MISSING=true; continue; fi
+            if ! python3 apply-emulatorjs-mods.py "$copy" >/dev/null 2>&1; then
+              MOD_MISSING=true
+            else
+              cmp -s "$copy" "$f" || MOD_MISSING=true
+            fi
+          done
+          if [ "$MOD_MISSING" = "true" ]; then
+            echo "Ly do: mod cua Hai chua co trong code hien tai (chay thu script thay file doi)."
             NEEDS_SYNC=true
           fi
           echo "NEEDS_SYNC=$NEEDS_SYNC" >> $GITHUB_ENV
