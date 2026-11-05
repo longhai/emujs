@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmulatorJS — Test (tu host)</title>
+<style>
+  body { margin: 0; background: #111; color: #eee; font-family: sans-serif; }
+  header { padding: 12px; background: #1c1c1c; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  header h1 { font-size: 18px; margin: 0 12px 0 0; }
+  select, button, input { padding: 8px; font-size: 15px; border-radius: 6px; border: 1px solid #444; background: #222; color: #eee; }
+  button { background: #2b7a2b; border: none; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  #game { width: 100%; height: calc(100vh - 60px); }
+  #note { padding: 8px 12px; font-size: 13px; color: #aaa; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎮 EmulatorJS — Test tu host</h1>
+  <select id="core">
+    <option value="nes">NES — fceumm</option>
+    <option value="snes">SNES — snes9x</option>
+    <option value="arcade">Arcade — fbneo</option>
+    <option value="segaMD">Sega Mega Drive — genesis_plus_gx</option>
+    <option value="gba">GBA — mgba</option>
+    <option value="gb">GB/GBC — gambatte</option>
+    <option value="n64">N64 — mupen64plus_next</option>
+    <option value="psx">PS1 — pcsx_rearmed</option>
+    <option value="nds">NDS — desmume</option>
+  </select>
+  <input type="file" id="rom">
+  <button id="play" disabled>▶ Chơi</button>
+  <button id="fs">⛶ Toàn màn hình</button>
+</header>
+<div id="game"></div>
+<div id="note">Bộ nguồn EmulatorJS nằm thẳng ở gốc repo này (loader.js, src/, cores/) — trang test này không gọi CDN. Chọn hệ máy, chọn file ROM rồi bấm Chơi. Muốn đổi ROM khác thì tải lại trang.</div>
+<script>
+  let romUrl = null;
+  const romInput = document.getElementById('rom');
+  const playBtn = document.getElementById('play');
+  romInput.addEventListener('change', () => {
+    const f = romInput.files[0];
+    if (!f) { playBtn.disabled = true; return; }
+    if (romUrl) URL.revokeObjectURL(romUrl);
+    romUrl = URL.createObjectURL(f);
+    playBtn.disabled = false;
+  });
+  playBtn.addEventListener('click', () => {
+    if (!romUrl) return;
+    playBtn.disabled = true;
+    // Cau hinh EmulatorJS — phai dat TRUOC khi nap loader.js
+    window.EJS_player = '#game';
+    window.EJS_core = document.getElementById('core').value;
+    window.EJS_gameUrl = romUrl;
+    // Bo nguon nam o goc repo (trang nay), khong qua CDN, khong qua vendor/
+    window.EJS_pathtodata = './';
+    window.EJS_startOnLoaded = true;
+    window.EJS_color = '#111111';
+    const s = document.createElement('script');
+    s.src = './loader.js';
+    s.onerror = () => alert('Khong nap duoc loader.js — kiem tra file loader.js co o goc repo khong.');
+    document.body.appendChild(s);
+  });
+  document.getElementById('fs').addEventListener('click', () => {
+    const el = document.getElementById('game');
+    if (document.fullscreenElement) document.exitFullscreen();
+    else el.requestFullscreen && el.requestFullscreen();
+  });
+</script>
+</body>
+</html>
