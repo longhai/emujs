@@ -103,7 +103,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v14 — nhan giu chon nut/cum, nut icon to + truot dung gon + nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove khi dang chinh, hien duoc khi fullscreen
+        // HAI: chinh vi tri + do mo cum nut v15 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -167,7 +167,7 @@ GP_LAYOUT_JS = '''
         const _gpMkMini = (txt, bg) => {
             const _b = document.createElement("button");
             _b.textContent = txt;
-            _b.style.cssText = "padding:10px 14px;border-radius:999px;border:0;background:" + bg + ";color:#fff;font-size:17px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
+            _b.style.cssText = "padding:7px 11px;border-radius:999px;border:0;background:" + bg + ";color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
             return _b;
         };
         const _gpMiniDone = _gpMkMini("✓", "rgba(52,130,255,.95)");
@@ -176,9 +176,10 @@ GP_LAYOUT_JS = '''
         _gpMiniBar.appendChild(_gpMiniReset);
         this.elements.parent.appendChild(_gpMiniBar);
         const _gpOffBtn = _gpMkMini("✕", "rgba(200,60,60,.95)");
-        _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;display:none;padding:10px 14px;border-radius:999px;border:0;background:rgba(200,60,60,.95);color:#fff;font-size:17px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
+        _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;display:none;padding:7px 11px;border-radius:999px;border:0;background:rgba(200,60,60,.95);color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
         this.elements.parent.appendChild(_gpOffBtn);
-        const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} };
+        const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} _gpSyncRightClick(); };
+        const _gpSyncRightClick = () => { try { if (!this.ejs.config.buttonOpts) this.ejs.config.buttonOpts = {}; this.ejs.config.buttonOpts.rightClick = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? false : true; } catch (err) {} };
         const _gpMiniSlider = document.createElement("div");
         _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:12px;padding:6px 3px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
         const _gpMiniRange = document.createElement("input");
@@ -323,6 +324,7 @@ GP_LAYOUT_JS = '''
             e.stopPropagation();
             _gpApplyOpacity();
             _gpSyncOffBtn();
+            _gpSyncRightClick();
             const _t = (e.touches && e.touches[0]) || e;
             const _btn = (e.target && e.target.closest) ? e.target.closest(".ejs_virtualGamepad_button") : null;
             const _dpad = (!_btn && e.target && e.target.closest) ? e.target.closest(".b_dpad") : null;
@@ -546,11 +548,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v14" in text:
-        print("Chinh cum nut: da co ban v14 (nhan giu chon nut/cum + nut icon to + truot dung gon + nut Tat rieng + truot doi co ca cum + chan menu + contextmenu + mousemove + fullscreen), bo qua")
+    if "cum nut v15" in text:
+        print("Chinh cum nut: da co ban v15 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum + chan menu + contextmenu + mousemove + rightClick + fullscreen), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v15", r"        // HAI: chinh vi tri \+ do mo cum nut v15 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v14", r"        // HAI: chinh vi tri \+ do mo cum nut v14 — nhan giu chon nut/cum, nut icon to \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v13", r"        // HAI: chinh vi tri \+ do mo cum nut v13 — nhan giu chon nut/cum, nut icon \+ truot dung gon \+ nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v12", r"        // HAI: chinh vi tri \+ do mo cum nut v12 — nhan giu chon nut/cum, nut icon \+ truot dung \+ nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -570,13 +573,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v14")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v15")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v14 (nhan giu chon nut/cum + nut icon to + truot dung gon + nut Tat rieng + truot doi co ca cum + chan menu + contextmenu + mousemove + hien khi fullscreen)")
+        changed.append("Chinh cum nut: da them v15 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
