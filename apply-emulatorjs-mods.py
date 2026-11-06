@@ -1,67 +1,7 @@
-#!/usr/bin/env python3
-"""Tu dong them nut mod vao file goc EmulatorJS sau khi sync.
-Vi du MOI, doc lap — khong lien quan code cu cua Hai.
 
-Chay:
-  python3 apply-emulatorjs-mods.py vendor/emulatorjs-data/src/frontend.js
-  python3 apply-emulatorjs-mods.py vendor/emulatorjs-data/src/gamepad.js
-Quy tac — CHI THEM NUT, KHONG VIET LAI BO NUT GOC:
-  Nut goc cua EmulatorJS da co san het roi, script chi khai bao
-  them nut thieu, chen vao sau khi bo nut goc da dung xong.
-  1. PS1: bo nut goc (Y/X/B/A + D-pad + Start/Select) giu nguyen,
-     chi them L1/R1/L2/R2 (input 10/11/12/13) bang info.push().
-  2. NES: bo nut goc giu nguyen, chi them Turbo A / Turbo B
-     (TA = input 8 giong A, TB = input 0 giong B, "autofire": true),
-     va patch them cho xu ly cham nut de no that su tu dong ban
-     lien tuc — vi mac dinh EmulatorJS chi autofire khi nguoi dung
-     tick o cai dat Controls, neu chi them nut ma khong patch cho
-     nay thi TA/TB chi la nut A/B thu hai.
-  3. Tay cam that: tu nhan loai tay cam qua Gamepad API (gamepad.id)
-     roi doi ky hieu nut cho dung loai do — Sony: ✕ ○ □ △,
-     Xbox: A B X Y, Nintendo Switch: B A Y X (vi tri dao nhau),
-     khac: ve chu Xbox. Cho nay sua trong gamepad.js, ham
-     getButtonLabel() goc chi tra BUTTON_1/2/3/4 chung chung.
-     Nhan dien dua vao chuoi id cua trinh duyet, khong phai luc
-     nao cung chinh xac 100% (tay la, tay che do XInput, Safari
-     chi bao "Standard Gamepad") — khi khong nhan ra thi ve
-     ky hieu Xbox mac dinh, khong bao loi.
-  4. Nut co mau — lam TRONG CODE giong nhu them nut (Hai chot 05/11,
-     sua lai 06/11): chen them mau vao emulator.css goc (khong sua
-     file index.html rieng). Mau la mau cua CHU, nen nut giu mac
-     dinh cua EmulatorJS, cho giong nut tren tay cam that:
-     A xanh la, B do, X xanh duong, Y vang; TA/TB cung mau A/B.
-     Nut co class b_<id> nen CSS nham dung tung nut. Chen 1 lan,
-     chay lai khong them trung.
-  5. Tat menu tu mo khi load game (Hai chot 06/11): menu duoi cua
-     EmulatorJS (Restart/Pause/Save State...) tu hien ra khi moi
-     vao game. NGUYEN NHAN THAT: trong emulator.js, khi game bat
-     dau chay thi code goc goi `this.frontend.menu.open()` — mo
-     menu moi lan vao game (roi tu tat sau 3 giay). Patch show()
-     o frontend.js khong du vi duong mo chinh la dong nay (da
-     kiem chung: an danh van thay menu vi dong nay chua bi patch).
-     Sua: xoa dong menu.open() do trong emulator.js + patch them
-     ham show() o frontend.js lam lop phong thu thu hai. Menu
-     chi mo khi bam nut ☰ goc tren phai (menu.toggle()).
-  6. Nut combo arcade (Hai chot 06/11): game thung chi co 4 nut
-     goc (Y/X/B/A) nen them 4 nut ket hop phia tren cum nut phai:
-     AB, XY, ABX, BXY. Ten combo DAT THEO TEN NUT CHINH (A/B/X/Y),
-     khong theo ten Neo Geo: nut X goc = Neo Geo C (input 1), nut
-     Y goc = Neo Geo D (input 9) — ban dau dat CD/ABC/BCD la sai
-     ten, Hai chi ra 06/11 nen doi thanh XY/ABX/BXY (id trong code
-     van giu cd/abc/bcd de khoi doi CSS mau). Mapping: A=0, B=8,
-     C=1, D=9. API goc chi cho 1 input_value/nut nen script them
-     truong moi "combo": [..] vao nut, va patch cho xu ly cham/nha
-     nut de gui/nha tat ca nut trong combo cung luc (khong autofire).
-     Mau chu: AB cam, XY tim, ABX hong, BXY xanh ngoc.
-  7. Chay lai lan 2 khong them trung (idempotent). Neu ban goc doi
-     ten ham / doi cau truc khien khong tim thay neo (anchor),
-     script thoat loi (exit 2) — workflow DUNG lai, khong mo PR
-     ghi de, Hai xem lai neo moi.
-"""
 import sys
 
-# Chi them nut thieu, chen ngay sau khi bo nut goc dung xong,
-# ngay truoc vong lap dich text cua nut. Nut goc giu nguyen 100%.
+
 APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem apply-emulatorjs-mods.py
         if ("psx" === this.ejs.getControlScheme()) {
             info.push(
@@ -103,7 +43,7 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
         }
 '''
 
-# Neo: vong lap dich text, nam ngay sau khi bo nut goc dung xong.
+
 LOCALIZE_ANCHOR = '''        for (let i = 0; i < info.length; i++) {
             if (info[i].text) {
                 info[i].text = this.localization(info[i].text);
@@ -113,11 +53,7 @@ LOCALIZE_ANCHOR = '''        for (let i = 0; i < info.length; i++) {
 AUTOFIRE_OLD = "if (this.ejs.isAutofireEnabled(0, value) && !isAnalog) {"
 AUTOFIRE_NEW = "if ((info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo"
 
-# Hien ky hieu nut tay cam that o man hinh Cai dat nut bam — CHI DE
-# HIEN THI, khong doi value2 hay getButtonLabel (xem loi 06/11 o
-# patch_gamepad). Neo la ham updateGamepadLabels() (cung class
-# EJS_Frontend voi man hinh Cai dat); 2 cho hien thi value2 trong
-# man hinh Cai dat doi sang goi helper nay.
+
 DISPLAY_LABEL_ANCHOR = '''    updateGamepadLabels() {
         for (let i = 0; i < this.gamepadLabels.length; i++) {
             this.gamepadLabels[i].innerHTML = ""
@@ -169,7 +105,7 @@ def main(path):
         print("LOI: khong tim thay setVirtualGamepad() — ban goc doi ten ham roi", file=sys.stderr)
         return 2
 
-    # --- 1+2. Chi them nut thieu (PS1 RL + NES Turbo), 1 cho duy nhat ---
+
     if "HAI: chi them nut thieu" in text:
         print("Nut them: da co roi, bo qua")
     else:
@@ -179,14 +115,7 @@ def main(path):
         text = text.replace(LOCALIZE_ANCHOR, APPEND_BLOCK + LOCALIZE_ANCHOR, 1)
         changed.append("PS1: da them L1/R1/L2/R2; NES: da them Turbo A / Turbo B")
 
-    # --- 4. KHONG patch show() nua — show() la duong DUY NHAT de mo
-    # thanh menu duoi tren PC: PC khong co nut ☰ (nut do chi tao khi
-    # may co man hinh cam ung), chi co di chuot xuong duoi / click
-    # moi goi show(). Patch show() thanh no-op lam PC mat het menu
-    # (loi Hai gap 06/11). Menu tu mo khi load game da duoc tri o
-    # goc: emulator.js xoa dong menu.open() trong startGame() — do
-    # moi la nguyen nhan that. Neu file dang co ban show() no-op cu
-    # thi tra ve ban goc; khong thi de yen. ---
+
     MENU_SHOW_OLD = '''        const show = () => {
             clearTimeout(timeout);
             timeout = setTimeout(hide, 3000);
@@ -200,7 +129,7 @@ def main(path):
         text = text.replace(MENU_SHOW_NEW, MENU_SHOW_OLD, 1)
         changed.append("Menu: da tra show() ve ban goc (PC mo menu bang chuot)")
 
-    # --- 3. Patch xu ly cham nut de TA/TB that su turbo ---
+
     if "info[i].autofire === true" in text:
         print("Turbo: xu ly cham nut da co autofire, bo qua")
     else:
@@ -210,9 +139,7 @@ def main(path):
         text = text.replace(AUTOFIRE_OLD, AUTOFIRE_NEW, 1)
         changed.append("Turbo: da patch xu ly cham nut (autofire:true)")
 
-    # --- 3b. Patch xu ly cham nut de nut combo (arcade) gui nhieu
-    # nut cung luc. Chay SAU buoc turbo vi anchor la dong da patch
-    # turbo o tren; dong nha nut thi lay tu ban goc. ---
+
     COMBO_DOWN_OLD = '''                        this.ejs.gameManager.simulateInput(0, value, downValue);
                         if ((info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo'''
     COMBO_DOWN_NEW = '''                        // HAI: nut combo — bam 1 nut ma gui nhieu nut cung luc (arcade AB/XY/ABX/BXY)
@@ -225,10 +152,8 @@ def main(path):
     COMBO_UP_NEW = '''                        window.setTimeout(() => {
                             (info[i].combo || [value]).forEach((v) => { this.ejs.stopAutofire(0, v); this.ejs.gameManager.simulateInput(0, v, 0); }); // HAI: nut combo
                         })'''
-    # Chu y: phai kiem tra dau hieu cua CHO XU LY (dong comment trong
-    # handler), khong kiem tra "HAI: nut combo" chung chung — vi khoi
-    # nut moi chen o tren cung co chu do trong comment, kiem tra chung
-    # se bo qua nham buoc nay (loi gap khi test 06/11).
+
+
     if "HAI: nut combo — bam 1 nut" in text:
         print("Nut combo: xu ly cham nut da co combo, bo qua")
     else:
@@ -239,10 +164,7 @@ def main(path):
         text = text.replace(COMBO_UP_OLD, COMBO_UP_NEW, 1)
         changed.append("Nut combo: da patch xu ly cham nut (arcade AB/XY/ABX/BXY)")
 
-    # --- 5. Hien ky hieu nut tay cam that o man hinh Cai dat nut bam
-    # (Sony ✕○□△ / Xbox A B X Y / Switch B A Y X) — CHI DE HIEN THI.
-    # Khong doi value2 hay getButtonLabel: nhan goc (BUTTON_2...)
-    # moi khop de nut bam chay (xem patch_gamepad). ---
+
     if "getGamepadDisplayLabel" in text:
         print("Ky hieu nut: da co hien thi ky hieu, bo qua")
     else:
@@ -297,11 +219,8 @@ GAMEPAD_LABEL_OLD = """    getButtonLabel(index) {
         }
         return this.buttonLabels[index];
     }"""
-# Ban getButtonLabel LOI cu: doi nhan thanh ky hieu (✕/A...) — nhan nay
-# duoc gamepadEvent() so khop truc tiep voi value2 mac dinh (BUTTON_2,
-# SELECT...) de nut bam chay. Doi sang ky hieu lam khong khop nut nao
-# nua: nut bam that liet het, chi co can/analog chay duoc vi di duong
-# truc khong qua nhan (loi Hai gap 06/11, ca tren dien thoai lan PC).
+
+
 GAMEPAD_LABEL_BROKEN = """    getButtonLabel(index, gamepadIndex) {
         if (index === null || index === undefined) {
             return null;
@@ -326,14 +245,12 @@ GAMEPAD_LABEL_BROKEN = """    getButtonLabel(index, gamepadIndex) {
 def patch_gamepad(path):
     text = open(path, encoding="utf-8").read()
     changed = []
-    # 1. Sua loi cu: tra getButtonLabel ve nhan goc (BUTTON_1...).
-    #    Ky hieu theo loai tay cam chi de HIEN THI o man hinh Cai dat
-    #    nut bam (getGamepadDisplayLabel trong frontend.js), khong
-    #    dung o day nua.
+
+
     if GAMEPAD_LABEL_BROKEN in text:
         text = text.replace(GAMEPAD_LABEL_BROKEN, GAMEPAD_LABEL_OLD, 1)
         changed.append("Tay cam: da tra getButtonLabel ve nhan goc (BUTTON_1...)")
-    # 2. Chen helper nhan loai tay cam (chi phuc vu hien thi ky hieu).
+
     if "detectGamepadType" in text:
         print("Tay cam: da co nhan loai tay cam, bo qua")
     else:
@@ -342,8 +259,8 @@ def patch_gamepad(path):
             return 2
         text = text.replace(GAMEPAD_LABEL_OLD, GAMEPAD_HELPER + "\n" + GAMEPAD_LABEL_OLD, 1)
         changed.append("Tay cam: da them nhan loai Sony/Xbox/Switch (chi de hien thi)")
-    # 3. Tra 2 dong dispatchEvent ve dang goc (1 tham so) — tham so
-    #    thu 2 chi can khi getButtonLabel doi ky hieu, gio khong can.
+
+
     if "this.getButtonLabel(buttonIndex, gamepad.index)" in text:
         text = text.replace(
             "this.dispatchEvent('buttondown', {index: buttonIndex, label: this.getButtonLabel(buttonIndex, gamepad.index), gamepadIndex: gamepad.index});",
@@ -362,11 +279,6 @@ def patch_gamepad(path):
     return 0
 
 
-# --- 4. Nut co mau trong code: chen vao cuoi emulator.css goc ---
-# Hai chot 06/11: mau la mau cua CHU, nen nut giu mac dinh cua
-# EmulatorJS (xam mo), cho giong nut tren tay cam that:
-#   A xanh la, B do, X xanh duong, Y vang (kieu tay Xbox).
-# TA/TB la ban turbo cua A/B nen cung mau voi A/B.
 BUTTON_COLOR_CSS = '''
 /* HAI: nut co mau v2 (chu co mau, nen mac dinh) — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_virtualGamepad_button.b_a, .ejs_virtualGamepad_button.b_ta { color: #4caf50 !important; }
@@ -376,8 +288,7 @@ BUTTON_COLOR_CSS = '''
 .ejs_virtualGamepad_button_down { filter: brightness(1.4); }
 '''
 
-# Mau chu cho nut combo arcade (AB/XY/ABX/BXY) — giong kieu nut
-# khach o trang online cua Hai.
+
 COMBO_COLOR_CSS = '''
 /* HAI: nut combo mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_virtualGamepad_button.b_ab { color: #ff9800 !important; }
@@ -386,19 +297,14 @@ COMBO_COLOR_CSS = '''
 .ejs_virtualGamepad_button.b_bcd { color: #26a69a !important; }
 '''
 
-# Mau chu cho 2 nut con lai cua tay Sega MD (A/B/X/Y da co mau
-# kieu Xbox roi, chi thieu C va Z — anh Hai gui 06:27).
+
 MD_COLOR_CSS = '''
 /* HAI: nut md mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_virtualGamepad_button.b_c { color: #ff9800 !important; }
 .ejs_virtualGamepad_button.b_z { color: #ab47bc !important; }
 '''
 
-# Thanh truot volume: ban goc to mau xanh bang currentColor +
-# bien --value, ma --value chi duoc JS gan khi doi volume — luc
-# moi load chua gan nen thanh truot toi thui, nut tron cung kho
-# thay (anh Hai gui 05:04). Chen mau xanh co dinh + mac dinh
-# --value 50% (JS van ghi de duoc qua inline style khi keo).
+
 VOLUME_CSS = '''
 /* HAI: volume hien ro — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_volume_parent input[type='range'] { --value: 50%; }
@@ -418,7 +324,7 @@ def patch_css(path):
     if "HAI: nut co mau v2" in text:
         print("Mau nut: da co roi, bo qua")
     else:
-        # Neu file con mau cu v1 (nen to mau) thi go bo truoc khi chen v2
+
         if "HAI: nut co mau" in text:
             import re
             out = re.sub(r"\n/\* HAI: nut co mau —.*?\n\.ejs_dpad_main \{ opacity: \.9; \}\n", "\n", out, flags=re.S)
@@ -448,9 +354,6 @@ def patch_css(path):
     return 0
 
 
-# --- 5b. Tat menu tu mo: xoa dong menu.open() trong emulator.js ---
-# Dong nay chay moi lan game bat dau (sau this.started = true),
-# mo menu duoi roi tu tat sau 3 giay — day moi la duong mo chinh.
 MENU_OPEN_OLD = "            this.frontend.menu.open();\n"
 MENU_OPEN_NEW = "            // HAI: tat tu mo menu khi load game — chi mo khi bam nut ☰\n"
 
