@@ -1,55 +1,14 @@
-# Sync EmulatorJS — TU DONG khi ben goc co thay doi
-# Dat file nay vao: .github/workflows/sync-emulatorjs.yml trong repo cua Hai
-#
-# TU DONG THE NAO — Hai hoi 05/11 ("nhu vay dau phai la tu dong"):
-# GitHub Actions KHONG co trigger tu repo khac sang, ben goc se khong
-# bao cho minh khi no doi. Cach tu dong duy nhat la: workflow tu chay
-# theo lich, KIEM TRA truoc xem ben goc co gi moi khong, co moi thi
-# moi dong bo + mo PR, khong co thi dung ngay, khong lam gi ca.
-#   - Lich: moi ngay 03:00 UTC (10:00 gio VN) — kiem tra 1 lan/ngay.
-#   - Kiem tra: so ma commit (SHA) cua data/ ben goc voi file
-#     .upstream-sha da luu trong repo. Khac nhau = co thay doi.
-#     Chi so version.json thoi la khong du, vi ben goc sua code ma
-#     chua doi so version thi van phai dong bo.
-#   - Bam tay van duoc: workflow_dispatch, chay ngay khong can doi lich.
-#
-# BO CUC PHANG — copy NGUYEN thu muc data/ cua goc ve thang goc repo:
-#   upstream/data/  ->  ./  (loader.js, emulator.css, version.json,
-#                            src/, src/vendor/, compression/,
-#                            localization/, cores/)
-# Khong copy: index.html goc, build.js, docs/, package.json, serve.py,
-# update.js — vi chung nam ngoai data/, khong nam trong thu muc copy.
-# Khong ghi de: index.html test, README.md, apply-emulatorjs-mods.py,
-# LICENSE cua Hai — vi data/ khong co may file do o goc.
-# Thu muc 'upstream' mau xanh tren GitHub la ban checkout tam cua repo
-# goc, no chi la con tro submodule rong, khong co file that — workflow
-# xoa no di truoc khi mo PR. Thu muc vendor/ cu cung duoc xoa.
-#
-# Sau khi sync xong, trang choi cua Hai chi can:
-#   EJS_pathtodata: "./" (neu trang nam cung repo) hoac duong dan
-#   toi goc repo nay (vd GitHub Pages cua repo emujs).
-#
-# Cach giu sua thang vao file goc (PS1 L/R + NES Turbo + tay cam):
-#   apply-emulatorjs-mods.py tim neo trong src/frontend.js va
-#   src/gamepad.js roi chen lai nut mod. Chay lai khong them trung.
-#   Tim khong thay neo -> workflow DUNG, khong mo PR ghi de.
 
 name: Sync EmulatorJS (chon loc)
 
 on:
-  # Tu dong chay ngay khi Hai up file script mod (hoac file yml nay) len
-  # main — khoi phai bam Run tay nua (Hai bao met 06/11). Workflow chi
-  # dong bo that khi buoc kiem tra thay mod thieu / ben goc co moi, nen
-  # up file khong lien quan se khong kich hoat. Khong so lap vo han:
-  # PR dong bo gop vao main khong doi 2 file nay, nen khong kich hoat
-  # lai chinh no.
   push:
     paths:
       - "apply-emulatorjs-mods.py"
       - ".github/workflows/sync-emulatorjs.yml"
   schedule:
-    - cron: "0 3 * * *"  # moi ngay 03:00 UTC = 10:00 gio VN, kiem tra co ban moi khong
-  workflow_dispatch:  # bam tay thi chay ngay, khong can doi lich
+    - cron: "0 3 * * *"
+  workflow_dispatch:
     inputs:
       force_sync:
         description: "Bat buoc dong bo lai du ben goc khong doi (dung khi doi script mod / mau nut)"
@@ -85,13 +44,6 @@ jobs:
           echo "UPSTREAM_SHA=$UPSTREAM_SHA" >> $GITHUB_ENV
           echo "Ban goc: $UPSTREAM_VERSION, commit: $UPSTREAM_SHA"
           echo "Ban da luu: $(cat .upstream-version 2>/dev/null || echo chua-co), commit: $(cat .upstream-sha 2>/dev/null || echo chua-co)"
-          # Dong bo khi 1 trong 3 dieu kien dung:
-          # 1. Ben goc co commit moi (so voi .upstream-sha da luu)
-          # 2. Hai bam Run va tick "Bat buoc dong bo lai"
-          # 3. Mod cua Hai chua co trong code hien tai (vd moi them mau
-          #    nut vao script mod ma ben goc thi chua doi gi) — truong
-          #    hop nay xay ra 05/11: chay lai van dung vi ben goc
-          #    khong doi, mau nut khong vao duoc.
           NEEDS_SYNC=false
           if [ "$UPSTREAM_SHA" != "$(cat .upstream-sha 2>/dev/null || echo '')" ]; then
             echo "Ly do: ben goc co thay doi."
@@ -101,16 +53,6 @@ jobs:
             echo "Ly do: Hai bat buoc dong bo lai."
             NEEDS_SYNC=true
           fi
-          # 3. Mod cua Hai chua co trong code hien tai: lay file GOC
-          #    SACH tu upstream (ban checkout o buoc truoc), chay
-          #    script len do, roi so voi file hien tai trong repo.
-          #    Khac nhau nghia la mod dang thieu HOAC script moi doi
-          #    ma code hien tai chua co (vd doi ten nut).
-          #    Cach cu (chay thu script len chinh file hien tai) SAI:
-          #    script chi chen them, khong sua lai khoi mod da co san,
-          #    nen chay lai khong doi gi — lan doi ten nut XY/ABX/BXY
-          #    06/11 no bao "khong can dong bo" du file py da doi,
-          #    chay xong bo qua het (loi gap 07:21, Hai phat hien).
           mkdir -p /tmp/modcheck/src
           cp upstream/data/src/frontend.js upstream/data/src/emulator.js upstream/data/src/gamepad.js /tmp/modcheck/src/ 2>/dev/null || true
           cp upstream/data/emulator.css /tmp/modcheck/ 2>/dev/null || true
@@ -128,12 +70,6 @@ jobs:
             echo "Ly do: mod cua Hai chua co trong code hien tai (file goc + script khac voi file hien tai)."
             NEEDS_SYNC=true
           fi
-          # 4. Thu muc cores/reports/ chua co trong repo: file bao cao
-          #    nay EmulatorJS dung de biet core da tai dung ban chua
-          #    (de cache, khoi tai lai moi lan mo game). Ben goc tren
-          #    GitHub khong co thu muc nay (chi co tren CDN) nen buoc
-          #    copy data/ khong mang theo duoc — thieu thi bao 404
-          #    "Core caching will be disabled" (loi Hai gap 06/11).
           if [ ! -d cores/reports ] || [ -z "$(ls -A cores/reports 2>/dev/null)" ]; then
             echo "Ly do: chua co cores/reports/ trong repo."
             NEEDS_SYNC=true
@@ -146,24 +82,13 @@ jobs:
       - name: Copy nguyen thu muc data/ ve goc repo
         if: env.NEEDS_SYNC == 'true'
         run: |
-          # Copy het data/ — gom loader.js, emulator.css, version.json,
-          # src/, src/vendor/, compression/, localization/, cores/.
-          # Ben goc them gi moi thi tu co theo, khoi liet ke tung file.
           cp -r upstream/data/. ./
-          # Ghi ban + commit goc de lan sau so sanh
           echo "$UPSTREAM_VERSION" > .upstream-version
           echo "$UPSTREAM_SHA" > .upstream-sha
-          # Xoa bo cuc cu + thu muc tam, khong de len PR:
-          # - vendor/ : bo cuc long nhau cua ban sync truoc
-          # - upstream/ : checkout tam, tren GitHub no hien thanh
-          #   thu muc xanh (submodule) rong, khong co file that
           rm -rf vendor upstream
           echo "Da copy xong, ban goc: $UPSTREAM_VERSION"
           ls -la
 
-      # Tai code goc moi ve xong, tu dong them lai nut mod.
-      # Script tim neo trong src/frontend.js, chen PS1 L/R + NES Turbo,
-      # chay lai khong them trung. Tim khong thay neo -> loi, dung.
       - name: Tu dong them lai nut PS1 + NES Turbo + ky hieu tay cam + mau nut + tat menu tu mo
         if: env.NEEDS_SYNC == 'true'
         run: |
@@ -175,14 +100,6 @@ jobs:
           node --check src/gamepad.js
           node --check src/emulator.js
 
-      # Tu host DAY DU core — Hai chot 05/11: lay het, khong phu thuoc CDN luc choi.
-      # Luc sync, workflow doc danh sach tren CDN roi tai het ve repo
-      # (05/11: 187 file, tong ~283MB — 46 core ban thuong + 46 legacy +
-      # 48 thread + 47 thread-legacy, gom ca ppsspp/dosbox_pure chi co ban
-      # thread; file lon nhat fbneo ~8MB, moi file deu <100MB nen GitHub
-      # cho luu). Sau do trang choi nap core tu repo cua Hai, khong goi CDN nua.
-      # Lay danh sach dong tu trang index cua CDN, co core moi la tu co, khong
-      # can sua lai workflow.
       - name: Tai day du core ve tu host (khong phu thuoc CDN)
         if: env.NEEDS_SYNC == 'true'
         run: |
@@ -195,12 +112,6 @@ jobs:
           done < /tmp/core-files.txt
           ls | wc -l
           du -sh .
-          # Tai them cores/reports/*.json (48 file nho): EmulatorJS
-          # dung de biet core da tai dung ban chua, de cache lai khoi
-          # tai lai core moi lan mo game. Thu muc nay chi co tren CDN,
-          # ben goc GitHub khong co nen buoc copy data/ khong mang
-          # theo duoc (thieu thi bao 404 "Core caching will be
-          # disabled", game van chay nhung tai lai core moi lan).
           mkdir -p reports
           cd reports
           curl -s "https://cdn.emulatorjs.org/stable/data/cores/reports/" | grep -o 'href="[^"]*\.json"' | sed 's/href="//;s/"//' | sort -u > /tmp/report-files.txt
@@ -228,11 +139,6 @@ jobs:
           branch: sync/emulatorjs-${{ env.UPSTREAM_VERSION }}
           commit-message: "Sync EmulatorJS ${{ env.UPSTREAM_VERSION }} (selective)"
 
-      # Tu dong GOP luon — Hai chot 05/11: khong can bam Merge tay nua.
-      # Chi chay toi day khi cac buoc truoc deu xong: mod nut da chen lai
-      # duoc (tim khong thay neo thi workflow da dung tu buoc mod roi),
-      # node --check da qua. Neu buoc nay loi thi PR van nam do, Hai
-      # gop tay nhu truoc, khong mat gi.
       - name: Tu dong gop PR vao main
         if: env.NEEDS_SYNC == 'true' && steps.cpr.outputs.pull-request-number != ''
         env:
