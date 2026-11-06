@@ -25,6 +25,7 @@
 </div>
 <script>
   function play() {
+    const file = document.getElementById('rom').files[0];
     window.EJS_player = '#game';
     window.EJS_core = document.getElementById('core').value;
     // Dua thang doi tuong File vao, KHONG boc qua URL.createObjectURL:
@@ -32,7 +33,15 @@
     // FBNeo nhan dien romset theo ten file (vd "64street.zip"). Boc
     // qua blob URL thi ten file thanh ma UUID, FBNeo bao "Romset is
     // unknown" voi MOI game thung (loi gap 06/11, da kiem chung).
-    window.EJS_gameUrl = document.getElementById('rom').files[0];
+    window.EJS_gameUrl = file;
+    window.EJS_gameName = file.name.replace(/\.[^.]+$/, '');
+    // BAT BUOC phai dat kem EJS_gameName (chuoi): neu khong, ham
+    // saveInBrowserSupported() trong EmulatorJS se goi
+    // gameUrl.startsWith("blob:") — ma gameUrl gio la doi tuong File
+    // khong co ham startsWith — nen toan bo game se dung o man hinh
+    // den + bao "That bai khoi dong game" (du tieng van chay, loi
+    // gap 06/11). Trang chinh cua Hai da dat EJS_gameName san nen
+    // khong bi; trang test quen dat nen moi dinh.
     window.EJS_pathtodata = './';
     window.EJS_startOnLoaded = true;
     const s = document.createElement('script');
