@@ -427,8 +427,8 @@ body.playing #playerWrap{display:block;}
       <div class="button-grid">
         <button class="pill-btn" id="exportConfigBtn" type="button">Xuất cấu hình</button>
         <button class="pill-btn" id="importConfigBtn" type="button">Nhập cấu hình</button>
-        <button class="pill-btn" id="exportSavesBtn" type="button">Xuất tất cả save</button>
-        <button class="pill-btn" id="importSavesBtn" type="button">Nhập save JSON</button>
+        <button class="pill-btn" id="exportSavesBtn" type="button">Xuất cài đặt từng hệ</button>
+        <button class="pill-btn" id="importSavesBtn" type="button">Nhập cài đặt từng hệ</button>
       </div>
     </section>
 
@@ -609,7 +609,6 @@ function detectCore(ext){
   if(has("sms")) return "segaMS";
   if(has("gg")) return "segaGG";
   if(has("32x")) return "sega32x";
-  if(has("cue")) return "segaCD";
   if(has("sat","ssf")) return "segaSaturn";
   if(has("adf","adz","dms","ipf")) return "amiga";
   if(has("int","itv")) return "intv";
@@ -640,7 +639,9 @@ const ICON_HUE = {nes:4,snes:268,n64:210,gb:150,gba:205,nds:190,"3ds":0,vb:0,
   lynx:330,jaguar:300,coleco:45,pce:180,pcfx:235,ngp:55,ws:90,"3do":260,
   c64:40,c128:42,vic20:44,plus4:46,pet:48,amiga:140,intv:265,doom:10,
   zxspectrum:150,zx81:155,cpc:170};
+const _iconCache = {};
 function iconSVG(core){
+  if(_iconCache[core]) return _iconCache[core];
   const kind = ICON_KIND[core] || "pad";
   const hue = ICON_HUE[core] !== undefined ? ICON_HUE[core] : 217;
   const bg = `hsl(${hue},72%,52%)`, dark = `hsl(${hue},60%,34%)`, lite = "#ffffff";
@@ -676,7 +677,7 @@ function iconSVG(core){
       <rect x="6" y="6" width="12" height="7" fill="${bg}" opacity=".3"/>
       <rect x="10.5" y="15" width="3" height="2.4" fill="${dark}"/><rect x="7" y="17.6" width="10" height="1.6" rx=".8" fill="${dark}"/>`;
   }
-  return `<svg viewBox="0 0 24 24"><rect width="24" height="24" fill="${bg}"/>${inner}</svg>`;
+  return _iconCache[core] = `<svg viewBox="0 0 24 24"><rect width="24" height="24" fill="${bg}"/>${inner}</svg>`;
 }
 
 /* ---------- cài đặt ---------- */
@@ -697,10 +698,7 @@ function loadAppSettings(){
 const appSettings = loadAppSettings();
 function saveAppSettings(){
   try{ localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(appSettings)); }catch(e){}
-  window.EJS_cacheConfig = window.EJS_cacheConfig || {};
-  window.EJS_cacheConfig.enabled = appSettings.cacheEnabled;
 }
-window.EJS_cacheConfig = {enabled:appSettings.cacheEnabled, cacheMaxSizeMB:4096, cacheMaxAgeMins:7200};
 
 /* ---------- IndexedDB ---------- */
 const DB_NAME = "EmulatorJS-Games", STORE_NAME = "games";
@@ -736,7 +734,7 @@ const dbGetGame = id => txDo("readonly", st=>{
 });
 const dbDeleteGame = id => txDo("readwrite", st=>{ st.delete(id); return {}; });
 const dbAllGames = () => txDo("readonly", st=>{
-  const box = {}; const r = st.getAll(); r.onsuccess = ()=>{ box.value = r.result||[]; }; return box;
+  const box = {}; const r = st.getAll(); r.onsuccess = ()=>{ box.value = (r.result||[]).map(g=>{ const m = Object.assign({}, g); delete m.data; return m; }); }; return box;
 });
 
 /* ---------- tiện ích ---------- */
@@ -748,9 +746,6 @@ function fmtSize(s){
   if(s>=1048576) return (s/1048576).toFixed(2)+" MB";
   if(s>=1024) return (s/1024).toFixed(2)+" KB";
   return s+" B";
-}
-function escHtml(v){
-  return String(v).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 }
 function extOf(fn){ const m = String(fn||"").toLowerCase().match(/\.([a-z0-9]+)$/); return m?m[1]:""; }
 function baseName(fn){ return String(fn||"").replace(/\.[^.]+$/,""); }
@@ -829,7 +824,7 @@ function ensureSelectValue(select, value, label){
 function bindSelectPicker(select, btn){
   syncSelectTrigger(select, btn);
   btn.addEventListener("click", ()=>{
-    const opts = Array.from(select.options).map(o=>({label:o.textContent, value:o.value}));
+    const opts = Array.from(select.options).filter(o=>!o.hidden).map(o=>({label:o.textContent, value:o.value}));
     openCorePicker(btn, select.value, opts, v=>{
       select.value = v; syncSelectTrigger(select, btn); saveSettingsFromControls();
     });
@@ -844,7 +839,7 @@ function getFilteredGames(){
   const q = $("searchInput").value.trim().toLowerCase();
   if(!q) return installedGames;
   return installedGames.filter(g =>
-    g.name.toLowerCase().includes(q) || (g.fileName||"").toLowerCase().includes(q));
+    (g.name||"").toLowerCase().includes(q) || (g.fileName||"").toLowerCase().includes(q));
 }
 async function refreshGames(){
   try{
@@ -869,6 +864,7 @@ function renderGames(){
       : "Không tìm thấy game nào khớp.";
   }else empty.hidden = true;
 
+  const frag = document.createDocumentFragment();
   list.forEach(g=>{
     const row = document.createElement("button");
     row.type = "button"; row.className = "game-row"; row.dataset.id = g.id;
@@ -878,14 +874,14 @@ function renderGames(){
       `<span class="game-info"><span class="game-name"></span>`+
       `<span class="game-meta"></span></span>`+
       `<span class="row-more">›</span>`;
-    row.querySelector(".game-name").textContent = g.name;
+    row.querySelector(".game-name").textContent = g.name||"";
     row.querySelector(".game-meta").textContent = `${getCoreLabel(g.core)} · ${fmtSize(g.size)}`;
     // bấm = chạy ngay (mobile) / chọn (desktop); nhấn giữ = menu
     let lpTimer = null, longPressed = false;
     row.addEventListener("pointerdown", e=>{
       if(e.button!==undefined && e.button!==0) return;
       longPressed = false; clearTimeout(lpTimer);
-      lpTimer = setTimeout(()=>{ longPressed = true; openGameSheet(g); }, 500);
+      lpTimer = setTimeout(()=>{ if(!row.isConnected) return; longPressed = true; openGameSheet(g); }, 500);
     });
     ["pointerup","pointerleave","pointercancel"].forEach(ev=>
       row.addEventListener(ev, ()=>clearTimeout(lpTimer)));
@@ -897,8 +893,9 @@ function renderGames(){
       if(isDesktop()) selectGame(g);
       else launchInstalledGame(g.id);
     });
-    wrap.appendChild(row);
+    frag.appendChild(row);
   });
+  wrap.appendChild(frag);
 }
 function updateStats(){
   $("gameCount").textContent = installedGames.length;
@@ -1070,9 +1067,9 @@ async function removeInstalledGame(g){
 /* xóa dữ liệu save của 1 game trong kho của EmulatorJS */
 async function clearGameData(g){
   if(!confirm(`Xóa dữ liệu save của "${g.name}"?`)) return;
-  const base = baseName(g.fileName || g.name);
-  const keys = [base+".state"];
-  for(let i=1;i<=9;i++) keys.push(`${base}.${i}.state`);
+  const base = baseName(g.fileName || g.name).replace(/[#<$+%>!`&*'|{}\\/?"=@:^\r\n]/g,"");
+  const keys = [base+".state", base+".srm"];
+  for(let i=1;i<=9;i++){ keys.push(`${base}.${i}.state`); keys.push(`${base}.${i}.srm`); }
   let removed = 0;
   for(const dbName of ["EmulatorJS-states","EmulatorJS"]){
     removed += await new Promise(resolve=>{
@@ -1109,23 +1106,23 @@ $("deleteFilteredBtn").onclick = async ()=>{
 };
 
 /* ---------- trình chơi game ---------- */
-let playerCleanup = null, currentGameName = "", pendingGameFile = null;
+let playerCleanup = null, currentGameName = "", pendingGameFile = null, loadTimer = null;
 function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
   const opts = {"save-state-location": appSettings.saveLocation, "save-state-slot": appSettings.saveSlot};
-  const shaderReapply = `setTimeout(function(){ try{ var em=window.EJS_emulator; if(!em||!em.enableShader) return; var sh=null; try{ sh=em.preGetSetting?em.preGetSetting("shader"):null; }catch(e){} if(!sh) sh=${JSON.stringify(appSettings.shader||"")}; if(sh) em.enableShader(sh); }catch(e){} },500);`;
+  const shaderReapply = `setTimeout(function(){ try{ var em=window.EJS_emulator; if(!em||!em.enableShader) return; var sh=null; try{ sh=em.preGetSetting?em.preGetSetting("shader"):null; }catch(e){} if(!sh||sh==="disabled") sh=${JSON.stringify(appSettings.shader||"")}; if(sh) em.enableShader(sh); }catch(e){} },500);`;
   const useFile = !blobUrl || blobUrl.indexOf("blob:") === 0;
   const lines = [
     `EJS_player = '#game';`,
     `EJS_gameName = ${JSON.stringify(game.name)};`,
-    `EJS_gameFileName = ${JSON.stringify(safeFileName(game.fileName||game.name))};`,
     useFile ? `` : `EJS_gameUrl = ${JSON.stringify(blobUrl)};`,
     `EJS_core = ${JSON.stringify(runtimeCore)};`,
     CONTROL_SCHEMES.has(game.core) ? `EJS_controlScheme = ${JSON.stringify(game.core)};` : ``,
+    `EJS_cacheConfig = ${JSON.stringify({enabled: appSettings.cacheEnabled, cacheMaxSizeMB: 4096, cacheMaxAgeMins: 7200})};`,
     `EJS_pathtodata = 'https://longhai.github.io/emujs/';`,
     `EJS_startOnLoaded = true;`,
     `EJS_fullscreenOnLoaded = ${appSettings.fullscreenOnLoad ? "true":"false"};`,
     `EJS_threads = ${(appSettings.threads || THREAD_CORES.has(runtimeCore) || THREAD_CORES.has(game.core)) ? "true":"false"};`,
-    `EJS_volume = ${Number(appSettings.volume)};`,
+    `EJS_volume = ${Number(appSettings.volume)||0.5};`,
     `EJS_videoRotation = ${parseInt(appSettings.videoRotation,10)||0};`,
     `EJS_softLoad = ${parseInt(appSettings.softLoad,10)||0};`,
     `EJS_disableAutoUnload = ${appSettings.disableAutoUnload ? "true":"false"};`,
@@ -1134,16 +1131,16 @@ function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
     `EJS_alignStartButton = 'center';`,
     `EJS_defaultOptions = ${JSON.stringify(opts)};`,
     biosUrl ? `EJS_biosUrl = ${JSON.stringify(biosUrl)};` : ``,
-    `EJS_onGameStart = function(){ try{ parent.postMessage({ejs:'started'}, '*'); }catch(e){} ${shaderReapply} };`,
-    `EJS_onExit = function(){ try{ parent.postMessage({ejs:'exit'}, '*'); }catch(e){} };`,
-    useFile ? `(function(){var started=false;window.addEventListener("message",function(e){if(!e.data||e.data.ejs!=="gamefile"||!e.data.file||started)return;started=true;window.EJS_gameUrl=e.data.file;var s=document.createElement("script");s.src="https://longhai.github.io/emujs/loader.js";document.body.appendChild(s);});try{parent.postMessage({ejs:"player-ready"},"*");}catch(e){}})();` : ``,
+    `EJS_onGameStart = function(){ try{ parent.postMessage({ejs:'started'}, location.origin); }catch(e){} ${shaderReapply} };`,
+    `EJS_onExit = function(){ try{ parent.postMessage({ejs:'exit'}, location.origin); }catch(e){} };`,
+    useFile ? `(function(){var started=false;window.addEventListener("message",function(e){if(!e.data||e.origin!==location.origin||e.data.ejs!=="gamefile"||!e.data.file||started)return;started=true;window.EJS_gameUrl=e.data.file;var s=document.createElement("script");s.src="https://longhai.github.io/emujs/loader.js";document.body.appendChild(s);});try{parent.postMessage({ejs:"player-ready"},location.origin);}catch(e){}})();` : ``,
     /* Vá stable (1/2) — QUAN TRỌNG NHẤT: loader.js của stable KHÔNG hề đăng
        ký EJS_onExit cho emulator (nightly có đăng ký ["exit", EJS_onExit]),
        nên khi game phát sự kiện exit thì không ai nhận, trang cha không nhận
        được postMessage và không dọn iframe — bấm thoát xong kẹt trong game.
        Đoạn dưới tự đăng ký lại ngay khi EJS_emulator xuất hiện (kiểm tra mỗi
        200ms, tối đa 2 phút). */
-    `(function(){var n=0;var t=setInterval(function(){n++;if(window.EJS_emulator&&window.EJS_emulator.on){clearInterval(t);window.EJS_emulator.on('exit',function(){try{parent.postMessage({ejs:'exit'},'*');}catch(e){}});}else if(n>600)clearInterval(t);},200);})();`,
+    `(function(){var n=0;var t=setInterval(function(){n++;if(window.EJS_emulator&&window.EJS_emulator.on){clearInterval(t);window.EJS_emulator.on('exit',function(){try{parent.postMessage({ejs:'exit'},location.origin);}catch(e){}});}else if(n>600)clearInterval(t);},200);})();`,
     /* Vá stable (2/2): stable bỏ qua EJS_askBeforeExit, bấm thoát là luôn
        hiện hộp thoại "Are you sure you want to exit?" (nightly thì tôn trọng
        biến này). Khi người dùng TẮT "Xác nhận trước khi thoát" thì chèn đoạn
@@ -1153,9 +1150,9 @@ function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
        stable hiện bình thường để người dùng tự bấm (và nhờ vá 1/2, bấm Exit
        trong hộp thoại cũng về được trang chính). */
     appSettings.askBeforeExit ? `` :
-      `(function(){var done=false;function autoExit(){if(done)return;var hs=document.querySelectorAll('h2');for(var i=0;i<hs.length;i++){if(hs[i].textContent.trim()!=='Are you sure you want to exit?')continue;var box=hs[i].parentElement;if(box)box=box.parentElement;if(!box)continue;var btns=box.querySelectorAll('footer button');if(btns.length){done=true;btns[0].click();return;}}}new MutationObserver(autoExit).observe(document.documentElement,{childList:true,subtree:true});})();`,
+      `(function(){var done=false;var mo=null;function autoExit(){if(done)return;var hs=document.querySelectorAll('h2.ejs_cheat_heading');for(var i=0;i<hs.length;i++){var box=hs[i].parentElement;if(box)box=box.parentElement;if(!box)continue;var btns=box.querySelectorAll('footer button.ejs_popup_submit');if(btns.length){done=true;if(mo)mo.disconnect();btns[0].click();return;}}}mo=new MutationObserver(autoExit);mo.observe(document.documentElement,{childList:true,subtree:true});})();`,
     appSettings.saveLocation==="download"
-      ? `EJS_onSaveState = function(d){ try{ var b=(d instanceof Blob)?d:new Blob([d]); var r=new FileReader(); r.onload=function(){ parent.postMessage({ejs:'savestate', buf:r.result}, '*'); }; r.readAsArrayBuffer(b); }catch(e){} };`
+      ? `EJS_onSaveState = function(d){ try{ var b=(d instanceof Blob)?d:new Blob([d]); var r=new FileReader(); r.onload=function(){ parent.postMessage({ejs:'savestate', buf:r.result}, location.origin); }; r.readAsArrayBuffer(b); }catch(e){} };`
       : ``
   ].join("\n");
   return `<!DOCTYPE html><html><head><meta charset="utf-8">`+
@@ -1165,8 +1162,11 @@ function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
     (useFile ? `` : `<script src="https://longhai.github.io/emujs/loader.js"><\/script>`) + `</body></html>`;
 }
 async function launchInstalledGame(id, overrideGame){
-  const game = overrideGame || await dbGetGame(id);
-  if(!game){ toast("Không tìm thấy file game"); return; }
+  if(appSettings.fullscreenOnLoad && !document.fullscreenElement){
+    try{ const p = document.documentElement.requestFullscreen(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
+  }
+  const game = overrideGame || await dbGetGame(id).catch(e=>{ toast("Đọc game thất bại: " + e.message); return null; });
+  if(!game){ if(!overrideGame) toast("Không tìm thấy file game"); return; }
   currentGameName = game.name;
   const runtimeCore = getRuntimeCore(game.core);
   const useThreads = appSettings.threads || THREAD_CORES.has(runtimeCore) || THREAD_CORES.has(game.core);
@@ -1195,6 +1195,8 @@ async function launchInstalledGame(id, overrideGame){
   disp.appendChild(fr);
   $("loading").style.display = "flex";
   $("loadingTxt").textContent = "Đang tải game...";
+  clearTimeout(loadTimer);
+  loadTimer = setTimeout(()=>{ $("loading").style.display = "none"; exitPlayer(); toast("Không tải được game, thử lại sau"); }, 30000);
   document.body.classList.add("playing");
   playerCleanup = ()=>{
     fr.remove();
@@ -1203,11 +1205,11 @@ async function launchInstalledGame(id, overrideGame){
   };
 }
 window.addEventListener("message", e=>{
-  if(!e.data) return;
+  if(!e.data || e.origin !== location.origin) return;
   if(e.data.ejs==="player-ready"){
-    if(pendingGameFile && e.source) e.source.postMessage({ejs:"gamefile", file:pendingGameFile}, "*");
+    if(pendingGameFile && e.source) e.source.postMessage({ejs:"gamefile", file:pendingGameFile}, location.origin);
   }
-  else if(e.data.ejs==="started") $("loading").style.display = "none";
+  else if(e.data.ejs==="started"){ clearTimeout(loadTimer); $("loading").style.display = "none"; }
   else if(e.data.ejs==="exit") exitPlayer();
   else if(e.data.ejs==="savestate" && e.data.buf){
     downloadBlob(new Blob([e.data.buf]), (currentGameName||"game")+".state");
@@ -1215,10 +1217,12 @@ window.addEventListener("message", e=>{
   }
 });
 function exitPlayer(){
+  clearTimeout(loadTimer);
   if(playerCleanup) playerCleanup();
   document.body.classList.remove("playing");
   $("display").innerHTML = "";
   $("loading").style.display = "none";
+  try{ if(document.fullscreenElement){ const p = document.exitFullscreen(); if(p && p.catch) p.catch(()=>{}); } }catch(e){}
 }
 
 /* ---------- chuyển tab ---------- */
@@ -1243,7 +1247,11 @@ $("desktopRail").addEventListener("click", e=>{
   const b = e.target.closest("[data-page]");
   if(b) switchPage(b.dataset.page);
 });
-$("searchInput").addEventListener("input", renderGames);
+let _searchTimer = null;
+$("searchInput").addEventListener("input", ()=>{
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(renderGames, 150);
+});
 
 /* ---------- cài đặt: bind ---------- */
 function applySettingsToControls(){
@@ -1382,7 +1390,7 @@ $("exportSavesBtn").onclick = ()=>{
     if(k && k.startsWith("ejs-") && k!=="ejs-settings" && k.endsWith("-settings"))
       saves[k] = localStorage.getItem(k);
   }
-  if(!Object.keys(saves).length){ toast("Chưa có save nào để xuất"); return; }
+  if(!Object.keys(saves).length){ toast("Chưa có cài đặt nào để xuất"); return; }
   downloadBlob(new Blob([JSON.stringify(saves,null,2)],{type:"application/json"}),
     "nes-launcher-saves-"+new Date().toISOString().slice(0,10)+".json");
   toast(`Đã xuất ${Object.keys(saves).length} save`);
@@ -1411,7 +1419,7 @@ $("importSavesBtn").onclick = ()=>{
 
 /* ---------- khởi động ---------- */
 (function init(){
-  try{ if(!localStorage.getItem("ejs-cache-cleared-v1")){ indexedDB.deleteDatabase("EmulatorJS-Cache"); localStorage.setItem("ejs-cache-cleared-v1","1"); } }catch(e){}
+  try{ if(!localStorage.getItem("ejs-cache-cleared-v1")){ const delReq = indexedDB.deleteDatabase("EmulatorJS-Cache"); delReq.onsuccess = ()=>localStorage.setItem("ejs-cache-cleared-v1","1"); delReq.onerror = ()=>{}; } }catch(e){}
   // ?debug=1 ?threads=1 ?rom=...
   try{
     const q = new URLSearchParams(location.search);
@@ -1438,14 +1446,16 @@ $("importSavesBtn").onclick = ()=>{
     }
   };
   window.addEventListener("resize", relayout);
-  refreshGames().then(()=>{
+  refreshGames().then(async ()=>{
     if(romParam){
-      const fileName = String(romParam).split("/").pop();
-      const core = detectCore(extOf(fileName)) || (appSettings.installCore!=="auto" ? appSettings.installCore : "");
+      const cleanParam = String(romParam).split(/[?#]/)[0];
+      const fileName = cleanParam.split("/").pop();
+      let core = detectCore(extOf(fileName)) || (appSettings.installCore!=="auto" ? appSettings.installCore : "");
+      if(!core && isCompressed(extOf(fileName))) core = await showCoreDialog(fileName);
       if(!core){ toast("Không nhận diện được hệ máy của ROM"); return; }
       launchInstalledGame("__url__", {
         name: baseName(fileName), fileName: safeFileName(fileName),
-        core, url: "roms/"+romParam, size: 0, data: null
+        core, url: "roms/"+cleanParam, size: 0, data: null
       });
     }
   });
