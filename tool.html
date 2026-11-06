@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FBNeo Cheat -&gt; EmulatorJS (arcade.json)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 0; background: #121212; color: #eee; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 20px; margin: 4px 0 2px; }
+  .sub { color: #aaa; font-size: 13px; margin: 0 0 14px; }
+  .card { background: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  button { background: #1e88e5; color: #fff; border: 0; border-radius: 8px; padding: 10px 14px; font-size: 15px; cursor: pointer; }
+  button.secondary { background: #333; }
+  button:disabled { opacity: .45; cursor: default; }
+  .drop { border: 2px dashed #555; border-radius: 12px; padding: 22px 14px; text-align: center; color: #bbb; font-size: 14px; margin-top: 10px; }
+  .drop.over { border-color: #1e88e5; color: #fff; background: #1e88e522; }
+  input[type=file] { display: none; }
+  #log { white-space: pre-wrap; word-break: break-word; background: #111; border: 1px solid #333; border-radius: 8px; padding: 10px; font-family: Consolas, monospace; font-size: 12.5px; min-height: 140px; max-height: 320px; overflow: auto; }
+  #preview { white-space: pre-wrap; word-break: break-word; background: #111; border: 1px solid #333; border-radius: 8px; padding: 10px; font-family: Consolas, monospace; font-size: 12px; max-height: 320px; overflow: auto; }
+  .stat { color: #9ccc65; font-weight: bold; }
+  .hint { color: #aaa; font-size: 13px; line-height: 1.5; }
+  .hint code { color: #ffcc80; }
+  label.filebtn { display: inline-block; background: #333; color: #fff; border-radius: 8px; padding: 10px 14px; font-size: 15px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>FBNeo Cheat -&gt; EmulatorJS</h1>
+  <p class="sub">Chuy&#7875;n file cheat FBNeo (.ini / .cht / .dat / .xml) th&agrave;nh <b>arcade.json</b> &#273;&#250;ng chu&#7849;n EmulatorJS.</p>
+
+  <div class="card">
+    <div class="row">
+      <label class="filebtn" for="pickFiles">Ch&#7885;n file cheat...</label>
+      <input type="file" id="pickFiles" multiple accept=".ini,.cht,.dat,.xml">
+      <label class="filebtn" for="pickDir">Ch&#7885;n th&#432; m&#7909;c...</label>
+      <input type="file" id="pickDir" webkitdirectory>
+      <button id="btnConvert">Chuy&#7875;n &#273;&#7893;i</button>
+      <button id="btnSave" class="secondary" disabled>T&#7843;i arcade.json</button>
+    </div>
+    <div class="drop" id="drop">Ho&#7863;c k&eacute;o th&#7843; file cheat v&agrave;o &#273;&acirc;y</div>
+    <p class="hint">H&#7895; tr&#7907;: <code>.ini</code> (FBNeo g&#7889;c, 1 game 1 file), <code>.cht</code> (RetroArch), <code>cheat.dat</code> (MAME), <code>.xml</code> (MAME XML). M&atilde; cheat ra d&#7841;ng <code>&#272;&#7882;A_CH&#7882;=GI&Aacute;_TR&#7882;</code> (hex), nhi&#7873;u ch&#7895; ghi n&#7889;i b&#7857;ng d&#7845;u <code>+</code>, vd <code>107156=75+107157=30</code>.</p>
+  </div>
+
+  <div class="card">
+    <div class="row"><b>K&#7871;t qu&#7843;:</b>&nbsp;<span class="stat" id="stat">Ch&#432;a chuy&#7875;n &#273;&#7893;i</span></div>
+    <div id="log" style="margin-top:10px">1. Ch&#7885;n file ho&#7863;c th&#432; m&#7909;c cheat (ho&#7863;c k&eacute;o th&#7843; v&agrave;o khung tr&ecirc;n).
+2. B&#7845;m "Chuy&#7875;n &#273;&#7893;i".
+3. B&#7845;m "T&#7843;i arcade.json" r&#7891;i up file &#273;&oacute; l&ecirc;n th&#432; m&#7909;c cheats/ tr&ecirc;n kho (c&ugrave;ng ch&#7895; v&#7899;i EJS_cheatPath).</div>
+  </div>
+
+  <div class="card">
+    <b>Xem tr&#432;&#7899;c arcade.json:</b>
+    <pre id="preview" style="margin-top:10px">(ch&#432;a c&oacute; d&#7919; li&#7879;u)</pre>
+  </div>
+</div>
+
+<script>
+"use strict";
+let pickedFiles = [];
+let result = {};
+
+const $ = id => document.getElementById(id);
+const logEl = $("log"), previewEl = $("preview"), statEl = $("stat");
+
+function say(msg) {
+  logEl.textContent += (logEl.textContent ? "\n" : "") + msg;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function hexnum(s) {
+  s = String(s).trim();
+  return s.toLowerCase().startsWith("0x") ? s.slice(2) : s;
+}
+function iniCode(options) {
+  let enabled = null;
+  for (const o of options) {
+    if (o.idx === 0) continue;
+    if (o.label.toLowerCase().startsWith("enabled") || o.idx === 1) { enabled = o.rest; break; }
+  }
+  if (enabled === null && options.length) enabled = options[options.length - 1].rest;
+  if (!enabled) return "";
+  const parts = enabled.replace(/^,/, "").split(",").map(p => p.trim()).filter(p => p !== "");
+  const writes = [];
+  for (let i = 0; i + 2 < parts.length; i += 3) {
+    const addr = hexnum(parts[i + 1]), val = hexnum(parts[i + 2]);
+    if (/^[0-9a-fA-F]+$/.test(addr) && /^[0-9a-fA-F]+$/.test(val)) {
+      writes.push(addr.toUpperCase() + "=" + val.toUpperCase());
+    }
+  }
+  return writes.join("+");
+}
+function parseIni(text) {
+  const out = [];
+  let curDesc = null, curOptions = [];
+  for (let raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith(";") || line.startsWith("#")) continue;
+    let m = line.match(/^cheat\s+"(.*)"\s*$/i);
+    if (m) {
+      if (curDesc !== null && curOptions.length) {
+        const code = iniCode(curOptions);
+        if (code) out.push({ desc: curDesc, code });
+      }
+      curDesc = m[1]; curOptions = []; continue;
+    }
+    if (/^default/i.test(line)) continue;
+    m = line.match(/^(\d+)\s+"([^"]*)"(.*)$/);
+    if (m && curDesc !== null) {
+      curOptions.push({ idx: parseInt(m[1], 10), label: m[2], rest: m[3].trim() });
+    }
+  }
+  if (curDesc !== null && curOptions.length) {
+    const code = iniCode(curOptions);
+    if (code) out.push({ desc: curDesc, code });
+  }
+  return out;
+}
+function parseCht(text) {
+  const descs = {}, codes = {};
+  for (let raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    let m = line.match(/^cheat(\d+)_desc\s*=\s*"(.*)"\s*$/);
+    if (m) { descs[+m[1]] = m[2]; continue; }
+    m = line.match(/^cheat(\d+)_code\s*=\s*"(.*)"\s*$/);
+    if (m) { codes[+m[1]] = m[2]; continue; }
+    m = line.match(/^cheat(\d+)_desc\s*=\s*(.+)$/);
+    if (m) { descs[+m[1]] = m[2].trim().replace(/^"|"$/g, ""); continue; }
+    m = line.match(/^cheat(\d+)_code\s*=\s*(.+)$/);
+    if (m) { codes[+m[1]] = m[2].trim().replace(/^"|"$/g, ""); }
+  }
+  const out = [];
+  for (const idx of [...new Set([...Object.keys(descs), ...Object.keys(codes)])].map(Number).sort((a, b) => a - b)) {
+    const code = (codes[idx] || "").trim();
+    const desc = (descs[idx] || ("Cheat " + (idx + 1))).trim();
+    if (code) out.push({ desc, code });
+  }
+  return out;
+}
+function parseDat(text) {
+  const games = {};
+  for (let raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith(";") || line.startsWith("#")) continue;
+    const parts = line.split(":");
+    if (parts.length < 6) continue;
+    const game = parts[0].trim();
+    const addr = parts[2].trim(), val = parts[3].trim();
+    let desc = parts.slice(5).join(":").trim().replace(/\s*\(\d+\/\d+\)\s*$/, "");
+    if (!/^[0-9a-fA-F]+$/.test(addr) || !/^[0-9a-fA-F]+$/.test(val)) continue;
+    const code = addr.toUpperCase() + "=" + val.toUpperCase();
+    const bucket = (games[game] = games[game] || {});
+    if (desc in bucket) {
+      if (!bucket[desc].includes(code)) bucket[desc] += "+" + code;
+    } else bucket[desc] = code;
+  }
+  const out = {};
+  for (const g of Object.keys(games)) {
+    out[g] = Object.entries(games[g]).map(([d, c]) => ({ desc: d, code: c }));
+  }
+  return out;
+}
+function parseXml(text) {
+  const out = [];
+  let doc;
+  try { doc = new DOMParser().parseFromString(text, "text/xml"); }
+  catch (e) { return out; }
+  if (doc.querySelector("parsererror")) return out;
+  for (const cheat of doc.querySelectorAll("cheat")) {
+    const desc = (cheat.getAttribute("desc") || "").trim();
+    if (!desc) continue;
+    const writes = [];
+    for (const action of cheat.querySelectorAll("action")) {
+      const a = (action.textContent || "").trim();
+      const m = a.match(/@([0-9A-Fa-f]+)\s*=\s*([0-9A-Fa-f]+)/);
+      if (m) writes.push(m[1].toUpperCase() + "=" + m[2].toUpperCase());
+    }
+    if (writes.length) out.push({ desc, code: writes.join("+") });
+  }
+  return out;
+}
+function parseOne(name, text) {
+  const ext = name.split(".").pop().toLowerCase();
+  const game = name.replace(/\.[^.]+$/, "");
+  if (ext === "ini") return { [game]: parseIni(text) };
+  if (ext === "cht") return { [game]: parseCht(text) };
+  if (ext === "dat") return parseDat(text);
+  if (ext === "xml") return { [game]: parseXml(text) };
+  if (/cheat0_(desc|code)/.test(text)) return { [game]: parseCht(text) };
+  if (/^\w+:\d+:[0-9A-Fa-f]+:[0-9A-Fa-f]+:/m.test(text)) return parseDat(text);
+  if (/cheat\s+"/i.test(text)) return { [game]: parseIni(text) };
+  return {};
+}
+function readFile(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(r.error);
+    r.readAsText(file);
+  });
+}
+function setFiles(files) {
+  pickedFiles = [...files].filter(f => /\.(ini|cht|dat|xml)$/i.test(f.name));
+  say("Da chon " + pickedFiles.length + " file cheat" + (files.length - pickedFiles.length ? (" (bo qua " + (files.length - pickedFiles.length) + " file khong phai cheat)") : "") + ".");
+}
+$("pickFiles").addEventListener("change", e => setFiles(e.target.files));
+$("pickDir").addEventListener("change", e => setFiles(e.target.files));
+const drop = $("drop");
+["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => setFiles(e.dataTransfer.files));
+
+$("btnConvert").addEventListener("click", async () => {
+  if (!pickedFiles.length) { alert("Chon file hoac thu muc cheat truoc."); return; }
+  result = {};
+  let nCheat = 0;
+  say("Dang chuyen doi " + pickedFiles.length + " file...");
+  for (const f of pickedFiles) {
+    try {
+      const text = await readFile(f);
+      const got = parseOne(f.name, text);
+      for (const [game, lst] of Object.entries(got)) {
+        if (!lst || !lst.length) continue;
+        if (result[game]) {
+          const have = new Set(result[game].map(c => c.desc));
+          for (const c of lst) if (!have.has(c.desc)) result[game].push(c);
+        } else result[game] = [...lst];
+        nCheat += lst.length;
+      }
+    } catch (e) { say("LOI " + f.name + ": " + e.message); }
+  }
+  const nGame = Object.keys(result).length;
+  statEl.textContent = nGame + " game, " + nCheat + " cheat";
+  say("Xong: " + nGame + " game, " + nCheat + " cheat.");
+  for (const g of Object.keys(result).sort().slice(0, 20)) say("  " + g + ": " + result[g].length + " cheat");
+  if (nGame > 20) say("  ... va " + (nGame - 20) + " game nua");
+  previewEl.textContent = JSON.stringify(result, null, 2);
+  $("btnSave").disabled = nGame === 0;
+});
+
+$("btnSave").addEventListener("click", () => {
+  if (!Object.keys(result).length) { alert("Bam 'Chuyen doi' truoc."); return; }
+  const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "arcade.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  say("Da tai arcade.json (" + Object.keys(result).length + " game).");
+});
+</script>
+</body>
+</html>
