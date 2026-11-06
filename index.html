@@ -572,6 +572,7 @@ const RUNTIME_CORE = {
   amiga:"puae", "3do":"opera", dos:"dosbox_pure", intv:"freeintv",
   doom:"prboom", zxspectrum:"fuse", zx81:"81", cpc:"cap32"
 };
+const CONTROL_SCHEMES = new Set(["gb","nes","snes","n64","gba","nds","vb","segaMD","segaCD","sega32x","segaMS","segaGG","segaSaturn","3do","atari2600","atari7800","lynx","jaguar","pce","ngp","ws","coleco","pcfx","psp","psx","arcade","mame","fbneo"]);
 const THREAD_CORES = new Set(["ppsspp","dosbox_pure","azahar","psp","dos","3ds"]);
 const getRuntimeCore = id => RUNTIME_CORE[id] || id;
 function getCoreLabel(id){
@@ -1119,6 +1120,7 @@ function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
     `EJS_gameFileName = ${JSON.stringify(safeFileName(game.fileName||game.name))};`,
     useFile ? `` : `EJS_gameUrl = ${JSON.stringify(blobUrl)};`,
     `EJS_core = ${JSON.stringify(runtimeCore)};`,
+    CONTROL_SCHEMES.has(game.core) ? `EJS_controlScheme = ${JSON.stringify(game.core)};` : ``,
     `EJS_pathtodata = 'https://longhai.github.io/emujs/';`,
     `EJS_startOnLoaded = true;`,
     `EJS_fullscreenOnLoaded = ${appSettings.fullscreenOnLoad ? "true":"false"};`,
