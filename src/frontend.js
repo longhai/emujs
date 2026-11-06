@@ -2625,8 +2625,10 @@ class EJS_Frontend {
             );
         }
         // HAI: nut combo arcade — 1 nut bam nhieu nut cung luc (kieu nut
-        // khach o trang online: AB/CD/ABC/BCD). Mapping Neo Geo da xac
-        // minh: A=0, B=8, C=1, D=9 (nut X goc = C, nut Y goc = D).
+        // khach o trang online). Ten combo theo ten nut chinh A/B/X/Y:
+        // nut X goc = Neo Geo C (input 1), nut Y goc = Neo Geo D
+        // (input 9) — nen combo la AB/XY/ABX/BXY, khong phai AB/CD/
+        // ABC/BCD (Hai chi ra sai ten 06/11). Mapping: A=0, B=8.
         // "combo" la truong moi do script them, xu ly o cho cham nut
         // ben duoi (khong phai API goc cua EmulatorJS).
         if (["arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
@@ -2641,9 +2643,9 @@ class EJS_Frontend {
             // tron A/B/X/Y — de phan biet nut ket hop voi nut don.
             info.push(
                 { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
-                { "type": "button", "text": "CD", "id": "cd", "location": "right", "left": -20, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
-                { "type": "button", "text": "ABC", "id": "abc", "location": "right", "left": 30, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
-                { "type": "button", "text": "BCD", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
+                { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
+                { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
+                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
             );
         }
         for (let i = 0; i < info.length; i++) {
@@ -2732,7 +2734,7 @@ class EJS_Frontend {
                         })
                     } else {
                         e.target.classList.add("ejs_virtualGamepad_button_down");
-                        // HAI: nut combo — bam 1 nut ma gui nhieu nut cung luc (arcade AB/CD/ABC/BCD)
+                        // HAI: nut combo — bam 1 nut ma gui nhieu nut cung luc (arcade AB/XY/ABX/BXY)
                         (info[i].combo || [value]).forEach((v) => this.ejs.gameManager.simulateInput(0, v, downValue));
                         if (!info[i].combo && (info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo
                             this.ejs.startAutofire(0, value, downValue);
