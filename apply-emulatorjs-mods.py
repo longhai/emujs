@@ -103,7 +103,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v10 — nhan giu chon nut, 3 nut thao tac nho, Dat lai D-pad ve mac dinh, xoa vien khi bo chon/tat che do chinh
+        // HAI: chinh vi tri + do mo cum nut v11 — nhan giu chon nut/cum, nut icon + truot dung + nut Tat, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -167,16 +167,18 @@ GP_LAYOUT_JS = '''
         const _gpMkMini = (txt, bg) => {
             const _b = document.createElement("button");
             _b.textContent = txt;
-            _b.style.cssText = "padding:6px 10px;border-radius:999px;border:0;background:" + bg + ";color:#fff;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
+            _b.style.cssText = "padding:7px 11px;border-radius:999px;border:0;background:" + bg + ";color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
             return _b;
         };
-        const _gpMiniDone = _gpMkMini("✓ Xong", "rgba(52,130,255,.95)");
-        const _gpMiniReset = _gpMkMini("↺ Đặt lại", "rgba(90,90,90,.92)");
+        const _gpMiniDone = _gpMkMini("✓", "rgba(52,130,255,.95)");
+        const _gpMiniReset = _gpMkMini("↺", "rgba(90,90,90,.92)");
+        const _gpMiniOff = _gpMkMini("✕", "rgba(200,60,60,.95)");
         _gpMiniBar.appendChild(_gpMiniDone);
         _gpMiniBar.appendChild(_gpMiniReset);
-        document.body.appendChild(_gpMiniBar);
+        _gpMiniBar.appendChild(_gpMiniOff);
+        this.elements.parent.appendChild(_gpMiniBar);
         const _gpMiniSlider = document.createElement("div");
-        _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;align-items:center;gap:8px;background:rgba(0,0,0,.78);border-radius:14px;padding:8px 10px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
+        _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:14px;padding:8px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
         const _gpMiniRange = document.createElement("input");
         _gpMiniRange.type = "range";
         _gpMiniRange.min = "0.5";
@@ -184,13 +186,13 @@ GP_LAYOUT_JS = '''
         _gpMiniRange.step = "0.05";
         _gpMiniRange.value = "1";
         _gpMiniRange.className = "_gpMiniRange";
-        _gpMiniRange.style.cssText = "width:110px;height:28px;";
+        _gpMiniRange.style.cssText = "width:28px;height:110px;writing-mode:vertical-lr;direction:rtl;";
         const _gpMiniPct = document.createElement("span");
         _gpMiniPct.style.cssText = "font-size:13px;font-weight:700;min-width:38px;text-align:center;";
         _gpMiniPct.textContent = "100%";
         _gpMiniSlider.appendChild(_gpMiniRange);
         _gpMiniSlider.appendChild(_gpMiniPct);
-        document.body.appendChild(_gpMiniSlider);
+        this.elements.parent.appendChild(_gpMiniSlider);
         let _gpSel = null;
         let _gpSelId = null;
         const _gpPlaceBar = () => {
@@ -207,15 +209,19 @@ GP_LAYOUT_JS = '''
             if (!_gpSel) return;
             const _r = _gpSel.getBoundingClientRect();
             const _cy = _r.top + _r.height / 2;
-            const _sw = 170;
+            const _sw = _gpMiniSlider.offsetWidth || 48;
+            const _sh = _gpMiniSlider.offsetHeight || 160;
             let _sx = _r.right + 8;
             if (_sx + _sw > window.innerWidth - 4) _sx = _r.left - _sw - 8;
             if (_sx < 4) _sx = 4;
+            let _sy = _cy - _sh / 2;
+            if (_sy < 4) _sy = 4;
+            if (_sy + _sh > window.innerHeight - 4) _sy = window.innerHeight - _sh - 4;
             _gpMiniSlider.style.left = _sx + "px";
-            _gpMiniSlider.style.top = _cy + "px";
-            _gpMiniSlider.style.transform = "translateY(-50%)";
+            _gpMiniSlider.style.top = _sy + "px";
+            _gpMiniSlider.style.transform = "";
         };
-        const _gpPlaceMini = () => { _gpPlaceBar(); _gpPlaceSlider(); };
+        const _gpPlaceMini = () => { _gpPlaceBar(); if (_gpMiniSlider.style.display !== "none") _gpPlaceSlider(); };
         const _gpSelect = (el, id) => {
             if (_gpSel && _gpSel !== el) {
                 _gpSel.style.outline = "";
@@ -230,26 +236,39 @@ GP_LAYOUT_JS = '''
             }
             el.style.outline = "2px dashed rgba(255,255,255,.9)";
             el.style.outlineOffset = "2px";
-            const _d = _gpBtnPos[id] || { x: 0, y: 0, s: 1 };
-            const _s = _d.s || 1;
-            _gpMiniRange.value = String(_s);
-            _gpMiniPct.textContent = Math.round(_s * 100) + "%";
+            if (_gpClusters[id]) {
+                _gpMiniSlider.style.display = "none";
+            } else {
+                const _d = _gpBtnPos[id] || { x: 0, y: 0, s: 1 };
+                const _s = _d.s || 1;
+                _gpMiniRange.value = String(_s);
+                _gpMiniPct.textContent = Math.round(_s * 100) + "%";
+                _gpMiniSlider.style.display = "flex";
+            }
             _gpMiniBar.style.display = "flex";
-            _gpMiniSlider.style.display = "flex";
             _gpPlaceMini();
             try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
         };
         _gpMiniDone.addEventListener("click", () => { _gpSelect(null, null); });
+        _gpMiniOff.addEventListener("click", () => {
+            _gpSelect(null, null);
+            try { this.changeSettingOption("virtual-gamepad-edit-layout", "disabled"); } catch (err) {}
+        });
         _gpMiniReset.addEventListener("click", () => {
             if (!_gpSel || !_gpSelId) return;
             try {
-                delete _gpBtnPos[_gpSelId];
-                localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
-                if (_gpSelId === "dpad") {
-                    const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k].contains(_gpSel));
-                    if (_ck) {
-                        delete _gpPos[_ck];
-                        localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
+                if (_gpClusters[_gpSelId]) {
+                    delete _gpPos[_gpSelId];
+                    localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
+                } else {
+                    delete _gpBtnPos[_gpSelId];
+                    localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
+                    if (_gpSelId === "dpad") {
+                        const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k].contains(_gpSel));
+                        if (_ck) {
+                            delete _gpPos[_ck];
+                            localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
+                        }
                     }
                 }
             } catch (err) {}
@@ -257,7 +276,7 @@ GP_LAYOUT_JS = '''
             _gpSelect(_gpSel, _gpSelId);
         });
         _gpMiniRange.addEventListener("input", () => {
-            if (!_gpSel || !_gpSelId) return;
+            if (!_gpSel || !_gpSelId || _gpClusters[_gpSelId]) return;
             const _s = parseFloat(_gpMiniRange.value) || 1;
             _gpMiniPct.textContent = Math.round(_s * 100) + "%";
             const _d = _gpBtnPos[_gpSelId] || { x: 0, y: 0, s: 1 };
@@ -301,7 +320,10 @@ GP_LAYOUT_JS = '''
             } else {
                 const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k] === e.currentTarget) || "left";
                 const _p = _gpPos[_ck] || { x: 0, y: 0 };
-                _gpDrag = { el: e.currentTarget, kind: "cluster", id: _ck, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false };
+                const _clEl = e.currentTarget;
+                _gpDrag = { el: _clEl, kind: "cluster", id: _ck, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false };
+                _gpClearHold();
+                _gpHoldTimer = setTimeout(() => { _gpHoldTimer = null; if (_gpDrag) _gpDrag.held = true; _gpSelect(_clEl, _ck); }, 1000);
             }
             _gpDrag.el.style.outline = "2px dashed rgba(255,255,255,.9)";
             _gpDrag.el.style.outlineOffset = "2px";
@@ -358,6 +380,13 @@ GP_LAYOUT_JS = '''
         window.addEventListener("pointercancel", _gpEnd);
         _gpApplyOpacity();
         this.virtualGamepad.addEventListener("pointerdown", () => { _gpApplyOpacity(); if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") _gpSelect(null, null); });
+        this.elements.parent.addEventListener("click", (e) => {
+            try {
+                if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
+                if (this.isChild(this.elements.menu, e.target) || this.isChild(this.elements.menuToggle, e.target)) return;
+                e.stopPropagation();
+            } catch (_err) {}
+        }, true);
         setTimeout(_gpApplyAll, 100);
         window.addEventListener("resize", () => {
             const _o = _gpOrient();
@@ -475,11 +504,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v10" in text:
-        print("Chinh cum nut: da co ban v10 (3 nut thao tac nho + Dat lai D-pad + xoa vien), bo qua")
+    if "cum nut v11" in text:
+        print("Chinh cum nut: da co ban v11 (nhan giu chon nut/cum + nut icon + truot dung + nut Tat + chan menu + fullscreen), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v10", r"        // HAI: chinh vi tri \+ do mo cum nut v10 — nhan giu chon nut, 3 nut thao tac nho, Dat lai D-pad ve mac dinh, xoa vien khi bo chon/tat che do chinh\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v9", r"        // HAI: chinh vi tri \+ do mo cum nut v9 — nhan giu chon nut, 3 nut thao tac nho quanh nut do, Dat lai D-pad ve mac dinh\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v8", r"        // HAI: chinh vi tri \+ do mo cum nut v8 — nhan giu chon nut, 3 nut thao tac nho quanh nut do \(Xong/Dat lai tren, thanh truot ben canh\)\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v7", r"        // HAI: chinh vi tri \+ do mo cum nut v7 — nhan giu chon nut/D-pad, doi co bang thanh truot, ep D-pad hien du 4 huong\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -494,13 +524,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v10")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v11")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v10 (3 nut thao tac nho + Dat lai D-pad + xoa vien khi bo chon)")
+        changed.append("Chinh cum nut: da them v11 (nhan giu chon nut/cum + nut icon + truot dung + nut Tat + chan menu + hien khi fullscreen)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
