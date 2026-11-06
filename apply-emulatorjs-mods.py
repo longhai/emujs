@@ -44,12 +44,15 @@ Quy tac — CHI THEM NUT, KHONG VIET LAI BO NUT GOC:
      chi mo khi bam nut ☰ goc tren phai (menu.toggle()).
   6. Nut combo arcade (Hai chot 06/11): game thung chi co 4 nut
      goc (Y/X/B/A) nen them 4 nut ket hop phia tren cum nut phai:
-     AB, CD, ABC, BCD — giong nut khach o trang online cua Hai.
-     Mapping Neo Geo: A=0, B=8, C=1, D=9 (nut X goc = C, Y goc = D).
-     API goc chi cho 1 input_value/nut nen script them truong moi
-     "combo": [..] vao nut, va patch cho xu ly cham/nha nut de
-     gui/nha tat ca nut trong combo cung luc (khong autofire).
-     Mau chu: AB cam, CD tim, ABC hong, BCD xanh ngoc.
+     AB, XY, ABX, BXY. Ten combo DAT THEO TEN NUT CHINH (A/B/X/Y),
+     khong theo ten Neo Geo: nut X goc = Neo Geo C (input 1), nut
+     Y goc = Neo Geo D (input 9) — ban dau dat CD/ABC/BCD la sai
+     ten, Hai chi ra 06/11 nen doi thanh XY/ABX/BXY (id trong code
+     van giu cd/abc/bcd de khoi doi CSS mau). Mapping: A=0, B=8,
+     C=1, D=9. API goc chi cho 1 input_value/nut nen script them
+     truong moi "combo": [..] vao nut, va patch cho xu ly cham/nha
+     nut de gui/nha tat ca nut trong combo cung luc (khong autofire).
+     Mau chu: AB cam, XY tim, ABX hong, BXY xanh ngoc.
   7. Chay lai lan 2 khong them trung (idempotent). Neu ban goc doi
      ten ham / doi cau truc khien khong tim thay neo (anchor),
      script thoat loi (exit 2) — workflow DUNG lai, khong mo PR
@@ -75,8 +78,10 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
             );
         }
         // HAI: nut combo arcade — 1 nut bam nhieu nut cung luc (kieu nut
-        // khach o trang online: AB/CD/ABC/BCD). Mapping Neo Geo da xac
-        // minh: A=0, B=8, C=1, D=9 (nut X goc = C, nut Y goc = D).
+        // khach o trang online). Ten combo theo ten nut chinh A/B/X/Y:
+        // nut X goc = Neo Geo C (input 1), nut Y goc = Neo Geo D
+        // (input 9) — nen combo la AB/XY/ABX/BXY, khong phai AB/CD/
+        // ABC/BCD (Hai chi ra sai ten 06/11). Mapping: A=0, B=8.
         // "combo" la truong moi do script them, xu ly o cho cham nut
         // ben duoi (khong phai API goc cua EmulatorJS).
         if (["arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
@@ -91,9 +96,9 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
             // tron A/B/X/Y — de phan biet nut ket hop voi nut don.
             info.push(
                 { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
-                { "type": "button", "text": "CD", "id": "cd", "location": "right", "left": -20, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
-                { "type": "button", "text": "ABC", "id": "abc", "location": "right", "left": 30, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
-                { "type": "button", "text": "BCD", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
+                { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
+                { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
+                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
             );
         }
 '''
@@ -163,7 +168,7 @@ def main(path):
     # turbo o tren; dong nha nut thi lay tu ban goc. ---
     COMBO_DOWN_OLD = '''                        this.ejs.gameManager.simulateInput(0, value, downValue);
                         if ((info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo'''
-    COMBO_DOWN_NEW = '''                        // HAI: nut combo — bam 1 nut ma gui nhieu nut cung luc (arcade AB/CD/ABC/BCD)
+    COMBO_DOWN_NEW = '''                        // HAI: nut combo — bam 1 nut ma gui nhieu nut cung luc (arcade AB/XY/ABX/BXY)
                         (info[i].combo || [value]).forEach((v) => this.ejs.gameManager.simulateInput(0, v, downValue));
                         if (!info[i].combo && (info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo'''
     COMBO_UP_OLD = '''                        window.setTimeout(() => {
@@ -185,7 +190,7 @@ def main(path):
             return 2
         text = text.replace(COMBO_DOWN_OLD, COMBO_DOWN_NEW, 1)
         text = text.replace(COMBO_UP_OLD, COMBO_UP_NEW, 1)
-        changed.append("Nut combo: da patch xu ly cham nut (arcade AB/CD/ABC/BCD)")
+        changed.append("Nut combo: da patch xu ly cham nut (arcade AB/XY/ABX/BXY)")
 
     if changed:
         open(path, "w", encoding="utf-8").write(text)
@@ -287,7 +292,7 @@ BUTTON_COLOR_CSS = '''
 .ejs_virtualGamepad_button_down { filter: brightness(1.4); }
 '''
 
-# Mau chu cho nut combo arcade (AB/CD/ABC/BCD) — giong kieu nut
+# Mau chu cho nut combo arcade (AB/XY/ABX/BXY) — giong kieu nut
 # khach o trang online cua Hai.
 COMBO_COLOR_CSS = '''
 /* HAI: nut combo mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
@@ -340,7 +345,7 @@ def patch_css(path):
         print("Mau nut combo: da co roi, bo qua")
     else:
         out += COMBO_COLOR_CSS
-        changed.append("Mau nut combo: da chen mau chu AB/CD/ABC/BCD")
+        changed.append("Mau nut combo: da chen mau chu AB/XY/ABX/BXY")
     if "HAI: nut md mau" in text:
         print("Mau nut MD: da co roi, bo qua")
     else:
