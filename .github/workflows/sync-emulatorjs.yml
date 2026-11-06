@@ -54,10 +54,10 @@ jobs:
             NEEDS_SYNC=true
           fi
           mkdir -p /tmp/modcheck/src
-          cp upstream/data/src/frontend.js upstream/data/src/emulator.js upstream/data/src/gamepad.js /tmp/modcheck/src/ 2>/dev/null || true
+          cp upstream/data/src/frontend.js upstream/data/src/emulator.js upstream/data/src/gamepad.js upstream/data/src/shaders.js /tmp/modcheck/src/ 2>/dev/null || true
           cp upstream/data/emulator.css /tmp/modcheck/ 2>/dev/null || true
           MOD_MISSING=false
-          for f in src/frontend.js src/emulator.js src/gamepad.js emulator.css; do
+          for f in src/frontend.js src/emulator.js src/gamepad.js src/shaders.js emulator.css; do
             if [ "$f" = "emulator.css" ]; then copy="/tmp/modcheck/emulator.css"; else copy="/tmp/modcheck/src/$(basename "$f")"; fi
             if [ ! -f "$copy" ]; then MOD_MISSING=true; continue; fi
             if ! python3 apply-emulatorjs-mods.py "$copy" >/dev/null 2>&1; then
@@ -89,16 +89,18 @@ jobs:
           echo "Da copy xong, ban goc: $UPSTREAM_VERSION"
           ls -la
 
-      - name: Tu dong them lai nut PS1 + NES Turbo + ky hieu tay cam + mau nut + tat menu tu mo
+      - name: Tu dong them lai nut PS1 + NES Turbo + ky hieu tay cam + mau nut + tat menu tu mo + shader
         if: env.NEEDS_SYNC == 'true'
         run: |
           python3 apply-emulatorjs-mods.py src/frontend.js
           python3 apply-emulatorjs-mods.py src/gamepad.js
           python3 apply-emulatorjs-mods.py src/emulator.js
           python3 apply-emulatorjs-mods.py emulator.css
+          python3 apply-emulatorjs-mods.py src/shaders.js
           node --check src/frontend.js
           node --check src/gamepad.js
           node --check src/emulator.js
+          node --check src/shaders.js
 
       - name: Tai day du core ve tu host (khong phu thuoc CDN)
         if: env.NEEDS_SYNC == 'true'
@@ -134,6 +136,7 @@ jobs:
             - Khong copy: index.html goc, build.js, docs/, package.json
             - Da xoa vendor/ cu va thu muc upstream (submodule rong)
             - Da chay apply-emulatorjs-mods.py: them lai PS1 L/R + NES Turbo
+            - Da them shader 2xsal-dotmask-4xsoft vao src/shaders.js (kieu goc EJS_SHADERS)
             - Da tai day du core (187 file, ~283MB) ve cores/ de tu host, khong phu thuoc CDN
             - PR nay tu dong gop vao main (xem buoc sau).
           branch: sync/emulatorjs-${{ env.UPSTREAM_VERSION }}
