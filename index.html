@@ -34,10 +34,8 @@
     const file = document.getElementById('rom').files[0];
     window.EJS_player = '#game';
     window.EJS_core = document.getElementById('core').value;
-
     window.EJS_gameUrl = file;
     window.EJS_gameName = file.name.replace(/\.[^.]+$/, '');
-
     window.EJS_pathtodata = './';
     window.EJS_startOnLoaded = true;
     const s = document.createElement('script');
