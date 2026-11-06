@@ -442,6 +442,30 @@ class EJS_Frontend {
             this.gamepadLabels[i].value = this.gamepadSelection[i] || "notconnected";
         }
     }
+
+    // HAI: dich ten nut goc (BUTTON_2, SELECT...) sang ky hieu cua tay
+    // cam that dang cam (Sony ✕○□△ / Xbox A B X Y / Switch B A Y X).
+    // CHI DE HIEN THI o man hinh Cai dat nut bam — khong doi value2
+    // goc: doi la hong nut bam (loi 06/11: doi getButtonLabel sang ky
+    // hieu lam nut bam that liet het, chi co can/analog chay duoc).
+    getGamepadDisplayLabel(value2, playerIdx) {
+        try {
+            const map = { BUTTON_1: 0, BUTTON_2: 1, BUTTON_3: 2, BUTTON_4: 3, LEFT_TOP_SHOULDER: 4, RIGHT_TOP_SHOULDER: 5, LEFT_BOTTOM_SHOULDER: 6, RIGHT_BOTTOM_SHOULDER: 7, SELECT: 8, START: 9, LEFT_STICK: 10, RIGHT_STICK: 11, DPAD_UP: 12, DPAD_DOWN: 13, DPAD_LEFT: 14, DPAD_RIGHT: 15 };
+            const idx = map[String(value2)];
+            if (idx === undefined) return this.localization(value2);
+            let gp = null;
+            const sel = (this.gamepadSelection && this.gamepadSelection[playerIdx]) || "";
+            if (sel) {
+                const gi = sel.lastIndexOf("_");
+                const gidx = parseInt(sel.slice(gi + 1), 10);
+                gp = (this.ejs.gamepad.gamepads || []).find((g) => g && g.index === gidx) || null;
+            }
+            if (!gp) gp = (this.ejs.gamepad.gamepads || [])[0] || null;
+            if (!gp || !gp.id) return this.localization(value2);
+            const sym = this.ejs.gamepad.getGamepadSymbols(this.ejs.gamepad.detectGamepadType(gp.id))[idx];
+            return sym || this.localization(value2);
+        } catch (e) { return this.localization(value2); }
+    }
     createLink(elem, link, text, useP) {
         const elm = this.ejs.createElement("a");
         elm.href = link;
@@ -841,8 +865,9 @@ class EJS_Frontend {
         }
 
         const show = () => {
-            // HAI: tat tu mo menu khi load / cham man hinh — chi mo khi bam nut ☰
-            return;
+            clearTimeout(timeout);
+            timeout = setTimeout(hide, 3000);
+            this.elements.menu.classList.remove("ejs_menu_bar_hidden");
         }
 
         this.menu = {
@@ -2162,7 +2187,7 @@ class EJS_Frontend {
                         } else if (!isNaN(value2)) {
                             value2 = this.localization("BUTTON") + " " + this.localization(value2);
                         } else {
-                            value2 = this.localization(value2);
+                            value2 = this.getGamepadDisplayLabel(value2, i);
                         }
                         textBox1.value = value2;
                     }
@@ -2181,7 +2206,7 @@ class EJS_Frontend {
                     } else if (!isNaN(value2)) {
                         value2 = this.localization("BUTTON") + " " + this.localization(value2);
                     } else {
-                        value2 = this.localization(value2);
+                        value2 = this.getGamepadDisplayLabel(value2, i);
                     }
                     textBox1.value = value2;
                 }

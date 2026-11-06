@@ -88,9 +88,9 @@ class GamepadHandler {
                     gamepadToSave.buttons[buttonIndex] = {pressed:pressed2};
                     if (pressed !== pressed2) {
                         if (pressed2) {
-                            this.dispatchEvent('buttondown', {index: buttonIndex, label: this.getButtonLabel(buttonIndex, gamepad.index), gamepadIndex: gamepad.index});
+                            this.dispatchEvent('buttondown', {index: buttonIndex, label: this.getButtonLabel(buttonIndex), gamepadIndex: gamepad.index});
                         } else {
-                            this.dispatchEvent('buttonup', {index: buttonIndex, label:this.getButtonLabel(buttonIndex, gamepad.index), gamepadIndex: gamepad.index});
+                            this.dispatchEvent('buttonup', {index: buttonIndex, label:this.getButtonLabel(buttonIndex), gamepadIndex: gamepad.index});
                         }
                     }
 
@@ -159,20 +159,10 @@ class GamepadHandler {
         return maps[type] || maps.xbox;
     }
 
-    getButtonLabel(index, gamepadIndex) {
+    getButtonLabel(index) {
         if (index === null || index === undefined) {
             return null;
         }
-        // HAI: doi ky hieu theo loai tay cam that dang cam
-        try {
-            const gp = (gamepadIndex !== undefined && gamepadIndex !== null)
-                ? this.gamepads.find((g) => g && g.index === gamepadIndex)
-                : (this.gamepads[0] || null);
-            if (gp && gp.id) {
-                const sym = this.getGamepadSymbols(this.detectGamepadType(gp.id))[index];
-                if (sym) return sym;
-            }
-        } catch (e) { /* ve nhan mac dinh ben duoi */ }
         if (this.buttonLabels[index] === undefined) {
             return `GAMEPAD_${index}`;
         }
