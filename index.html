@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Test mod EmulatorJS</title>
 </head>
+<style>
+  * {
+  margin: 0;
+  padding: 0;
+  }
+  </style>
 <body>
 <select id="core">
   <option value="nes">NES</option>
@@ -19,8 +25,7 @@
 </select>
 <input type="file" id="rom">
 <button onclick="play()">Chơi</button>
-<!-- Khung game 640x480 (Hai tu chinh, cach nay moi hien hinh) -->
-<div style="width: 640px; height: 480px; max-width: 100%;">
+<div style="width: 100%; height: 100%;">
   <div id="game"></div>
 </div>
 <script>
@@ -28,20 +33,8 @@
     const file = document.getElementById('rom').files[0];
     window.EJS_player = '#game';
     window.EJS_core = document.getElementById('core').value;
-    // Dua thang doi tuong File vao, KHONG boc qua URL.createObjectURL:
-    // EmulatorJS dat ten file trong may ao theo ten nay — game thung
-    // FBNeo nhan dien romset theo ten file (vd "64street.zip"). Boc
-    // qua blob URL thi ten file thanh ma UUID, FBNeo bao "Romset is
-    // unknown" voi MOI game thung (loi gap 06/11, da kiem chung).
     window.EJS_gameUrl = file;
     window.EJS_gameName = file.name.replace(/\.[^.]+$/, '');
-    // BAT BUOC phai dat kem EJS_gameName (chuoi): neu khong, ham
-    // saveInBrowserSupported() trong EmulatorJS se goi
-    // gameUrl.startsWith("blob:") — ma gameUrl gio la doi tuong File
-    // khong co ham startsWith — nen toan bo game se dung o man hinh
-    // den + bao "That bai khoi dong game" (du tieng van chay, loi
-    // gap 06/11). Trang chinh cua Hai da dat EJS_gameName san nen
-    // khong bi; trang test quen dat nen moi dinh.
     window.EJS_pathtodata = './';
     window.EJS_startOnLoaded = true;
     const s = document.createElement('script');
