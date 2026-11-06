@@ -2694,7 +2694,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v16 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen
+        // HAI: chinh vi tri + do mo cum nut v17 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2868,6 +2868,8 @@ class EJS_Frontend {
                 if (_gpClusters[_gpSelId]) {
                     delete _gpPos[_gpSelId];
                     localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
+                    _gpClusterBtnIds(_gpSel).forEach((_cid) => { delete _gpBtnPos[_cid]; });
+                    localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
                 } else {
                     delete _gpBtnPos[_gpSelId];
                     localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
