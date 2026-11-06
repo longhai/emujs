@@ -246,6 +246,7 @@ body.playing #playerWrap{display:block;}
   border:4px solid rgba(255,255,255,.18); border-top-color:var(--accent);
   animation:spin .9s linear infinite;
 }
+#loadingCancel{ margin-top:6px; background:rgba(255,255,255,.16); color:#fff; }
 @keyframes spin{to{transform:rotate(360deg);}}
 #loading .txt{font-size:15px; color:#ddd;}
 
@@ -535,7 +536,7 @@ body.playing #playerWrap{display:block;}
 
 <div id="playerWrap">
   <div id="display"></div>
-  <div id="loading"><div class="spin"></div><div class="txt" id="loadingTxt">Đang tải game...</div></div>
+  <div id="loading"><div class="spin"></div><div class="txt" id="loadingTxt">Đang tải game...</div><button class="pill-btn" id="loadingCancel" type="button">Hủy</button></div>
 </div>
 
 <script>
@@ -600,7 +601,7 @@ function detectCore(ext){
   if(has("a52")) return "atari5200";
   if(has("a78")) return "atari7800";
   if(has("a26")) return "atari2600";
-  if(has("d64","g64","t64","tap","x64")) return "c64";
+  if(has("d64","g64","t64","x64")) return "c64";
   if(has("d71")) return "c128";
   if(has("lnx")) return "lynx";
   if(has("j64","jag")) return "jaguar";
@@ -734,7 +735,7 @@ const dbGetGame = id => txDo("readonly", st=>{
 });
 const dbDeleteGame = id => txDo("readwrite", st=>{ st.delete(id); return {}; });
 const dbAllGames = () => txDo("readonly", st=>{
-  const box = {}; const r = st.getAll(); r.onsuccess = ()=>{ box.value = (r.result||[]).map(g=>{ const m = Object.assign({}, g); delete m.data; return m; }); }; return box;
+  const box = {}; const r = st.getAll(); r.onsuccess = ()=>{ box.value = r.result||[]; }; return box;
 });
 
 /* ---------- tiện ích ---------- */
@@ -1026,19 +1027,27 @@ async function installGame(file){
 }
 /* hộp chọn hệ máy cho file chưa nhận diện được */
 let coreDialogResolve = null;
+const coreDialogQueue = [];
 function showCoreDialog(fileName){
   return new Promise(resolve=>{
-    $("coreSelectFile").textContent = fileName;
-    $("coreSelectBox").value = "";
-    setTriggerLabel($("coreSelectButton"), "Hãy chọn");
-    $("coreSelectSheet").hidden = false;
-    coreDialogResolve = resolve;
+    coreDialogQueue.push({fileName, resolve});
+    if(!coreDialogResolve) openNextCoreDialog();
   });
+}
+function openNextCoreDialog(){
+  const next = coreDialogQueue.shift();
+  if(!next){ coreDialogResolve = null; return; }
+  $("coreSelectFile").textContent = next.fileName;
+  $("coreSelectBox").value = "";
+  setTriggerLabel($("coreSelectButton"), "Hãy chọn");
+  $("coreSelectSheet").hidden = false;
+  coreDialogResolve = next.resolve;
 }
 function endCoreDialog(value){
   $("coreSelectSheet").hidden = true;
   closeCorePicker();
-  if(coreDialogResolve){ coreDialogResolve(value); coreDialogResolve = null; }
+  if(coreDialogResolve){ const r = coreDialogResolve; coreDialogResolve = null; r(value); }
+  openNextCoreDialog();
 }
 $("coreSelectButton").onclick = ()=>{
   openCorePicker($("coreSelectButton"), $("coreSelectBox").value, CORE_OPTIONS, v=>{
@@ -1106,7 +1115,7 @@ $("deleteFilteredBtn").onclick = async ()=>{
 };
 
 /* ---------- trình chơi game ---------- */
-let playerCleanup = null, currentGameName = "", pendingGameFile = null, loadTimer = null;
+let playerCleanup = null, currentGameName = "", pendingGameFile = null;
 function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
   const opts = {"save-state-location": appSettings.saveLocation, "save-state-slot": appSettings.saveSlot};
   const shaderReapply = `setTimeout(function(){ try{ var em=window.EJS_emulator; if(!em||!em.enableShader) return; var sh=null; try{ sh=em.preGetSetting?em.preGetSetting("shader"):null; }catch(e){} if(!sh||sh==="disabled") sh=${JSON.stringify(appSettings.shader||"")}; if(sh) em.enableShader(sh); }catch(e){} },500);`;
@@ -1165,7 +1174,10 @@ async function launchInstalledGame(id, overrideGame){
   if(appSettings.fullscreenOnLoad && !document.fullscreenElement){
     try{ const p = document.documentElement.requestFullscreen(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
   }
-  const game = overrideGame || await dbGetGame(id).catch(e=>{ toast("Đọc game thất bại: " + e.message); return null; });
+  let game = overrideGame;
+  if(!game || (game.data===undefined && !game.url)){
+    game = await dbGetGame(id).catch(e=>{ toast("Đọc game thất bại: " + e.message); return null; });
+  }
   if(!game){ if(!overrideGame) toast("Không tìm thấy file game"); return; }
   currentGameName = game.name;
   const runtimeCore = getRuntimeCore(game.core);
@@ -1195,8 +1207,6 @@ async function launchInstalledGame(id, overrideGame){
   disp.appendChild(fr);
   $("loading").style.display = "flex";
   $("loadingTxt").textContent = "Đang tải game...";
-  clearTimeout(loadTimer);
-  loadTimer = setTimeout(()=>{ $("loading").style.display = "none"; exitPlayer(); toast("Không tải được game, thử lại sau"); }, 30000);
   document.body.classList.add("playing");
   playerCleanup = ()=>{
     fr.remove();
@@ -1209,7 +1219,7 @@ window.addEventListener("message", e=>{
   if(e.data.ejs==="player-ready"){
     if(pendingGameFile && e.source) e.source.postMessage({ejs:"gamefile", file:pendingGameFile}, "*");
   }
-  else if(e.data.ejs==="started"){ clearTimeout(loadTimer); $("loading").style.display = "none"; }
+  else if(e.data.ejs==="started"){ $("loading").style.display = "none"; }
   else if(e.data.ejs==="exit") exitPlayer();
   else if(e.data.ejs==="savestate" && e.data.buf){
     downloadBlob(new Blob([e.data.buf]), (currentGameName||"game")+".state");
@@ -1217,7 +1227,6 @@ window.addEventListener("message", e=>{
   }
 });
 function exitPlayer(){
-  clearTimeout(loadTimer);
   if(playerCleanup) playerCleanup();
   document.body.classList.remove("playing");
   $("display").innerHTML = "";
@@ -1226,6 +1235,7 @@ function exitPlayer(){
 }
 
 /* ---------- chuyển tab ---------- */
+let lastSelectedGame = null;
 function switchPage(page){
   const games = page==="games";
   $("gamesPage").classList.toggle("active", games);
@@ -1235,7 +1245,8 @@ function switchPage(page){
   document.querySelectorAll("#desktopRail .rail-item").forEach(b=>
     b.classList.toggle("active", b.dataset.page===page));
   if(isDesktop()){
-    selectGame(games ? activeGame : null);
+    if(games) selectGame(lastSelectedGame);
+    else{ lastSelectedGame = activeGame; selectGame(null); }
   }
   window.scrollTo(0,0);
 }
@@ -1351,12 +1362,12 @@ function downloadBlob(blob, name){
   document.body.appendChild(a); a.click();
   setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 4000);
 }
-const isEjsKey = k => typeof k==="string" && (k.startsWith("ejs-") || k===APP_SETTINGS_KEY);
+const isConfigKey = k => k===APP_SETTINGS_KEY || k==="ejs-settings";
 $("exportConfigBtn").onclick = ()=>{
   const data = {};
   for(let i=0;i<localStorage.length;i++){
     const k = localStorage.key(i);
-    if(isEjsKey(k)) data[k] = localStorage.getItem(k);
+    if(isConfigKey(k)) data[k] = localStorage.getItem(k);
   }
   downloadBlob(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),
     "nes-launcher-config-"+new Date().toISOString().slice(0,10)+".json");
@@ -1366,14 +1377,14 @@ $("importConfigBtn").onclick = ()=>{
   const inp = document.createElement("input");
   inp.type = "file"; inp.accept = ".json"; inp.style.display = "none";
   inp.onchange = ()=>{
-    const f = inp.files[0]; if(!f) return;
+    const f = inp.files[0]; inp.remove(); if(!f) return;
     const r = new FileReader();
     r.onload = ()=>{
       try{
         const data = JSON.parse(r.result);
         let n = 0;
         for(const k of Object.keys(data))
-          if(isEjsKey(k)){ localStorage.setItem(k, data[k]); n++; }
+          if(isConfigKey(k)){ localStorage.setItem(k, data[k]); n++; }
         Object.assign(appSettings, loadAppSettings());
         applySettingsToControls();
         toast(`Đã nhập ${n} mục cấu hình`);
@@ -1381,7 +1392,7 @@ $("importConfigBtn").onclick = ()=>{
     };
     r.readAsText(f);
   };
-  document.body.appendChild(inp); inp.click(); inp.remove();
+  document.body.appendChild(inp); inp.click();
 };
 $("exportSavesBtn").onclick = ()=>{
   const saves = {};
@@ -1399,7 +1410,7 @@ $("importSavesBtn").onclick = ()=>{
   const inp = document.createElement("input");
   inp.type = "file"; inp.accept = ".json"; inp.style.display = "none";
   inp.onchange = ()=>{
-    const f = inp.files[0]; if(!f) return;
+    const f = inp.files[0]; inp.remove(); if(!f) return;
     const r = new FileReader();
     r.onload = ()=>{
       try{
@@ -1414,12 +1425,13 @@ $("importSavesBtn").onclick = ()=>{
     };
     r.readAsText(f);
   };
-  document.body.appendChild(inp); inp.click(); inp.remove();
+  document.body.appendChild(inp); inp.click();
 };
 
 /* ---------- khởi động ---------- */
 (function init(){
   try{ if(!localStorage.getItem("ejs-cache-cleared-v1")){ const delReq = indexedDB.deleteDatabase("EmulatorJS-Cache"); delReq.onsuccess = ()=>localStorage.setItem("ejs-cache-cleared-v1","1"); delReq.onerror = ()=>{}; } }catch(e){}
+  $("loadingCancel").addEventListener("click", ()=>{ exitPlayer(); });
   // ?debug=1 ?threads=1 ?rom=...
   try{
     const q = new URLSearchParams(location.search);
