@@ -103,7 +103,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v6 — nhan giu chon nut/D-pad, doi co bang thanh truot
+        // HAI: chinh vi tri + do mo cum nut v8 — nhan giu chon nut, 3 nut thao tac nho quanh nut do (Xong/Dat lai tren, thanh truot ben canh)
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -145,97 +145,118 @@ GP_LAYOUT_JS = '''
                     const _id = _gpBtnId(_b);
                     _gpBtnTransform(_b, _id ? _gpBtnPos[_id] : null);
                 }
-                const _dp = _el.querySelector(".b_dpad");
-                if (_dp) _gpBtnTransform(_dp, _gpBtnPos["dpad"] || null);
+                const _dm = _el.querySelector(".ejs_dpad_main");
+                if (_dm && _dm.parentElement) {
+                    const _dp = _dm.parentElement;
+                    _dp.style.position = "absolute";
+                    _dp.style.left = "0";
+                    _dp.style.top = "0";
+                    _dp.style.right = "auto";
+                    _dp.style.width = "100%";
+                    _dp.style.height = "100%";
+                    _gpBtnTransform(_dp, _gpBtnPos["dpad"] || null);
+                }
             }
         };
         _gpApplyAll();
-        const _gpBar = document.createElement("div");
-        _gpBar.style.cssText = "position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;display:none;gap:10px;";
-        const _gpMkBtn = (txt, bg) => {
+        const _gpMiniStyle = document.createElement("style");
+        _gpMiniStyle.textContent = "._gpMiniRange{accent-color:#3482ff;}._gpMiniRange::-webkit-slider-thumb{width:24px;height:24px;border-radius:50%;background:#3482ff;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.5);}";
+        document.head.appendChild(_gpMiniStyle);
+        const _gpMiniBar = document.createElement("div");
+        _gpMiniBar.style.cssText = "position:fixed;z-index:10000;display:none;gap:6px;";
+        const _gpMkMini = (txt, bg) => {
             const _b = document.createElement("button");
             _b.textContent = txt;
-            _b.style.cssText = "padding:10px 18px;border-radius:999px;border:0;background:" + bg + ";color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 12px rgba(0,0,0,.4);";
+            _b.style.cssText = "padding:6px 10px;border-radius:999px;border:0;background:" + bg + ";color:#fff;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
             return _b;
         };
-        const _gpDone = _gpMkBtn("✓ Xong", "rgba(52,130,255,.95)");
-        const _gpReset = _gpMkBtn("↺ Đặt lại", "rgba(90,90,90,.92)");
-        _gpDone.addEventListener("click", () => {
-            try { this.changeSettingOption("virtual-gamepad-edit-layout", "disabled"); } catch (e) {}
-            _gpBar.style.display = "none";
-            _gpSelect(null, null);
-        });
-        _gpReset.addEventListener("click", () => {
-            try {
-                ["portrait", "landscape"].forEach((o) => {
-                    localStorage.removeItem(_gpKeyFor(o));
-                    localStorage.removeItem(_gpBtnKeyFor(o));
-                });
-                localStorage.removeItem("ejs-gamepad-layout-" + _gpScheme);
-                localStorage.removeItem("ejs-gamepad-buttons-" + _gpScheme);
-            } catch (e) {}
-            _gpPos = {}; _gpBtnPos = {};
-            _gpApplyAll();
-            _gpSelect(null, null);
-        });
-        _gpBar.appendChild(_gpDone);
-        _gpBar.appendChild(_gpReset);
-        document.body.appendChild(_gpBar);
-        const _gpSliderStyle = document.createElement("style");
-        _gpSliderStyle.textContent = "._gpSizeRange{accent-color:#3482ff;}._gpSizeRange::-webkit-slider-thumb{width:32px;height:32px;border-radius:50%;background:#3482ff;border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.5);}";
-        document.head.appendChild(_gpSliderStyle);
-        const _gpSlider = document.createElement("div");
-        _gpSlider.style.cssText = "position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:10000;display:none;align-items:center;gap:12px;background:rgba(0,0,0,.78);border-radius:18px;padding:12px 16px;color:#fff;box-shadow:0 2px 16px rgba(0,0,0,.5);";
-        const _gpSliderLabel = document.createElement("span");
-        _gpSliderLabel.style.cssText = "font-size:16px;font-weight:700;min-width:52px;text-align:center;";
-        const _gpRange = document.createElement("input");
-        _gpRange.type = "range";
-        _gpRange.min = "0.5";
-        _gpRange.max = "2.5";
-        _gpRange.step = "0.05";
-        _gpRange.value = "1";
-        _gpRange.className = "_gpSizeRange";
-        _gpRange.style.cssText = "width:min(56vw,240px);height:40px;";
-        const _gpPct = document.createElement("span");
-        _gpPct.style.cssText = "font-size:16px;font-weight:700;min-width:52px;text-align:center;";
-        _gpPct.textContent = "100%";
-        _gpSlider.appendChild(_gpSliderLabel);
-        _gpSlider.appendChild(_gpRange);
-        _gpSlider.appendChild(_gpPct);
-        document.body.appendChild(_gpSlider);
-        const _gpSyncBar = () => {
-            try { _gpBar.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "flex" : "none"; } catch (e) { _gpBar.style.display = "none"; }
-            if (_gpBar.style.display === "none") _gpSelect(null, null);
-        };
+        const _gpMiniDone = _gpMkMini("✓ Xong", "rgba(52,130,255,.95)");
+        const _gpMiniReset = _gpMkMini("↺ Đặt lại", "rgba(90,90,90,.92)");
+        _gpMiniBar.appendChild(_gpMiniDone);
+        _gpMiniBar.appendChild(_gpMiniReset);
+        document.body.appendChild(_gpMiniBar);
+        const _gpMiniSlider = document.createElement("div");
+        _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;align-items:center;gap:8px;background:rgba(0,0,0,.78);border-radius:14px;padding:8px 10px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
+        const _gpMiniRange = document.createElement("input");
+        _gpMiniRange.type = "range";
+        _gpMiniRange.min = "0.5";
+        _gpMiniRange.max = "2.5";
+        _gpMiniRange.step = "0.05";
+        _gpMiniRange.value = "1";
+        _gpMiniRange.className = "_gpMiniRange";
+        _gpMiniRange.style.cssText = "width:110px;height:28px;";
+        const _gpMiniPct = document.createElement("span");
+        _gpMiniPct.style.cssText = "font-size:13px;font-weight:700;min-width:38px;text-align:center;";
+        _gpMiniPct.textContent = "100%";
+        _gpMiniSlider.appendChild(_gpMiniRange);
+        _gpMiniSlider.appendChild(_gpMiniPct);
+        document.body.appendChild(_gpMiniSlider);
         let _gpSel = null;
         let _gpSelId = null;
+        const _gpPlaceBar = () => {
+            if (!_gpSel) return;
+            const _r = _gpSel.getBoundingClientRect();
+            const _cx = _r.left + _r.width / 2;
+            let _top = _r.top - 40;
+            if (_top < 4) _top = _r.bottom + 6;
+            _gpMiniBar.style.left = Math.max(4, Math.min(window.innerWidth - 4, _cx)) + "px";
+            _gpMiniBar.style.top = _top + "px";
+            _gpMiniBar.style.transform = "translateX(-50%)";
+        };
+        const _gpPlaceSlider = () => {
+            if (!_gpSel) return;
+            const _r = _gpSel.getBoundingClientRect();
+            const _cy = _r.top + _r.height / 2;
+            const _sw = 170;
+            let _sx = _r.right + 8;
+            if (_sx + _sw > window.innerWidth - 4) _sx = _r.left - _sw - 8;
+            if (_sx < 4) _sx = 4;
+            _gpMiniSlider.style.left = _sx + "px";
+            _gpMiniSlider.style.top = _cy + "px";
+            _gpMiniSlider.style.transform = "translateY(-50%)";
+        };
+        const _gpPlaceMini = () => { _gpPlaceBar(); _gpPlaceSlider(); };
         const _gpSelect = (el, id) => {
             _gpSel = el;
             _gpSelId = id;
             if (!el || !id) {
-                _gpSlider.style.display = "none";
+                _gpMiniBar.style.display = "none";
+                _gpMiniSlider.style.display = "none";
                 return;
             }
             el.style.outline = "2px dashed rgba(255,255,255,.9)";
             el.style.outlineOffset = "2px";
             const _d = _gpBtnPos[id] || { x: 0, y: 0, s: 1 };
             const _s = _d.s || 1;
-            _gpSliderLabel.textContent = (id === "dpad") ? "D-pad" : id.toUpperCase();
-            _gpRange.value = String(_s);
-            _gpPct.textContent = Math.round(_s * 100) + "%";
-            _gpSlider.style.display = "flex";
+            _gpMiniRange.value = String(_s);
+            _gpMiniPct.textContent = Math.round(_s * 100) + "%";
+            _gpMiniBar.style.display = "flex";
+            _gpMiniSlider.style.display = "flex";
+            _gpPlaceMini();
             try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
         };
-        _gpRange.addEventListener("input", () => {
+        _gpMiniDone.addEventListener("click", () => { _gpSelect(null, null); });
+        _gpMiniReset.addEventListener("click", () => {
             if (!_gpSel || !_gpSelId) return;
-            const _s = parseFloat(_gpRange.value) || 1;
-            _gpPct.textContent = Math.round(_s * 100) + "%";
+            try {
+                delete _gpBtnPos[_gpSelId];
+                localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
+            } catch (err) {}
+            _gpApplyAll();
+            _gpSelect(_gpSel, _gpSelId);
+        });
+        _gpMiniRange.addEventListener("input", () => {
+            if (!_gpSel || !_gpSelId) return;
+            const _s = parseFloat(_gpMiniRange.value) || 1;
+            _gpMiniPct.textContent = Math.round(_s * 100) + "%";
             const _d = _gpBtnPos[_gpSelId] || { x: 0, y: 0, s: 1 };
             _d.s = _s;
             _gpBtnTransform(_gpSel, _d);
             _gpBtnPos[_gpSelId] = _d;
             try { localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos)); } catch (err) {}
+            _gpPlaceBar();
         });
+        _gpMiniRange.addEventListener("change", () => { _gpPlaceMini(); });
         let _gpDrag = null;
         let _gpHoldTimer = null;
         const _gpClearHold = () => { if (_gpHoldTimer !== null) { clearTimeout(_gpHoldTimer); _gpHoldTimer = null; } };
@@ -245,7 +266,6 @@ GP_LAYOUT_JS = '''
             e.preventDefault();
             e.stopPropagation();
             _gpApplyOpacity();
-            _gpSyncBar();
             const _t = (e.touches && e.touches[0]) || e;
             const _btn = (e.target && e.target.closest) ? e.target.closest(".ejs_virtualGamepad_button") : null;
             const _dpad = (!_btn && e.target && e.target.closest) ? e.target.closest(".b_dpad") : null;
@@ -294,6 +314,7 @@ GP_LAYOUT_JS = '''
                 _gpDrag.el.style.transform = "translate(" + _nx + "px," + _ny + "px)";
             }
             _gpDrag.nx = _nx; _gpDrag.ny = _ny;
+            if (_gpSel) _gpPlaceMini();
         };
         const _gpEnd = () => {
             _gpClearHold();
@@ -325,8 +346,7 @@ GP_LAYOUT_JS = '''
         window.addEventListener("pointerup", _gpEnd);
         window.addEventListener("pointercancel", _gpEnd);
         _gpApplyOpacity();
-        _gpSyncBar();
-        this.virtualGamepad.addEventListener("pointerdown", () => { _gpApplyOpacity(); _gpSyncBar(); });
+        this.virtualGamepad.addEventListener("pointerdown", () => { _gpApplyOpacity(); if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") _gpSelect(null, null); });
         setTimeout(_gpApplyAll, 100);
         window.addEventListener("resize", () => {
             const _o = _gpOrient();
@@ -337,7 +357,8 @@ GP_LAYOUT_JS = '''
             _gpSelect(null, null);
             _gpApplyAll();
         });
-        } catch (_gpErr) {}'''
+        } catch (_gpErr) {}
+'''
 
 
 
@@ -443,44 +464,30 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v6" in text:
-        print("Chinh cum nut: da co ban v6 (thanh truot doi co + D-pad), bo qua")
+    if "cum nut v8" in text:
+        print("Chinh cum nut: da co ban v8 (3 nut thao tac nho quanh nut), bo qua")
     else:
         import re
-        old_pat = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut v5 — nhan giu 1s chon nut, nut goc to de keo, vuot doc doi co\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n")
-        _m = old_pat.search(text)
-        if _m:
-            text = text[:_m.start()] + text[_m.end():]
-            print("Chinh cum nut: da go ban v5, chen ban v6")
-        else:
-            old_pat4 = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut v4 — keo tung nut, keo goc doi co, ngang/doc rieng, Dat lai\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n")
-            _m4 = old_pat4.search(text)
-            if _m4:
-                text = text[:_m4.start()] + text[_m4.end():]
-                print("Chinh cum nut: da go ban v4, chen ban v6")
-            else:
-                old_pat3 = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut v3 — keo tung nut / cum nut, nut Xong thoat\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n")
-                _m3 = old_pat3.search(text)
-                if _m3:
-                    text = text[:_m3.start()] + text[_m3.end():]
-                    print("Chinh cum nut: da go ban v3, chen ban v6")
-                else:
-                    old_pat2 = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut v2 — keo de doi vi tri, luu theo he may\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n")
-                    _m2 = old_pat2.search(text)
-                    if _m2:
-                        text = text[:_m2.start()] + text[_m2.end():]
-                        print("Chinh cum nut: da go ban v2, chen ban v6")
-                    else:
-                        old_pat1 = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut — keo de doi vi tri, luu theo he may\n[\s\S]*?        this\.virtualGamepad\.addEventListener\(\"pointerdown\", _gpApplyOpacity\);\n")
-                        _m1 = old_pat1.search(text)
-                        if _m1:
-                            text = text[:_m1.start()] + text[_m1.end():]
-                            print("Chinh cum nut: da go ban v1 (gay ket game), chen ban v6")
+        _gp_vers = [
+            ("v7", r"        // HAI: chinh vi tri \+ do mo cum nut v7 — nhan giu chon nut/D-pad, doi co bang thanh truot, ep D-pad hien du 4 huong\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v6", r"        // HAI: chinh vi tri \+ do mo cum nut v6 — nhan giu chon nut/D-pad, doi co bang thanh truot\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v5", r"        // HAI: chinh vi tri \+ do mo cum nut v5 — nhan giu 1s chon nut, nut goc to de keo, vuot doc doi co\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v4", r"        // HAI: chinh vi tri \+ do mo cum nut v4 — keo tung nut, keo goc doi co, ngang/doc rieng, Dat lai\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v3", r"        // HAI: chinh vi tri \+ do mo cum nut v3 — keo tung nut / cum nut, nut Xong thoat\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v2", r"        // HAI: chinh vi tri \+ do mo cum nut v2 — keo de doi vi tri, luu theo he may\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v1", r"        // HAI: chinh vi tri \+ do mo cum nut — keo de doi vi tri, luu theo he may\n[\s\S]*?        this\.virtualGamepad\.addEventListener\(\"pointerdown\", _gpApplyOpacity\);\n"),
+        ]
+        for _lbl, _pat in _gp_vers:
+            _mm = re.compile(_pat).search(text)
+            if _mm:
+                text = text[:_mm.start()] + text[_mm.end():]
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v8")
+                break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v6 (thanh truot doi co + D-pad)")
+        changed.append("Chinh cum nut: da them v8 (3 nut thao tac nho quanh nut dang chon)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
