@@ -2694,7 +2694,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v8 — nhan giu chon nut, 3 nut thao tac nho quanh nut do (Xong/Dat lai tren, thanh truot ben canh)
+        // HAI: chinh vi tri + do mo cum nut v10 — nhan giu chon nut, 3 nut thao tac nho, Dat lai D-pad ve mac dinh, xoa vien khi bo chon/tat che do chinh
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2808,6 +2808,10 @@ class EJS_Frontend {
         };
         const _gpPlaceMini = () => { _gpPlaceBar(); _gpPlaceSlider(); };
         const _gpSelect = (el, id) => {
+            if (_gpSel && _gpSel !== el) {
+                _gpSel.style.outline = "";
+                _gpSel.style.outlineOffset = "";
+            }
             _gpSel = el;
             _gpSelId = id;
             if (!el || !id) {
@@ -2832,6 +2836,13 @@ class EJS_Frontend {
             try {
                 delete _gpBtnPos[_gpSelId];
                 localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
+                if (_gpSelId === "dpad") {
+                    const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k].contains(_gpSel));
+                    if (_ck) {
+                        delete _gpPos[_ck];
+                        localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
+                    }
+                }
             } catch (err) {}
             _gpApplyAll();
             _gpSelect(_gpSel, _gpSelId);
@@ -2852,7 +2863,7 @@ class EJS_Frontend {
         let _gpHoldTimer = null;
         const _gpClearHold = () => { if (_gpHoldTimer !== null) { clearTimeout(_gpHoldTimer); _gpHoldTimer = null; } };
         const _gpStart = (e) => {
-            if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
+            if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") { _gpSelect(null, null); return; }
             if (_gpDrag) return;
             e.preventDefault();
             e.stopPropagation();
