@@ -2694,7 +2694,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v5 — nhan giu 1s chon nut, nut goc to de keo, vuot doc doi co
+        // HAI: chinh vi tri + do mo cum nut v6 — nhan giu chon nut/D-pad, doi co bang thanh truot
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2736,6 +2736,8 @@ class EJS_Frontend {
                     const _id = _gpBtnId(_b);
                     _gpBtnTransform(_b, _id ? _gpBtnPos[_id] : null);
                 }
+                const _dp = _el.querySelector(".b_dpad");
+                if (_dp) _gpBtnTransform(_dp, _gpBtnPos["dpad"] || null);
             }
         };
         _gpApplyAll();
@@ -2752,7 +2754,7 @@ class EJS_Frontend {
         _gpDone.addEventListener("click", () => {
             try { this.changeSettingOption("virtual-gamepad-edit-layout", "disabled"); } catch (e) {}
             _gpBar.style.display = "none";
-            _gpSelect(null);
+            _gpSelect(null, null);
         });
         _gpReset.addEventListener("click", () => {
             try {
@@ -2765,60 +2767,66 @@ class EJS_Frontend {
             } catch (e) {}
             _gpPos = {}; _gpBtnPos = {};
             _gpApplyAll();
-            _gpSelect(null);
+            _gpSelect(null, null);
         });
         _gpBar.appendChild(_gpDone);
         _gpBar.appendChild(_gpReset);
         document.body.appendChild(_gpBar);
+        const _gpSliderStyle = document.createElement("style");
+        _gpSliderStyle.textContent = "._gpSizeRange{accent-color:#3482ff;}._gpSizeRange::-webkit-slider-thumb{width:32px;height:32px;border-radius:50%;background:#3482ff;border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.5);}";
+        document.head.appendChild(_gpSliderStyle);
+        const _gpSlider = document.createElement("div");
+        _gpSlider.style.cssText = "position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:10000;display:none;align-items:center;gap:12px;background:rgba(0,0,0,.78);border-radius:18px;padding:12px 16px;color:#fff;box-shadow:0 2px 16px rgba(0,0,0,.5);";
+        const _gpSliderLabel = document.createElement("span");
+        _gpSliderLabel.style.cssText = "font-size:16px;font-weight:700;min-width:52px;text-align:center;";
+        const _gpRange = document.createElement("input");
+        _gpRange.type = "range";
+        _gpRange.min = "0.5";
+        _gpRange.max = "2.5";
+        _gpRange.step = "0.05";
+        _gpRange.value = "1";
+        _gpRange.className = "_gpSizeRange";
+        _gpRange.style.cssText = "width:min(56vw,240px);height:40px;";
+        const _gpPct = document.createElement("span");
+        _gpPct.style.cssText = "font-size:16px;font-weight:700;min-width:52px;text-align:center;";
+        _gpPct.textContent = "100%";
+        _gpSlider.appendChild(_gpSliderLabel);
+        _gpSlider.appendChild(_gpRange);
+        _gpSlider.appendChild(_gpPct);
+        document.body.appendChild(_gpSlider);
         const _gpSyncBar = () => {
             try { _gpBar.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "flex" : "none"; } catch (e) { _gpBar.style.display = "none"; }
-            if (_gpBar.style.display === "none") _gpSelect(null);
+            if (_gpBar.style.display === "none") _gpSelect(null, null);
         };
         let _gpSel = null;
-        let _gpHandle = null;
-        const _gpSelect = (btn) => {
-            if (_gpHandle) { try { _gpHandle.remove(); } catch (e) {} _gpHandle = null; }
-            _gpSel = btn;
-            if (!btn) return;
-            btn.style.outline = "2px dashed rgba(255,255,255,.9)";
-            btn.style.outlineOffset = "2px";
-            _gpHandle = document.createElement("div");
-            _gpHandle.textContent = "⤢";
-            _gpHandle.style.cssText = "position:absolute;right:-16px;bottom:-16px;width:36px;height:36px;border-radius:50%;background:#fff;border:3px solid #3482ff;color:#3482ff;z-index:5;touch-action:none;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;line-height:1;";
-            btn.appendChild(_gpHandle);
+        let _gpSelId = null;
+        const _gpSelect = (el, id) => {
+            _gpSel = el;
+            _gpSelId = id;
+            if (!el || !id) {
+                _gpSlider.style.display = "none";
+                return;
+            }
+            el.style.outline = "2px dashed rgba(255,255,255,.9)";
+            el.style.outlineOffset = "2px";
+            const _d = _gpBtnPos[id] || { x: 0, y: 0, s: 1 };
+            const _s = _d.s || 1;
+            _gpSliderLabel.textContent = (id === "dpad") ? "D-pad" : id.toUpperCase();
+            _gpRange.value = String(_s);
+            _gpPct.textContent = Math.round(_s * 100) + "%";
+            _gpSlider.style.display = "flex";
             try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
-            let _rs = null;
-            _gpHandle.addEventListener("pointerdown", (e) => {
-                e.preventDefault(); e.stopPropagation();
-                const _r = btn.getBoundingClientRect();
-                const _cx = _r.left + _r.width / 2, _cy = _r.top + _r.height / 2;
-                const _id = _gpBtnId(btn);
-                const _d = (_id && _gpBtnPos[_id]) || { x: 0, y: 0, s: 1 };
-                _rs = { cx: _cx, cy: _cy, base: Math.max(20, btn.offsetWidth / 2), s0: _d.s || 1, id: _id };
-            });
-            _gpHandle.addEventListener("pointermove", (e) => {
-                if (!_rs) return;
-                const _dist = Math.hypot(e.clientX - _rs.cx, e.clientY - _rs.cy);
-                let _s = _dist / _rs.base;
-                _s = Math.max(0.5, Math.min(2.5, Math.round(_s * 20) / 20));
-                const _d = (_rs.id && _gpBtnPos[_rs.id]) || { x: 0, y: 0, s: 1 };
-                _d.s = _s;
-                _gpBtnTransform(btn, _d);
-                _rs.s = _s;
-            });
-            const _rsEnd = () => {
-                if (!_rs) return;
-                const _d = (_rs.id && _gpBtnPos[_rs.id]) || { x: 0, y: 0, s: 1 };
-                _d.s = _rs.s;
-                if (_rs.id) {
-                    _gpBtnPos[_rs.id] = _d;
-                    try { localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos)); } catch (err) {}
-                }
-                _rs = null;
-            };
-            _gpHandle.addEventListener("pointerup", _rsEnd);
-            _gpHandle.addEventListener("pointercancel", _rsEnd);
         };
+        _gpRange.addEventListener("input", () => {
+            if (!_gpSel || !_gpSelId) return;
+            const _s = parseFloat(_gpRange.value) || 1;
+            _gpPct.textContent = Math.round(_s * 100) + "%";
+            const _d = _gpBtnPos[_gpSelId] || { x: 0, y: 0, s: 1 };
+            _d.s = _s;
+            _gpBtnTransform(_gpSel, _d);
+            _gpBtnPos[_gpSelId] = _d;
+            try { localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos)); } catch (err) {}
+        });
         let _gpDrag = null;
         let _gpHoldTimer = null;
         const _gpClearHold = () => { if (_gpHoldTimer !== null) { clearTimeout(_gpHoldTimer); _gpHoldTimer = null; } };
@@ -2831,16 +2839,29 @@ class EJS_Frontend {
             _gpSyncBar();
             const _t = (e.touches && e.touches[0]) || e;
             const _btn = (e.target && e.target.closest) ? e.target.closest(".ejs_virtualGamepad_button") : null;
-            const _id = _btn ? _gpBtnId(_btn) : null;
-            if (_btn && _id) {
-                const _p = _gpBtnPos[_id] || { x: 0, y: 0, s: 1 };
-                _gpDrag = { el: _btn, kind: "btn", id: _id, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false, mode: null, s0: _p.s || 1, s: null };
+            const _dpad = (!_btn && e.target && e.target.closest) ? e.target.closest(".b_dpad") : null;
+            let _selEl = null, _selId = null;
+            if (_btn) {
+                const _id = _gpBtnId(_btn);
+                if (_id) { _selEl = _btn; _selId = _id; }
+            } else if (_dpad) {
+                _selEl = _dpad; _selId = "dpad";
+            }
+            if (_selEl && _selId) {
+                if (_selId === "dpad") {
+                    const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k].contains(_selEl)) || "left";
+                    const _p = _gpPos[_ck] || { x: 0, y: 0 };
+                    _gpDrag = { el: _gpClusters[_ck], kind: "cluster", id: _ck, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false };
+                } else {
+                    const _p = _gpBtnPos[_selId] || { x: 0, y: 0, s: 1 };
+                    _gpDrag = { el: _selEl, kind: "btn", id: _selId, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false };
+                }
                 _gpClearHold();
-                _gpHoldTimer = setTimeout(() => { _gpHoldTimer = null; _gpSelect(_btn); }, 1000);
+                _gpHoldTimer = setTimeout(() => { _gpHoldTimer = null; if (_gpDrag) _gpDrag.held = true; _gpSelect(_selEl, _selId); }, 1000);
             } else {
                 const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k] === e.currentTarget) || "left";
                 const _p = _gpPos[_ck] || { x: 0, y: 0 };
-                _gpDrag = { el: e.currentTarget, kind: "cluster", id: _ck, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false, mode: "move" };
+                _gpDrag = { el: e.currentTarget, kind: "cluster", id: _ck, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false };
             }
             _gpDrag.el.style.outline = "2px dashed rgba(255,255,255,.9)";
             _gpDrag.el.style.outlineOffset = "2px";
@@ -2855,21 +2876,6 @@ class EJS_Frontend {
             const _t = (e.touches && e.touches[0]) || e;
             const _dx = _t.clientX - _gpDrag.sx, _dy = _t.clientY - _gpDrag.sy;
             if (Math.abs(_dx) + Math.abs(_dy) > 10) { _gpDrag.moved = true; _gpClearHold(); }
-            if (_gpDrag.kind === "btn" && _gpDrag.el === _gpSel && !_gpDrag.mode) {
-                if (Math.abs(_dy) > 12 && Math.abs(_dy) > Math.abs(_dx) * 1.5) {
-                    _gpDrag.mode = "resize";
-                } else if (Math.abs(_dx) > 6 || Math.abs(_dy) > 6) {
-                    _gpDrag.mode = "move";
-                }
-            }
-            if (_gpDrag.kind === "btn" && _gpDrag.mode === "resize") {
-                let _s = _gpDrag.s0 + (_gpDrag.sy - _t.clientY) / 120;
-                _s = Math.max(0.5, Math.min(2.5, Math.round(_s * 20) / 20));
-                const _d = _gpBtnPos[_gpDrag.id] || { x: _gpDrag.ox, y: _gpDrag.oy, s: 1 };
-                _gpBtnTransform(_gpDrag.el, { x: _d.x || 0, y: _d.y || 0, s: _s });
-                _gpDrag.s = _s;
-                return;
-            }
             const _nx = _gpDrag.ox + _dx;
             const _ny = _gpDrag.oy + _dy;
             if (_gpDrag.kind === "btn") {
@@ -2886,13 +2892,7 @@ class EJS_Frontend {
             const _d = _gpDrag;
             _d.el.style.outline = "";
             _d.el.style.outlineOffset = "";
-            if (_d.kind === "btn" && _d.mode === "resize" && typeof _d.s === "number") {
-                try {
-                    const _old = _gpBtnPos[_d.id] || { x: 0, y: 0, s: 1 };
-                    _gpBtnPos[_d.id] = { x: _old.x || 0, y: _old.y || 0, s: _d.s };
-                    localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
-                } catch (err) {}
-            } else if (_d.moved && typeof _d.nx === "number") {
+            if (_d.moved && typeof _d.nx === "number") {
                 try {
                     if (_d.kind === "btn") {
                         const _old = _gpBtnPos[_d.id] || { x: 0, y: 0, s: 1 };
@@ -2903,8 +2903,8 @@ class EJS_Frontend {
                         localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
                     }
                 } catch (err) {}
-            } else if (!_d.moved && _d.kind !== "btn") {
-                _gpSelect(null);
+            } else if (!_d.moved && _d.kind !== "btn" && !_d.held) {
+                _gpSelect(null, null);
             }
             _gpDrag = null;
         };
@@ -2925,7 +2925,7 @@ class EJS_Frontend {
             _gpCurOrient = _o;
             _gpPos = _gpLoad(_gpKeyFor(_o), "ejs-gamepad-layout-" + _gpScheme);
             _gpBtnPos = _gpLoad(_gpBtnKeyFor(_o), "ejs-gamepad-buttons-" + _gpScheme);
-            _gpSelect(null);
+            _gpSelect(null, null);
             _gpApplyAll();
         });
         } catch (_gpErr) {}
