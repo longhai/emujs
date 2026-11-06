@@ -113,6 +113,53 @@ LOCALIZE_ANCHOR = '''        for (let i = 0; i < info.length; i++) {
 AUTOFIRE_OLD = "if (this.ejs.isAutofireEnabled(0, value) && !isAnalog) {"
 AUTOFIRE_NEW = "if ((info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo"
 
+# Hien ky hieu nut tay cam that o man hinh Cai dat nut bam — CHI DE
+# HIEN THI, khong doi value2 hay getButtonLabel (xem loi 06/11 o
+# patch_gamepad). Neo la ham updateGamepadLabels() (cung class
+# EJS_Frontend voi man hinh Cai dat); 2 cho hien thi value2 trong
+# man hinh Cai dat doi sang goi helper nay.
+DISPLAY_LABEL_ANCHOR = '''    updateGamepadLabels() {
+        for (let i = 0; i < this.gamepadLabels.length; i++) {
+            this.gamepadLabels[i].innerHTML = ""
+            const def = this.ejs.createElement("option");
+            def.setAttribute("value", "notconnected");
+            def.innerText = "Not Connected";
+            this.gamepadLabels[i].appendChild(def);
+            for (let j = 0; j < this.ejs.gamepad.gamepads.length; j++) {
+                const opt = this.ejs.createElement("option");
+                opt.setAttribute("value", this.ejs.gamepad.gamepads[j].id + "_" + this.ejs.gamepad.gamepads[j].index);
+                opt.innerText = this.ejs.gamepad.gamepads[j].id + "_" + this.ejs.gamepad.gamepads[j].index;
+                this.gamepadLabels[i].appendChild(opt);
+            }
+            this.gamepadLabels[i].value = this.gamepadSelection[i] || "notconnected";
+        }
+    }'''
+
+DISPLAY_LABEL_HELPER = '''
+    // HAI: dich ten nut goc (BUTTON_2, SELECT...) sang ky hieu cua tay
+    // cam that dang cam (Sony ✕○□△ / Xbox A B X Y / Switch B A Y X).
+    // CHI DE HIEN THI o man hinh Cai dat nut bam — khong doi value2
+    // goc: doi la hong nut bam (loi 06/11: doi getButtonLabel sang ky
+    // hieu lam nut bam that liet het, chi co can/analog chay duoc).
+    getGamepadDisplayLabel(value2, playerIdx) {
+        try {
+            const map = { BUTTON_1: 0, BUTTON_2: 1, BUTTON_3: 2, BUTTON_4: 3, LEFT_TOP_SHOULDER: 4, RIGHT_TOP_SHOULDER: 5, LEFT_BOTTOM_SHOULDER: 6, RIGHT_BOTTOM_SHOULDER: 7, SELECT: 8, START: 9, LEFT_STICK: 10, RIGHT_STICK: 11, DPAD_UP: 12, DPAD_DOWN: 13, DPAD_LEFT: 14, DPAD_RIGHT: 15 };
+            const idx = map[String(value2)];
+            if (idx === undefined) return this.localization(value2);
+            let gp = null;
+            const sel = (this.gamepadSelection && this.gamepadSelection[playerIdx]) || "";
+            if (sel) {
+                const gi = sel.lastIndexOf("_");
+                const gidx = parseInt(sel.slice(gi + 1), 10);
+                gp = (this.ejs.gamepad.gamepads || []).find((g) => g && g.index === gidx) || null;
+            }
+            if (!gp) gp = (this.ejs.gamepad.gamepads || [])[0] || null;
+            if (!gp || !gp.id) return this.localization(value2);
+            const sym = this.ejs.gamepad.getGamepadSymbols(this.ejs.gamepad.detectGamepadType(gp.id))[idx];
+            return sym || this.localization(value2);
+        } catch (e) { return this.localization(value2); }
+    }'''
+
 
 def main(path):
     text = open(path, encoding="utf-8").read()
@@ -132,9 +179,14 @@ def main(path):
         text = text.replace(LOCALIZE_ANCHOR, APPEND_BLOCK + LOCALIZE_ANCHOR, 1)
         changed.append("PS1: da them L1/R1/L2/R2; NES: da them Turbo A / Turbo B")
 
-    # --- 4. Tat menu tu mo khi load game: show() chi dung cho
-    # tu mo khi click/chuot — nut ☰ goi menu.toggle() khong dung
-    # show() nen van mo duoc binh thuong. ---
+    # --- 4. KHONG patch show() nua — show() la duong DUY NHAT de mo
+    # thanh menu duoi tren PC: PC khong co nut ☰ (nut do chi tao khi
+    # may co man hinh cam ung), chi co di chuot xuong duoi / click
+    # moi goi show(). Patch show() thanh no-op lam PC mat het menu
+    # (loi Hai gap 06/11). Menu tu mo khi load game da duoc tri o
+    # goc: emulator.js xoa dong menu.open() trong startGame() — do
+    # moi la nguyen nhan that. Neu file dang co ban show() no-op cu
+    # thi tra ve ban goc; khong thi de yen. ---
     MENU_SHOW_OLD = '''        const show = () => {
             clearTimeout(timeout);
             timeout = setTimeout(hide, 3000);
@@ -144,14 +196,9 @@ def main(path):
             // HAI: tat tu mo menu khi load / cham man hinh — chi mo khi bam nut ☰
             return;
         }'''
-    if "HAI: tat tu mo menu" in text:
-        print("Menu tu mo: da tat roi, bo qua")
-    else:
-        if MENU_SHOW_OLD not in text:
-            print("LOI: khong tim thay ham show() cua menu duoi — ban goc doi code roi", file=sys.stderr)
-            return 2
-        text = text.replace(MENU_SHOW_OLD, MENU_SHOW_NEW, 1)
-        changed.append("Menu: da tat tu mo khi load game (chi mo bang nut ☰)")
+    if MENU_SHOW_NEW in text:
+        text = text.replace(MENU_SHOW_NEW, MENU_SHOW_OLD, 1)
+        changed.append("Menu: da tra show() ve ban goc (PC mo menu bang chuot)")
 
     # --- 3. Patch xu ly cham nut de TA/TB that su turbo ---
     if "info[i].autofire === true" in text:
@@ -191,6 +238,23 @@ def main(path):
         text = text.replace(COMBO_DOWN_OLD, COMBO_DOWN_NEW, 1)
         text = text.replace(COMBO_UP_OLD, COMBO_UP_NEW, 1)
         changed.append("Nut combo: da patch xu ly cham nut (arcade AB/XY/ABX/BXY)")
+
+    # --- 5. Hien ky hieu nut tay cam that o man hinh Cai dat nut bam
+    # (Sony ✕○□△ / Xbox A B X Y / Switch B A Y X) — CHI DE HIEN THI.
+    # Khong doi value2 hay getButtonLabel: nhan goc (BUTTON_2...)
+    # moi khop de nut bam chay (xem patch_gamepad). ---
+    if "getGamepadDisplayLabel" in text:
+        print("Ky hieu nut: da co hien thi ky hieu, bo qua")
+    else:
+        if text.count("value2 = this.localization(value2);") != 2:
+            print("LOI: khong tim thay dung 2 cho hien thi value2 — ban goc doi man hinh Cai dat roi", file=sys.stderr)
+            return 2
+        if DISPLAY_LABEL_ANCHOR not in text:
+            print("LOI: khong tim thay updateGamepadLabels() — ban goc doi frontend.js roi", file=sys.stderr)
+            return 2
+        text = text.replace(DISPLAY_LABEL_ANCHOR, DISPLAY_LABEL_ANCHOR + "\n" + DISPLAY_LABEL_HELPER, 1)
+        text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
+        changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
     if changed:
         open(path, "w", encoding="utf-8").write(text)
@@ -233,7 +297,12 @@ GAMEPAD_LABEL_OLD = """    getButtonLabel(index) {
         }
         return this.buttonLabels[index];
     }"""
-GAMEPAD_LABEL_NEW = """    getButtonLabel(index, gamepadIndex) {
+# Ban getButtonLabel LOI cu: doi nhan thanh ky hieu (✕/A...) — nhan nay
+# duoc gamepadEvent() so khop truc tiep voi value2 mac dinh (BUTTON_2,
+# SELECT...) de nut bam chay. Doi sang ky hieu lam khong khop nut nao
+# nua: nut bam that liet het, chi co can/analog chay duoc vi di duong
+# truc khong qua nhan (loi Hai gap 06/11, ca tren dien thoai lan PC).
+GAMEPAD_LABEL_BROKEN = """    getButtonLabel(index, gamepadIndex) {
         if (index === null || index === undefined) {
             return null;
         }
@@ -256,25 +325,40 @@ GAMEPAD_LABEL_NEW = """    getButtonLabel(index, gamepadIndex) {
 
 def patch_gamepad(path):
     text = open(path, encoding="utf-8").read()
+    changed = []
+    # 1. Sua loi cu: tra getButtonLabel ve nhan goc (BUTTON_1...).
+    #    Ky hieu theo loai tay cam chi de HIEN THI o man hinh Cai dat
+    #    nut bam (getGamepadDisplayLabel trong frontend.js), khong
+    #    dung o day nua.
+    if GAMEPAD_LABEL_BROKEN in text:
+        text = text.replace(GAMEPAD_LABEL_BROKEN, GAMEPAD_LABEL_OLD, 1)
+        changed.append("Tay cam: da tra getButtonLabel ve nhan goc (BUTTON_1...)")
+    # 2. Chen helper nhan loai tay cam (chi phuc vu hien thi ky hieu).
     if "detectGamepadType" in text:
         print("Tay cam: da co nhan loai tay cam, bo qua")
-        return 0
-    if GAMEPAD_LABEL_OLD not in text:
-        print("LOI: khong tim thay getButtonLabel() goc — ban goc doi gamepad.js roi", file=sys.stderr)
-        return 2
-    # Chen helper truoc getButtonLabel, roi thay ham do
-    text = text.replace(GAMEPAD_LABEL_OLD, GAMEPAD_HELPER + "\n" + GAMEPAD_LABEL_NEW, 1)
-    # Truyen gamepadIndex vao 2 cho goi getButtonLabel() khi bam/nha nut
-    text = text.replace(
-        "this.dispatchEvent('buttondown', {index: buttonIndex, label: this.getButtonLabel(buttonIndex), gamepadIndex: gamepad.index});",
-        "this.dispatchEvent('buttondown', {index: buttonIndex, label: this.getButtonLabel(buttonIndex, gamepad.index), gamepadIndex: gamepad.index});",
-        1)
-    text = text.replace(
-        "this.dispatchEvent('buttonup', {index: buttonIndex, label:this.getButtonLabel(buttonIndex), gamepadIndex: gamepad.index});",
-        "this.dispatchEvent('buttonup', {index: buttonIndex, label:this.getButtonLabel(buttonIndex, gamepad.index), gamepadIndex: gamepad.index});",
-        1)
-    open(path, "w", encoding="utf-8").write(text)
-    print("DA DOI: Tay cam: da them nhan loai Sony/Xbox/Switch + ky hieu nut")
+    else:
+        if GAMEPAD_LABEL_OLD not in text:
+            print("LOI: khong tim thay getButtonLabel() goc — ban goc doi gamepad.js roi", file=sys.stderr)
+            return 2
+        text = text.replace(GAMEPAD_LABEL_OLD, GAMEPAD_HELPER + "\n" + GAMEPAD_LABEL_OLD, 1)
+        changed.append("Tay cam: da them nhan loai Sony/Xbox/Switch (chi de hien thi)")
+    # 3. Tra 2 dong dispatchEvent ve dang goc (1 tham so) — tham so
+    #    thu 2 chi can khi getButtonLabel doi ky hieu, gio khong can.
+    if "this.getButtonLabel(buttonIndex, gamepad.index)" in text:
+        text = text.replace(
+            "this.dispatchEvent('buttondown', {index: buttonIndex, label: this.getButtonLabel(buttonIndex, gamepad.index), gamepadIndex: gamepad.index});",
+            "this.dispatchEvent('buttondown', {index: buttonIndex, label: this.getButtonLabel(buttonIndex), gamepadIndex: gamepad.index});",
+            1)
+        text = text.replace(
+            "this.dispatchEvent('buttonup', {index: buttonIndex, label:this.getButtonLabel(buttonIndex, gamepad.index), gamepadIndex: gamepad.index});",
+            "this.dispatchEvent('buttonup', {index: buttonIndex, label:this.getButtonLabel(buttonIndex), gamepadIndex: gamepad.index});",
+            1)
+        changed.append("Tay cam: da tra dispatchEvent ve dang goc")
+    if changed:
+        open(path, "w", encoding="utf-8").write(text)
+        print("DA DOI: " + "; ".join(changed))
+    else:
+        print("Tay cam: khong co gi doi.")
     return 0
 
 
