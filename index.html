@@ -1112,6 +1112,7 @@ let playerCleanup = null, currentGameName = "";
 function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
   const opts = {"save-state-location": appSettings.saveLocation, "save-state-slot": appSettings.saveSlot};
   if(appSettings.shader) opts.shader = appSettings.shader;
+  const shaderReapply = `setTimeout(function(){ try{ var em=window.EJS_emulator; if(!em||!em.enableShader) return; var sh=null; try{ sh=em.preGetSetting?em.preGetSetting("shader"):null; }catch(e){} if(!sh) sh=${JSON.stringify(appSettings.shader||"")}; if(sh) em.enableShader(sh); }catch(e){} },500);`;
   const lines = [
     `EJS_player = '#game';`,
     `EJS_gameName = ${JSON.stringify(game.name)};`,
@@ -1131,7 +1132,7 @@ function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
     `EJS_alignStartButton = 'center';`,
     `EJS_defaultOptions = ${JSON.stringify(opts)};`,
     biosUrl ? `EJS_biosUrl = ${JSON.stringify(biosUrl)};` : ``,
-    `EJS_onGameStart = function(){ try{ parent.postMessage({ejs:'started'}, '*'); }catch(e){} };`,
+    `EJS_onGameStart = function(){ try{ parent.postMessage({ejs:'started'}, '*'); }catch(e){} ${shaderReapply} };`,
     `EJS_onExit = function(){ try{ parent.postMessage({ejs:'exit'}, '*'); }catch(e){} };`,
     /* Vá stable (1/2) — QUAN TRỌNG NHẤT: loader.js của stable KHÔNG hề đăng
        ký EJS_onExit cho emulator (nightly có đăng ký ["exit", EJS_onExit]),
