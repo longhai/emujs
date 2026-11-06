@@ -103,7 +103,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v17 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen
+        // HAI: chinh vi tri + do mo cum nut v18 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -555,11 +555,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v17" in text:
-        print("Chinh cum nut: da co ban v17 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen), bo qua")
+    if "cum nut v18" in text:
+        print("Chinh cum nut: da co ban v18 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v18", r"        // HAI: chinh vi tri \+ do mo cum nut v18 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v17", r"        // HAI: chinh vi tri \+ do mo cum nut v17 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v16", r"        // HAI: chinh vi tri \+ do mo cum nut v16 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v15", r"        // HAI: chinh vi tri \+ do mo cum nut v15 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -582,13 +583,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v17")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v18")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v17 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen)")
+        changed.append("Chinh cum nut: da them v18 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
@@ -726,6 +727,19 @@ MD_COLOR_CSS = '''
 '''
 
 
+BUTTON_PRESS_CSS = '''
+/* HAI: nut bam co mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_virtualGamepad_button_down.b_a, .ejs_virtualGamepad_button_down.b_ta { background: rgba(76,175,80,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_b, .ejs_virtualGamepad_button_down.b_tb { background: rgba(229,57,53,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_x { background: rgba(30,136,229,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_y { background: rgba(253,216,53,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_ab, .ejs_virtualGamepad_button_down.b_c { background: rgba(255,152,0,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_cd, .ejs_virtualGamepad_button_down.b_z { background: rgba(171,71,188,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_abc { background: rgba(236,64,122,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_bcd { background: rgba(38,166,154,.55) !important; color: #fff !important; }
+'''
+
+
 VOLUME_CSS = '''
 /* HAI: volume hien ro — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_volume_parent input[type='range'] { --value: 50%; }
@@ -762,6 +776,11 @@ def patch_css(path):
     else:
         out += MD_COLOR_CSS
         changed.append("Mau nut MD: da chen mau chu C/Z")
+    if "HAI: nut bam co mau" in text:
+        print("Mau nut bam: da co roi, bo qua")
+    else:
+        out += BUTTON_PRESS_CSS
+        changed.append("Mau nut bam: bam nut thi nen to mau cua nut, chu trang")
     if "HAI: volume hien ro" in text:
         print("Volume: da co roi, bo qua")
     else:
