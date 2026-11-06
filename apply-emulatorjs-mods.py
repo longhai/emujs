@@ -1208,12 +1208,12 @@ maskLight = 1.2
 SHADER_RES_A = [("2xsal.glsl", SHADER_2XSAL), ("dotmask.glsl", SHADER_DOTMASK), ("4xsoft.glsl", SHADER_4XSOFT)]
 SHADER_RES_B = [("xbr-lv2.glsl", SHADER_XBR_LV2), ("dotmask.glsl", SHADER_DOTMASK), ("4xsoft.glsl", SHADER_4XSOFT), ("2xsal.glsl", SHADER_2XSAL)]
 SHADER_ENTRIES = [
-    ("2xsal-dotmask-4xsoft.glslp", shader_preset_a("1"), SHADER_RES_A),
-    ("2xsal-dotmask-4xsoft-lv1.5.glslp", shader_preset_a("1.5"), SHADER_RES_A),
-    ("2xsal-dotmask-4xsoft-lv2.glslp", shader_preset_a("2"), SHADER_RES_A),
-    ("xbr-dotmask-4xsoft-2xsal-lv1.glslp", shader_preset_b("1"), SHADER_RES_B),
-    ("xbr-dotmask-4xsoft-2xsal-lv1.5.glslp", shader_preset_b("1.5"), SHADER_RES_B),
-    ("xbr-dotmask-4xsoft-2xsal-lv2.glslp", shader_preset_b("2"), SHADER_RES_B),
+    ("2xsal dotmask 4xsoft", shader_preset_a("1"), SHADER_RES_A),
+    ("2xsal dotmask 4xsoft lv1.5", shader_preset_a("1.5"), SHADER_RES_A),
+    ("2xsal dotmask 4xsoft lv2", shader_preset_a("2"), SHADER_RES_A),
+    ("xbr dotmask 4xsoft 2xsal lv1", shader_preset_b("1"), SHADER_RES_B),
+    ("xbr dotmask 4xsoft 2xsal lv1.5", shader_preset_b("1.5"), SHADER_RES_B),
+    ("xbr dotmask 4xsoft 2xsal lv2", shader_preset_b("2"), SHADER_RES_B),
 ]
 
 
