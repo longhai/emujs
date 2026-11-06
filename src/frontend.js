@@ -2694,7 +2694,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v15 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen
+        // HAI: chinh vi tri + do mo cum nut v16 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2710,7 +2710,7 @@ class EJS_Frontend {
         let _gpPos = _gpLoad(_gpKeyFor(_gpCurOrient), "ejs-gamepad-layout-" + _gpScheme);
         let _gpBtnPos = _gpLoad(_gpBtnKeyFor(_gpCurOrient), "ejs-gamepad-buttons-" + _gpScheme);
         const _gpClusters = { top: up, center: down, left: left, right: right };
-        const _gpGetSetting = (id) => { try { return this.ejs.getSettingValue(id); } catch (e) { return null; } };
+        const _gpGetSetting = (id) => { try { const _v = this.ejs.getSettingValue(id); if (_v) return _v; } catch (e) {} try { if (this.settings && this.settings[id]) return this.settings[id]; } catch (e) {} try { if (this.ejs && this.ejs.allSettings && this.ejs.allSettings[id]) return this.ejs.allSettings[id]; } catch (e) {} return null; };
         const _gpApplyOpacity = () => {
             const _op = _gpGetSetting("virtual-gamepad-opacity");
             const _v = _op ? parseFloat(_op) : 1;
@@ -2730,7 +2730,8 @@ class EJS_Frontend {
             for (const _k in _gpClusters) {
                 const _el = _gpClusters[_k];
                 const _p = _gpPos[_k];
-                _el.style.transform = (_p && (typeof _p.x === "number" || typeof _p.y === "number")) ? "translate(" + ((_p.x) || 0) + "px," + ((_p.y) || 0) + "px)" : "";
+                const _cs = (_p && _p.s) || 1;
+                _el.style.transform = (_p && (typeof _p.x === "number" || typeof _p.y === "number" || typeof _p.s === "number")) ? "translate(" + ((_p.x) || 0) + "px," + ((_p.y) || 0) + "px)" + (_cs !== 1 ? " scale(" + _cs + ")" : "") : "";
                 const _btns = _el.querySelectorAll(".ejs_virtualGamepad_button");
                 for (const _b of _btns) {
                     const _id = _gpBtnId(_b);
@@ -2839,9 +2840,8 @@ class EJS_Frontend {
             el.style.outline = "2px dashed rgba(255,255,255,.9)";
             el.style.outlineOffset = "2px";
             if (_gpClusters[id]) {
-                const _ids = _gpClusterBtnIds(el);
-                let _s = 1;
-                for (const _cid of _ids) { const _cd = _gpBtnPos[_cid]; if (_cd && _cd.s) { _s = _cd.s; break; } }
+                const _cp = _gpPos[id] || {};
+                const _s = _cp.s || 1;
                 _gpMiniRange.value = String(_s);
                 _gpMiniPct.textContent = Math.round(_s * 100) + "%";
                 _gpMiniSlider.style.display = "flex";
@@ -2888,12 +2888,16 @@ class EJS_Frontend {
             const _s = parseFloat(_gpMiniRange.value) || 1;
             _gpMiniPct.textContent = Math.round(_s * 100) + "%";
             if (_gpClusters[_gpSelId]) {
+                const _cp = _gpPos[_gpSelId] || { x: 0, y: 0 };
+                _cp.s = _s;
+                _gpPos[_gpSelId] = _cp;
                 _gpClusterBtnIds(_gpSel).forEach((_cid) => {
                     const _cd = _gpBtnPos[_cid] || { x: 0, y: 0, s: 1 };
-                    _cd.s = _s;
+                    _cd.s = 1;
                     _gpBtnPos[_cid] = _cd;
                 });
                 _gpApplyAll();
+                try { localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos)); } catch (err) {}
                 try { localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos)); } catch (err) {}
                 return;
             }
@@ -2982,7 +2986,8 @@ class EJS_Frontend {
                         _gpBtnPos[_d.id] = { x: Math.round(_d.nx), y: Math.round(_d.ny), s: _old.s || 1 };
                         localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
                     } else {
-                        _gpPos[_d.id] = { x: Math.round(_d.nx), y: Math.round(_d.ny) };
+                        const _oldP = _gpPos[_d.id] || { x: 0, y: 0 };
+                        _gpPos[_d.id] = { x: Math.round(_d.nx), y: Math.round(_d.ny), s: _oldP.s || 1 };
                         localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
                     }
                 } catch (err) {}
