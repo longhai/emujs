@@ -806,12 +806,7 @@ void main()
 }
 #endif
 """
-SHADER_XBR_LV2 = """#version 130
-
-
-
-
-#pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
+SHADER_XBR_LV2 = """#pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
 #pragma parameter XBR_EQ_THRESHOLD "Eq Threshold" 15.0 0.0 50.0 1.0
 #pragma parameter XBR_LV1_COEFFICIENT "Lv1 Coefficient" 0.5 0.0 30.0 0.5
 #pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 0.1
@@ -930,7 +925,7 @@ uniform PRECISION int FrameCount;
 uniform PRECISION vec2 OutputSize;
 uniform PRECISION vec2 TextureSize;
 uniform PRECISION vec2 InputSize;
-uniform sampler2D decal;
+uniform sampler2D Texture;
 IN vec2 texCoord;
 IN vec4 t1;
 IN vec4 t2;
@@ -1025,27 +1020,27 @@ void main()
 
     vec2 fp  = fract(texCoord*TextureSize);
 
-    vec3 A1 = tex2D(decal, t1.xw ).xyz;
-    vec3 B1 = tex2D(decal, t1.yw ).xyz;
-    vec3 C1 = tex2D(decal, t1.zw ).xyz;
-    vec3 A  = tex2D(decal, t2.xw ).xyz;
-    vec3 B  = tex2D(decal, t2.yw ).xyz;
-    vec3 C  = tex2D(decal, t2.zw ).xyz;
-    vec3 D  = tex2D(decal, t3.xw ).xyz;
-    vec3 E  = tex2D(decal, t3.yw ).xyz;
-    vec3 F  = tex2D(decal, t3.zw ).xyz;
-    vec3 G  = tex2D(decal, t4.xw ).xyz;
-    vec3 H  = tex2D(decal, t4.yw ).xyz;
-    vec3 I  = tex2D(decal, t4.zw ).xyz;
-    vec3 G5 = tex2D(decal, t5.xw ).xyz;
-    vec3 H5 = tex2D(decal, t5.yw ).xyz;
-    vec3 I5 = tex2D(decal, t5.zw ).xyz;
-    vec3 A0 = tex2D(decal, t6.xy ).xyz;
-    vec3 D0 = tex2D(decal, t6.xz ).xyz;
-    vec3 G0 = tex2D(decal, t6.xw ).xyz;
-    vec3 C4 = tex2D(decal, t7.xy ).xyz;
-    vec3 F4 = tex2D(decal, t7.xz ).xyz;
-    vec3 I4 = tex2D(decal, t7.xw ).xyz;
+    vec3 A1 = tex2D(Texture, t1.xw ).xyz;
+    vec3 B1 = tex2D(Texture, t1.yw ).xyz;
+    vec3 C1 = tex2D(Texture, t1.zw ).xyz;
+    vec3 A  = tex2D(Texture, t2.xw ).xyz;
+    vec3 B  = tex2D(Texture, t2.yw ).xyz;
+    vec3 C  = tex2D(Texture, t2.zw ).xyz;
+    vec3 D  = tex2D(Texture, t3.xw ).xyz;
+    vec3 E  = tex2D(Texture, t3.yw ).xyz;
+    vec3 F  = tex2D(Texture, t3.zw ).xyz;
+    vec3 G  = tex2D(Texture, t4.xw ).xyz;
+    vec3 H  = tex2D(Texture, t4.yw ).xyz;
+    vec3 I  = tex2D(Texture, t4.zw ).xyz;
+    vec3 G5 = tex2D(Texture, t5.xw ).xyz;
+    vec3 H5 = tex2D(Texture, t5.yw ).xyz;
+    vec3 I5 = tex2D(Texture, t5.zw ).xyz;
+    vec3 A0 = tex2D(Texture, t6.xy ).xyz;
+    vec3 D0 = tex2D(Texture, t6.xz ).xyz;
+    vec3 G0 = tex2D(Texture, t6.xw ).xyz;
+    vec3 C4 = tex2D(Texture, t7.xy ).xyz;
+    vec3 F4 = tex2D(Texture, t7.xz ).xyz;
+    vec3 I4 = tex2D(Texture, t7.xw ).xyz;
 
     vec4 b  = vec4(dot(B ,rgbw), dot(D ,rgbw), dot(H ,rgbw), dot(F ,rgbw));
     vec4 c  = vec4(dot(C ,rgbw), dot(A ,rgbw), dot(G ,rgbw), dot(I ,rgbw));
@@ -1208,12 +1203,12 @@ maskLight = 1.2
 SHADER_RES_A = [("2xsal.glsl", SHADER_2XSAL), ("dotmask.glsl", SHADER_DOTMASK), ("4xsoft.glsl", SHADER_4XSOFT)]
 SHADER_RES_B = [("xbr-lv2.glsl", SHADER_XBR_LV2), ("dotmask.glsl", SHADER_DOTMASK), ("4xsoft.glsl", SHADER_4XSOFT), ("2xsal.glsl", SHADER_2XSAL)]
 SHADER_ENTRIES = [
-    ("2xsal dotmask 4xsoft", shader_preset_a("1"), SHADER_RES_A),
-    ("2xsal dotmask 4xsoft lv1.5", shader_preset_a("1.5"), SHADER_RES_A),
-    ("2xsal dotmask 4xsoft lv2", shader_preset_a("2"), SHADER_RES_A),
-    ("xbr dotmask 4xsoft 2xsal lv1", shader_preset_b("1"), SHADER_RES_B),
-    ("xbr dotmask 4xsoft 2xsal lv1.5", shader_preset_b("1.5"), SHADER_RES_B),
-    ("xbr dotmask 4xsoft 2xsal lv2", shader_preset_b("2"), SHADER_RES_B),
+    ("2xsal-dotmask-4xsoft.glslp", shader_preset_a("1"), SHADER_RES_A),
+    ("2xsal-dotmask-4xsoft-lv1.5.glslp", shader_preset_a("1.5"), SHADER_RES_A),
+    ("2xsal-dotmask-4xsoft-lv2.glslp", shader_preset_a("2"), SHADER_RES_A),
+    ("xbr-dotmask-4xsoft-2xsal-lv1.glslp", shader_preset_b("1"), SHADER_RES_B),
+    ("xbr-dotmask-4xsoft-2xsal-lv1.5.glslp", shader_preset_b("1.5"), SHADER_RES_B),
+    ("xbr-dotmask-4xsoft-2xsal-lv2.glslp", shader_preset_b("2"), SHADER_RES_B),
 ]
 
 
@@ -1244,31 +1239,26 @@ def patch_shaders(path):
     if anchor not in text:
         print("LOI: khong tim thay EJS_SHADERS — ban goc doi shaders.js roi", file=sys.stderr)
         return 2
-    lv1_name = SHADER_ENTRIES[0][0]
-    lv1_block = shader_entry_block(*SHADER_ENTRIES[0])
-    lv1_re = re.compile(r'    "' + re.escape(lv1_name) + r'": \{[\s\S]*?\n    \},\n')
-    m = lv1_re.search(text)
-    missing = [e for e in SHADER_ENTRIES if e[0] not in text]
-    if m and m.group(0) == lv1_block:
-        if not missing:
-            print("Shader: ca 6 shader da co roi, bo qua")
-            return 0
-        block = "".join(shader_entry_block(*e) for e in missing)
-        text = text[:m.end()] + block + text[m.end():]
-        added = [e[0] for e in missing]
-    elif m:
-        block = "".join(shader_entry_block(*e) for e in SHADER_ENTRIES if e[0] == lv1_name or e[0] not in text)
-        text = text[:m.start()] + block + text[m.end():]
-        added = [lv1_name] + [e[0] for e in missing]
-    else:
-        if not missing:
-            print("Shader: ca 6 shader da co roi, bo qua")
-            return 0
-        block = "".join(shader_entry_block(*e) for e in missing)
-        text = text.replace(anchor, anchor + block, 1)
-        added = [e[0] for e in missing]
+    changed = []
+    missing_blocks = []
+    for name, preset, resources in SHADER_ENTRIES:
+        block = shader_entry_block(name, preset, resources)
+        pat = re.compile(r'    "' + re.escape(name) + r'": \{[\s\S]*?\n    \},\n')
+        found = pat.search(text)
+        if found:
+            if found.group(0) != block:
+                text = text[:found.start()] + block + text[found.end():]
+                changed.append(name + " (cap nhat)")
+        else:
+            missing_blocks.append(block)
+            changed.append(name)
+    if missing_blocks:
+        text = text.replace(anchor, anchor + "".join(missing_blocks), 1)
+    if not changed:
+        print("Shader: ca 6 shader da co roi, bo qua")
+        return 0
     open(path, "w", encoding="utf-8").write(text)
-    print("DA DOI: Shader: da them " + ", ".join(added))
+    print("DA DOI: Shader: " + ", ".join(changed))
     return 0
 
 
