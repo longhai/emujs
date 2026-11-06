@@ -2694,7 +2694,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v14 — nhan giu chon nut/cum, nut icon to + truot dung gon + nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove khi dang chinh, hien duoc khi fullscreen
+        // HAI: chinh vi tri + do mo cum nut v15 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2758,7 +2758,7 @@ class EJS_Frontend {
         const _gpMkMini = (txt, bg) => {
             const _b = document.createElement("button");
             _b.textContent = txt;
-            _b.style.cssText = "padding:10px 14px;border-radius:999px;border:0;background:" + bg + ";color:#fff;font-size:17px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
+            _b.style.cssText = "padding:7px 11px;border-radius:999px;border:0;background:" + bg + ";color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
             return _b;
         };
         const _gpMiniDone = _gpMkMini("✓", "rgba(52,130,255,.95)");
@@ -2767,9 +2767,10 @@ class EJS_Frontend {
         _gpMiniBar.appendChild(_gpMiniReset);
         this.elements.parent.appendChild(_gpMiniBar);
         const _gpOffBtn = _gpMkMini("✕", "rgba(200,60,60,.95)");
-        _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;display:none;padding:10px 14px;border-radius:999px;border:0;background:rgba(200,60,60,.95);color:#fff;font-size:17px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
+        _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;display:none;padding:7px 11px;border-radius:999px;border:0;background:rgba(200,60,60,.95);color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
         this.elements.parent.appendChild(_gpOffBtn);
-        const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} };
+        const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} _gpSyncRightClick(); };
+        const _gpSyncRightClick = () => { try { if (!this.ejs.config.buttonOpts) this.ejs.config.buttonOpts = {}; this.ejs.config.buttonOpts.rightClick = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? false : true; } catch (err) {} };
         const _gpMiniSlider = document.createElement("div");
         _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:12px;padding:6px 3px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
         const _gpMiniRange = document.createElement("input");
@@ -2914,6 +2915,7 @@ class EJS_Frontend {
             e.stopPropagation();
             _gpApplyOpacity();
             _gpSyncOffBtn();
+            _gpSyncRightClick();
             const _t = (e.touches && e.touches[0]) || e;
             const _btn = (e.target && e.target.closest) ? e.target.closest(".ejs_virtualGamepad_button") : null;
             const _dpad = (!_btn && e.target && e.target.closest) ? e.target.closest(".b_dpad") : null;
