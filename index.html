@@ -19,15 +19,20 @@
 </select>
 <input type="file" id="rom">
 <button onclick="play()">Chơi</button>
-  <div style="width: 640px; height: 480px; max-width: 100%;">
+<!-- Khung game 640x480 (Hai tu chinh, cach nay moi hien hinh) -->
+<div style="width: 640px; height: 480px; max-width: 100%;">
   <div id="game"></div>
-  </div>
-<!-- Chi cho khung game co kich thuoc de hien hinh — day khong phai CSS mod (khong doi mau nut, volume, menu). Khong co dong nay thi khung game cao 0px nên chi nghe tiếng, không thấy hình. -->
+</div>
 <script>
   function play() {
     window.EJS_player = '#game';
     window.EJS_core = document.getElementById('core').value;
-    window.EJS_gameUrl = URL.createObjectURL(document.getElementById('rom').files[0]);
+    // Dua thang doi tuong File vao, KHONG boc qua URL.createObjectURL:
+    // EmulatorJS dat ten file trong may ao theo ten nay — game thung
+    // FBNeo nhan dien romset theo ten file (vd "64street.zip"). Boc
+    // qua blob URL thi ten file thanh ma UUID, FBNeo bao "Romset is
+    // unknown" voi MOI game thung (loi gap 06/11, da kiem chung).
+    window.EJS_gameUrl = document.getElementById('rom').files[0];
     window.EJS_pathtodata = './';
     window.EJS_startOnLoaded = true;
     const s = document.createElement('script');
