@@ -2694,14 +2694,16 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut — keo de doi vi tri, luu theo he may
+        // HAI: chinh vi tri + do mo cum nut v2 — keo de doi vi tri, luu theo he may
+        try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpKey = "ejs-gamepad-layout-" + _gpScheme;
         let _gpPos = {};
         try { _gpPos = JSON.parse(localStorage.getItem(_gpKey) || "{}") || {}; } catch (e) { _gpPos = {}; }
         const _gpClusters = { top: up, center: down, left: left, right: right };
+        const _gpGetSetting = (id) => { try { return this.ejs.getSettingValue(id); } catch (e) { return null; } };
         const _gpApplyOpacity = () => {
-            const _op = this.ejs.getSettingValue("virtual-gamepad-opacity");
+            const _op = _gpGetSetting("virtual-gamepad-opacity");
             const _v = _op ? parseFloat(_op) : 1;
             if (isNaN(_v)) return;
             for (const _k in _gpClusters) _gpClusters[_k].style.opacity = String(_v);
@@ -2714,7 +2716,7 @@ class EJS_Frontend {
             }
             let _gpDrag = null;
             const _gpStart = (e) => {
-                if (this.ejs.getSettingValue("virtual-gamepad-edit-layout") !== "enabled") return;
+                if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
                 if (_gpDrag) return;
                 e.preventDefault();
                 e.stopPropagation();
@@ -2725,7 +2727,7 @@ class EJS_Frontend {
                 _gpEl.style.outlineOffset = "2px";
             };
             const _gpBlock = (e) => {
-                if (this.ejs.getSettingValue("virtual-gamepad-edit-layout") !== "enabled") return;
+                if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
                 e.preventDefault();
                 e.stopPropagation();
             };
@@ -2755,6 +2757,7 @@ class EJS_Frontend {
         }
         _gpApplyOpacity();
         this.virtualGamepad.addEventListener("pointerdown", _gpApplyOpacity);
+        } catch (_gpErr) {}
 
         this.toggleVirtualGamepadLeftHanded = (enabled) => {
             left.classList.toggle("ejs_virtualGamepad_left", !enabled);
