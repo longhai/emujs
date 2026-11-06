@@ -103,7 +103,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v8 — nhan giu chon nut, 3 nut thao tac nho quanh nut do (Xong/Dat lai tren, thanh truot ben canh)
+        // HAI: chinh vi tri + do mo cum nut v10 — nhan giu chon nut, 3 nut thao tac nho, Dat lai D-pad ve mac dinh, xoa vien khi bo chon/tat che do chinh
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -217,6 +217,10 @@ GP_LAYOUT_JS = '''
         };
         const _gpPlaceMini = () => { _gpPlaceBar(); _gpPlaceSlider(); };
         const _gpSelect = (el, id) => {
+            if (_gpSel && _gpSel !== el) {
+                _gpSel.style.outline = "";
+                _gpSel.style.outlineOffset = "";
+            }
             _gpSel = el;
             _gpSelId = id;
             if (!el || !id) {
@@ -241,6 +245,13 @@ GP_LAYOUT_JS = '''
             try {
                 delete _gpBtnPos[_gpSelId];
                 localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
+                if (_gpSelId === "dpad") {
+                    const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k].contains(_gpSel));
+                    if (_ck) {
+                        delete _gpPos[_ck];
+                        localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
+                    }
+                }
             } catch (err) {}
             _gpApplyAll();
             _gpSelect(_gpSel, _gpSelId);
@@ -261,7 +272,7 @@ GP_LAYOUT_JS = '''
         let _gpHoldTimer = null;
         const _gpClearHold = () => { if (_gpHoldTimer !== null) { clearTimeout(_gpHoldTimer); _gpHoldTimer = null; } };
         const _gpStart = (e) => {
-            if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
+            if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") { _gpSelect(null, null); return; }
             if (_gpDrag) return;
             e.preventDefault();
             e.stopPropagation();
@@ -464,11 +475,13 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v8" in text:
-        print("Chinh cum nut: da co ban v8 (3 nut thao tac nho quanh nut), bo qua")
+    if "cum nut v10" in text:
+        print("Chinh cum nut: da co ban v10 (3 nut thao tac nho + Dat lai D-pad + xoa vien), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v9", r"        // HAI: chinh vi tri \+ do mo cum nut v9 — nhan giu chon nut, 3 nut thao tac nho quanh nut do, Dat lai D-pad ve mac dinh\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v8", r"        // HAI: chinh vi tri \+ do mo cum nut v8 — nhan giu chon nut, 3 nut thao tac nho quanh nut do \(Xong/Dat lai tren, thanh truot ben canh\)\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v7", r"        // HAI: chinh vi tri \+ do mo cum nut v7 — nhan giu chon nut/D-pad, doi co bang thanh truot, ep D-pad hien du 4 huong\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v6", r"        // HAI: chinh vi tri \+ do mo cum nut v6 — nhan giu chon nut/D-pad, doi co bang thanh truot\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v5", r"        // HAI: chinh vi tri \+ do mo cum nut v5 — nhan giu 1s chon nut, nut goc to de keo, vuot doc doi co\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -481,13 +494,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v8")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v10")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v8 (3 nut thao tac nho quanh nut dang chon)")
+        changed.append("Chinh cum nut: da them v10 (3 nut thao tac nho + Dat lai D-pad + xoa vien khi bo chon)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
