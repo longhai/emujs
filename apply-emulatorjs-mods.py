@@ -103,7 +103,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v4 — keo tung nut, keo goc doi co, ngang/doc rieng, Dat lai
+        // HAI: chinh vi tri + do mo cum nut v5 — nhan giu 1s chon nut, nut goc to de keo, vuot doc doi co
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -192,8 +192,10 @@ GP_LAYOUT_JS = '''
             btn.style.outline = "2px dashed rgba(255,255,255,.9)";
             btn.style.outlineOffset = "2px";
             _gpHandle = document.createElement("div");
-            _gpHandle.style.cssText = "position:absolute;right:-10px;bottom:-10px;width:22px;height:22px;border-radius:50%;background:#fff;border:2.5px solid #3482ff;z-index:5;touch-action:none;";
+            _gpHandle.textContent = "⤢";
+            _gpHandle.style.cssText = "position:absolute;right:-16px;bottom:-16px;width:36px;height:36px;border-radius:50%;background:#fff;border:3px solid #3482ff;color:#3482ff;z-index:5;touch-action:none;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;line-height:1;";
             btn.appendChild(_gpHandle);
+            try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
             let _rs = null;
             _gpHandle.addEventListener("pointerdown", (e) => {
                 e.preventDefault(); e.stopPropagation();
@@ -227,6 +229,8 @@ GP_LAYOUT_JS = '''
             _gpHandle.addEventListener("pointercancel", _rsEnd);
         };
         let _gpDrag = null;
+        let _gpHoldTimer = null;
+        const _gpClearHold = () => { if (_gpHoldTimer !== null) { clearTimeout(_gpHoldTimer); _gpHoldTimer = null; } };
         const _gpStart = (e) => {
             if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
             if (_gpDrag) return;
@@ -239,11 +243,13 @@ GP_LAYOUT_JS = '''
             const _id = _btn ? _gpBtnId(_btn) : null;
             if (_btn && _id) {
                 const _p = _gpBtnPos[_id] || { x: 0, y: 0, s: 1 };
-                _gpDrag = { el: _btn, kind: "btn", id: _id, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false };
+                _gpDrag = { el: _btn, kind: "btn", id: _id, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false, mode: null, s0: _p.s || 1, s: null };
+                _gpClearHold();
+                _gpHoldTimer = setTimeout(() => { _gpHoldTimer = null; _gpSelect(_btn); }, 1000);
             } else {
                 const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k] === e.currentTarget) || "left";
                 const _p = _gpPos[_ck] || { x: 0, y: 0 };
-                _gpDrag = { el: e.currentTarget, kind: "cluster", id: _ck, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false };
+                _gpDrag = { el: e.currentTarget, kind: "cluster", id: _ck, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false, mode: "move" };
             }
             _gpDrag.el.style.outline = "2px dashed rgba(255,255,255,.9)";
             _gpDrag.el.style.outlineOffset = "2px";
@@ -256,9 +262,25 @@ GP_LAYOUT_JS = '''
         const _gpMove = (e) => {
             if (!_gpDrag) return;
             const _t = (e.touches && e.touches[0]) || e;
-            if (Math.abs(_t.clientX - _gpDrag.sx) + Math.abs(_t.clientY - _gpDrag.sy) > 6) _gpDrag.moved = true;
-            const _nx = _gpDrag.ox + (_t.clientX - _gpDrag.sx);
-            const _ny = _gpDrag.oy + (_t.clientY - _gpDrag.sy);
+            const _dx = _t.clientX - _gpDrag.sx, _dy = _t.clientY - _gpDrag.sy;
+            if (Math.abs(_dx) + Math.abs(_dy) > 10) { _gpDrag.moved = true; _gpClearHold(); }
+            if (_gpDrag.kind === "btn" && _gpDrag.el === _gpSel && !_gpDrag.mode) {
+                if (Math.abs(_dy) > 12 && Math.abs(_dy) > Math.abs(_dx) * 1.5) {
+                    _gpDrag.mode = "resize";
+                } else if (Math.abs(_dx) > 6 || Math.abs(_dy) > 6) {
+                    _gpDrag.mode = "move";
+                }
+            }
+            if (_gpDrag.kind === "btn" && _gpDrag.mode === "resize") {
+                let _s = _gpDrag.s0 + (_gpDrag.sy - _t.clientY) / 120;
+                _s = Math.max(0.5, Math.min(2.5, Math.round(_s * 20) / 20));
+                const _d = _gpBtnPos[_gpDrag.id] || { x: _gpDrag.ox, y: _gpDrag.oy, s: 1 };
+                _gpBtnTransform(_gpDrag.el, { x: _d.x || 0, y: _d.y || 0, s: _s });
+                _gpDrag.s = _s;
+                return;
+            }
+            const _nx = _gpDrag.ox + _dx;
+            const _ny = _gpDrag.oy + _dy;
             if (_gpDrag.kind === "btn") {
                 const _d = _gpBtnPos[_gpDrag.id] || { x: 0, y: 0, s: 1 };
                 _gpBtnTransform(_gpDrag.el, { x: _nx, y: _ny, s: _d.s || 1 });
@@ -268,11 +290,18 @@ GP_LAYOUT_JS = '''
             _gpDrag.nx = _nx; _gpDrag.ny = _ny;
         };
         const _gpEnd = () => {
+            _gpClearHold();
             if (!_gpDrag) return;
             const _d = _gpDrag;
             _d.el.style.outline = "";
             _d.el.style.outlineOffset = "";
-            if (_d.moved && typeof _d.nx === "number") {
+            if (_d.kind === "btn" && _d.mode === "resize" && typeof _d.s === "number") {
+                try {
+                    const _old = _gpBtnPos[_d.id] || { x: 0, y: 0, s: 1 };
+                    _gpBtnPos[_d.id] = { x: _old.x || 0, y: _old.y || 0, s: _d.s };
+                    localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
+                } catch (err) {}
+            } else if (_d.moved && typeof _d.nx === "number") {
                 try {
                     if (_d.kind === "btn") {
                         const _old = _gpBtnPos[_d.id] || { x: 0, y: 0, s: 1 };
@@ -283,9 +312,7 @@ GP_LAYOUT_JS = '''
                         localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
                     }
                 } catch (err) {}
-            } else if (!_d.moved && _d.kind === "btn") {
-                _gpSelect(_d.el);
-            } else if (!_d.moved) {
+            } else if (!_d.moved && _d.kind !== "btn") {
                 _gpSelect(null);
             }
             _gpDrag = null;
@@ -311,6 +338,8 @@ GP_LAYOUT_JS = '''
             _gpApplyAll();
         });
         } catch (_gpErr) {}'''
+
+
 
 
 GP_LAYOUT_MENU_ANCHOR = '''            addToMenu(this.localization("Left Handed Mode"), "virtual-gamepad-left-handed-mode", {
@@ -412,32 +441,38 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v4" in text:
-        print("Chinh cum nut: da co ban v4 (doi co + ngang/doc + Dat lai), bo qua")
+    if "cum nut v5" in text:
+        print("Chinh cum nut: da co ban v5 (nhan giu + nut goc to + vuot doi co), bo qua")
     else:
         import re
-        old_pat = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut v3 — keo tung nut / cum nut, nut Xong thoat\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n")
+        old_pat = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut v4 — keo tung nut, keo goc doi co, ngang/doc rieng, Dat lai\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n")
         _m = old_pat.search(text)
         if _m:
             text = text[:_m.start()] + text[_m.end():]
-            print("Chinh cum nut: da go ban v3, chen ban v4")
+            print("Chinh cum nut: da go ban v4, chen ban v5")
         else:
-            old_pat2 = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut v2 — keo de doi vi tri, luu theo he may\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n")
-            _m2 = old_pat2.search(text)
-            if _m2:
-                text = text[:_m2.start()] + text[_m2.end():]
-                print("Chinh cum nut: da go ban v2, chen ban v4")
+            old_pat3 = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut v3 — keo tung nut / cum nut, nut Xong thoat\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n")
+            _m3 = old_pat3.search(text)
+            if _m3:
+                text = text[:_m3.start()] + text[_m3.end():]
+                print("Chinh cum nut: da go ban v3, chen ban v5")
             else:
-                old_pat1 = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut — keo de doi vi tri, luu theo he may\n[\s\S]*?        this\.virtualGamepad\.addEventListener\(\"pointerdown\", _gpApplyOpacity\);\n")
-                _m1 = old_pat1.search(text)
-                if _m1:
-                    text = text[:_m1.start()] + text[_m1.end():]
-                    print("Chinh cum nut: da go ban v1 (gay ket game), chen ban v4")
+                old_pat2 = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut v2 — keo de doi vi tri, luu theo he may\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n")
+                _m2 = old_pat2.search(text)
+                if _m2:
+                    text = text[:_m2.start()] + text[_m2.end():]
+                    print("Chinh cum nut: da go ban v2, chen ban v5")
+                else:
+                    old_pat1 = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut — keo de doi vi tri, luu theo he may\n[\s\S]*?        this\.virtualGamepad\.addEventListener\(\"pointerdown\", _gpApplyOpacity\);\n")
+                    _m1 = old_pat1.search(text)
+                    if _m1:
+                        text = text[:_m1.start()] + text[_m1.end():]
+                        print("Chinh cum nut: da go ban v1 (gay ket game), chen ban v5")
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v4 (doi co + ngang/doc + Dat lai)")
+        changed.append("Chinh cum nut: da them v5 (nhan giu + nut goc to + vuot doi co)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
