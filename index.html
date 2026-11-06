@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Test mod EmulatorJS</title>
 <style>
-  #game{width:100%;height:100%}
+  #game{width:100%;height:100vh}
   </style>
 </head>
 <body>
@@ -22,7 +22,6 @@
 </select>
 <input type="file" id="rom">
 <button onclick="play()">Chơi</button>
-<!-- Khung game 640x480 (Hai tu chinh, cach nay moi hien hinh) -->
   <div id="game"></div>
 <script>
   function play() {
@@ -30,7 +29,7 @@
     window.EJS_player = '#game';
     window.EJS_core = document.getElementById('core').value;
     window.EJS_gameUrl = file;
-    window.EJS_gameName = file.name.replace(/\.[^.]+$/, '');
+    window.EJS_gameName = gameName;
     window.EJS_pathtodata = './';
     window.EJS_startOnLoaded = true;
     const s = document.createElement('script');
