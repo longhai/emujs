@@ -812,7 +812,6 @@ SHADER_XBR_LV2 = """#pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
 #pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 0.1
 #pragma parameter small_details "Preserve Small Details" 0.0 0.0 1.0 1.0
 
-#define mul(a,b) (b*a)
 
 
 
@@ -954,9 +953,6 @@ const float coef         = 2.0;
 const vec3 rgbw          = vec3(14.352, 28.176, 5.472);
 const vec4 eq_threshold  = vec4(15.0, 15.0, 15.0, 15.0);
 
-vec4 delta   = vec4(1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE);
-vec4 delta_l = vec4(0.5/XBR_SCALE, 1.0/XBR_SCALE, 0.5/XBR_SCALE, 1.0/XBR_SCALE);
-vec4 delta_u = delta_l.yxwz;
 
 const  vec4 Ao = vec4( 1.0, -1.0, -1.0, 1.0 );
 const  vec4 Bo = vec4( 1.0,  1.0, -1.0,-1.0 );
@@ -1014,6 +1010,9 @@ float c_df(vec3 c1, vec3 c2)
 
 void main()
 {
+    vec4 delta = vec4(1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE);
+    vec4 delta_l = vec4(0.5/XBR_SCALE, 1.0/XBR_SCALE, 0.5/XBR_SCALE, 1.0/XBR_SCALE);
+    vec4 delta_u = delta_l.yxwz;
     vec4 edri, edr, edr_l, edr_u, px;
     vec4 irlv0, irlv1, irlv2l, irlv2u, block_3d;
     vec4 fx, fx_l, fx_u;
@@ -1063,9 +1062,9 @@ void main()
 	}
 	else
 	{
-		i4 = mul( mat4x3(I4, C1, A0, G5), y_weight * Y );
-		i5 = mul( mat4x3(I5, C4, A1, G0), y_weight * Y );
-		h5 = mul( mat4x3(H5, F4, B1, D0), y_weight * Y );
+		i4 = vec4( dot(I4, y_weight*Y), dot(C1, y_weight*Y), dot(A0, y_weight*Y), dot(G5, y_weight*Y) );
+		i5 = vec4( dot(I5, y_weight*Y), dot(C4, y_weight*Y), dot(A1, y_weight*Y), dot(G0, y_weight*Y) );
+		h5 = vec4( dot(H5, y_weight*Y), dot(F4, y_weight*Y), dot(B1, y_weight*Y), dot(D0, y_weight*Y) );
 	}
     f4 = h5.yzwx;
 
