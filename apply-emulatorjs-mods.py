@@ -103,7 +103,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v12 — nhan giu chon nut/cum, nut icon + truot dung + nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen
+        // HAI: chinh vi tri + do mo cum nut v13 — nhan giu chon nut/cum, nut icon + truot dung gon + nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu khi dang chinh, hien duoc khi fullscreen
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -180,7 +180,7 @@ GP_LAYOUT_JS = '''
         this.elements.parent.appendChild(_gpOffBtn);
         const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} };
         const _gpMiniSlider = document.createElement("div");
-        _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:14px;padding:8px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
+        _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:12px;padding:6px 3px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
         const _gpMiniRange = document.createElement("input");
         _gpMiniRange.type = "range";
         _gpMiniRange.min = "0.5";
@@ -188,9 +188,9 @@ GP_LAYOUT_JS = '''
         _gpMiniRange.step = "0.05";
         _gpMiniRange.value = "1";
         _gpMiniRange.className = "_gpMiniRange";
-        _gpMiniRange.style.cssText = "width:28px;height:110px;writing-mode:vertical-lr;direction:rtl;";
+        _gpMiniRange.style.cssText = "width:20px;height:100px;writing-mode:vertical-lr;direction:rtl;";
         const _gpMiniPct = document.createElement("span");
-        _gpMiniPct.style.cssText = "font-size:13px;font-weight:700;min-width:38px;text-align:center;";
+        _gpMiniPct.style.cssText = "font-size:11px;font-weight:700;min-width:26px;text-align:center;";
         _gpMiniPct.textContent = "100%";
         _gpMiniSlider.appendChild(_gpMiniRange);
         _gpMiniSlider.appendChild(_gpMiniPct);
@@ -211,8 +211,8 @@ GP_LAYOUT_JS = '''
             if (!_gpSel) return;
             const _r = _gpSel.getBoundingClientRect();
             const _cy = _r.top + _r.height / 2;
-            const _sw = _gpMiniSlider.offsetWidth || 48;
-            const _sh = _gpMiniSlider.offsetHeight || 160;
+            const _sw = _gpMiniSlider.offsetWidth || 32;
+            const _sh = _gpMiniSlider.offsetHeight || 137;
             let _sx = _r.right + 8;
             if (_sx + _sw > window.innerWidth - 4) _sx = _r.left - _sw - 8;
             if (_sx < 4) _sx = 4;
@@ -393,6 +393,13 @@ GP_LAYOUT_JS = '''
                 e.stopPropagation();
             } catch (_err) {}
         }, true);
+        window.addEventListener("contextmenu", (e) => {
+            try {
+                if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
+                e.preventDefault();
+                e.stopPropagation();
+            } catch (_err) {}
+        }, true);
         setTimeout(_gpApplyAll, 100);
         setTimeout(_gpSyncOffBtn, 100);
         window.addEventListener("resize", () => {
@@ -511,11 +518,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v12" in text:
-        print("Chinh cum nut: da co ban v12 (nhan giu chon nut/cum + nut icon + truot dung + nut Tat rieng + chan menu + fullscreen), bo qua")
+    if "cum nut v13" in text:
+        print("Chinh cum nut: da co ban v13 (nhan giu chon nut/cum + nut icon + truot dung gon + nut Tat rieng + chan menu + contextmenu + fullscreen), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v13", r"        // HAI: chinh vi tri \+ do mo cum nut v13 — nhan giu chon nut/cum, nut icon \+ truot dung gon \+ nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v12", r"        // HAI: chinh vi tri \+ do mo cum nut v12 — nhan giu chon nut/cum, nut icon \+ truot dung \+ nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v11", r"        // HAI: chinh vi tri \+ do mo cum nut v11 — nhan giu chon nut/cum, nut icon \+ truot dung \+ nut Tat, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v10", r"        // HAI: chinh vi tri \+ do mo cum nut v10 — nhan giu chon nut, 3 nut thao tac nho, Dat lai D-pad ve mac dinh, xoa vien khi bo chon/tat che do chinh\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -533,13 +541,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v12")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v13")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v12 (nhan giu chon nut/cum + nut icon + truot dung + nut Tat rieng + chan menu + hien khi fullscreen)")
+        changed.append("Chinh cum nut: da them v13 (nhan giu chon nut/cum + nut icon + truot dung gon + nut Tat rieng + chan menu + contextmenu + hien khi fullscreen)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
