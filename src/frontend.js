@@ -2694,7 +2694,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v12 — nhan giu chon nut/cum, nut icon + truot dung + nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen
+        // HAI: chinh vi tri + do mo cum nut v13 — nhan giu chon nut/cum, nut icon + truot dung gon + nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu khi dang chinh, hien duoc khi fullscreen
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2771,7 +2771,7 @@ class EJS_Frontend {
         this.elements.parent.appendChild(_gpOffBtn);
         const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} };
         const _gpMiniSlider = document.createElement("div");
-        _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:14px;padding:8px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
+        _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:12px;padding:6px 3px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
         const _gpMiniRange = document.createElement("input");
         _gpMiniRange.type = "range";
         _gpMiniRange.min = "0.5";
@@ -2779,9 +2779,9 @@ class EJS_Frontend {
         _gpMiniRange.step = "0.05";
         _gpMiniRange.value = "1";
         _gpMiniRange.className = "_gpMiniRange";
-        _gpMiniRange.style.cssText = "width:28px;height:110px;writing-mode:vertical-lr;direction:rtl;";
+        _gpMiniRange.style.cssText = "width:20px;height:100px;writing-mode:vertical-lr;direction:rtl;";
         const _gpMiniPct = document.createElement("span");
-        _gpMiniPct.style.cssText = "font-size:13px;font-weight:700;min-width:38px;text-align:center;";
+        _gpMiniPct.style.cssText = "font-size:11px;font-weight:700;min-width:26px;text-align:center;";
         _gpMiniPct.textContent = "100%";
         _gpMiniSlider.appendChild(_gpMiniRange);
         _gpMiniSlider.appendChild(_gpMiniPct);
@@ -2802,8 +2802,8 @@ class EJS_Frontend {
             if (!_gpSel) return;
             const _r = _gpSel.getBoundingClientRect();
             const _cy = _r.top + _r.height / 2;
-            const _sw = _gpMiniSlider.offsetWidth || 48;
-            const _sh = _gpMiniSlider.offsetHeight || 160;
+            const _sw = _gpMiniSlider.offsetWidth || 32;
+            const _sh = _gpMiniSlider.offsetHeight || 137;
             let _sx = _r.right + 8;
             if (_sx + _sw > window.innerWidth - 4) _sx = _r.left - _sw - 8;
             if (_sx < 4) _sx = 4;
@@ -2981,6 +2981,13 @@ class EJS_Frontend {
                 if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
                 if (this.isChild(this.elements.menu, e.target) || this.isChild(this.elements.menuToggle, e.target)) return;
                 if (_gpMiniBar.contains(e.target) || _gpMiniSlider.contains(e.target) || _gpOffBtn.contains(e.target)) return;
+                e.stopPropagation();
+            } catch (_err) {}
+        }, true);
+        window.addEventListener("contextmenu", (e) => {
+            try {
+                if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
+                e.preventDefault();
                 e.stopPropagation();
             } catch (_err) {}
         }, true);
