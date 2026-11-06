@@ -97,6 +97,92 @@ DISPLAY_LABEL_HELPER = '''
     }'''
 
 
+GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
+        this.virtualGamepad.appendChild(down);
+        this.virtualGamepad.appendChild(left);
+        this.virtualGamepad.appendChild(right);'''
+
+GP_LAYOUT_JS = '''
+        // HAI: chinh vi tri + do mo cum nut — keo de doi vi tri, luu theo he may
+        const _gpScheme = this.ejs.getControlScheme();
+        const _gpKey = "ejs-gamepad-layout-" + _gpScheme;
+        let _gpPos = {};
+        try { _gpPos = JSON.parse(localStorage.getItem(_gpKey) || "{}") || {}; } catch (e) { _gpPos = {}; }
+        const _gpClusters = { top: up, center: down, left: left, right: right };
+        const _gpApplyOpacity = () => {
+            const _op = this.ejs.getSettingValue("virtual-gamepad-opacity");
+            const _v = _op ? parseFloat(_op) : 1;
+            if (isNaN(_v)) return;
+            for (const _k in _gpClusters) _gpClusters[_k].style.opacity = String(_v);
+        };
+        for (const _gpK in _gpClusters) {
+            const _gpEl = _gpClusters[_gpK];
+            const _gpP = _gpPos[_gpK];
+            if (_gpP && typeof _gpP.x === "number" && typeof _gpP.y === "number") {
+                _gpEl.style.transform = "translate(" + _gpP.x + "px," + _gpP.y + "px)";
+            }
+            let _gpDrag = null;
+            const _gpStart = (e) => {
+                if (this.ejs.getSettingValue("virtual-gamepad-edit-layout") !== "enabled") return;
+                if (_gpDrag) return;
+                e.preventDefault();
+                e.stopPropagation();
+                _gpApplyOpacity();
+                const _t = (e.touches && e.touches[0]) || e;
+                _gpDrag = { sx: _t.clientX, sy: _t.clientY, ox: (_gpPos[_gpK] && _gpPos[_gpK].x) || 0, oy: (_gpPos[_gpK] && _gpPos[_gpK].y) || 0, nx: null, ny: null };
+                _gpEl.style.outline = "2px dashed rgba(255,255,255,.9)";
+                _gpEl.style.outlineOffset = "2px";
+            };
+            const _gpBlock = (e) => {
+                if (this.ejs.getSettingValue("virtual-gamepad-edit-layout") !== "enabled") return;
+                e.preventDefault();
+                e.stopPropagation();
+            };
+            const _gpMove = (e) => {
+                if (!_gpDrag) return;
+                const _t = (e.touches && e.touches[0]) || e;
+                const _nx = _gpDrag.ox + (_t.clientX - _gpDrag.sx);
+                const _ny = _gpDrag.oy + (_t.clientY - _gpDrag.sy);
+                _gpEl.style.transform = "translate(" + _nx + "px," + _ny + "px)";
+                _gpDrag.nx = _nx; _gpDrag.ny = _ny;
+            };
+            const _gpEnd = () => {
+                if (!_gpDrag) return;
+                _gpEl.style.outline = "";
+                _gpEl.style.outlineOffset = "";
+                if (typeof _gpDrag.nx === "number") {
+                    _gpPos[_gpK] = { x: Math.round(_gpDrag.nx), y: Math.round(_gpDrag.ny) };
+                    try { localStorage.setItem(_gpKey, JSON.stringify(_gpPos)); } catch (err) {}
+                }
+                _gpDrag = null;
+            };
+            _gpEl.addEventListener("pointerdown", _gpStart, true);
+            _gpEl.addEventListener("touchstart", _gpBlock, true);
+            window.addEventListener("pointermove", _gpMove);
+            window.addEventListener("pointerup", _gpEnd);
+            window.addEventListener("pointercancel", _gpEnd);
+        }
+        _gpApplyOpacity();
+        this.virtualGamepad.addEventListener("pointerdown", _gpApplyOpacity);'''
+
+GP_LAYOUT_MENU_ANCHOR = '''            addToMenu(this.localization("Left Handed Mode"), "virtual-gamepad-left-handed-mode", {
+                "enabled": this.localization("Enabled"),
+                "disabled": this.localization("Disabled")
+            }, "disabled", virtualGamepad, true);'''
+
+GP_LAYOUT_MENU = '''
+            addToMenu(this.localization("Chỉnh vị trí nút"), "virtual-gamepad-edit-layout", {
+                "enabled": this.localization("Enabled"),
+                "disabled": this.localization("Disabled")
+            }, "disabled", virtualGamepad, true); // HAI: chinh vi tri cum nut
+            addToMenu(this.localization("Độ mờ nút"), "virtual-gamepad-opacity", {
+                "1": "100%",
+                "0.8": "80%",
+                "0.6": "60%",
+                "0.4": "40%"
+            }, "1", virtualGamepad, true); // HAI: do mo cum nut'''
+
+
 def main(path):
     text = open(path, encoding="utf-8").read()
     changed = []
@@ -177,6 +263,24 @@ def main(path):
         text = text.replace(DISPLAY_LABEL_ANCHOR, DISPLAY_LABEL_ANCHOR + "\n" + DISPLAY_LABEL_HELPER, 1)
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
+
+    if "HAI: chinh vi tri + do mo cum nut" in text:
+        print("Chinh cum nut: da co keo doi vi tri + do mo, bo qua")
+    else:
+        if GP_LAYOUT_ANCHOR not in text:
+            print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
+            return 2
+        text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
+        changed.append("Chinh cum nut: da them keo doi vi tri + do mo (luu theo he may)")
+
+    if "HAI: do mo cum nut" in text:
+        print("Menu do mo: da co roi, bo qua")
+    else:
+        if GP_LAYOUT_MENU_ANCHOR not in text:
+            print("LOI: khong tim thay menu Left Handed Mode — ban goc doi menu roi", file=sys.stderr)
+            return 2
+        text = text.replace(GP_LAYOUT_MENU_ANCHOR, GP_LAYOUT_MENU_ANCHOR + GP_LAYOUT_MENU, 1)
+        changed.append("Menu: da them 'Chinh vi tri nut' + 'Do mo nut' vao muc Virtual Gamepad")
 
     if changed:
         open(path, "w", encoding="utf-8").write(text)
