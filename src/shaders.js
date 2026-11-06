@@ -23,7 +23,7 @@
  *  }
  */
 export const EJS_SHADERS = {
-    "2xsal-dotmask-4xsoft.glslp": {
+    "2xsal dotmask 4xsoft": {
         "shader": {
             "type": "text",
             "value": "shaders = 3\n\nshader0 = \"2xsal.glsl\"\nfilter_linear0 = false\nscale_type0 = source\nscale0 = 1\n\nshader1 = \"dotmask.glsl\"\nfilter_linear1 = true\nscale_type1 = viewport\nscale_type_x1 = viewport\nscale_type_y1 = source\nscale1 = 1.0\n\nshader2 = \"4xsoft.glsl\"\nfilter_linear2 = false\nscale_type2 = source\nscale2 = 1\n\nparameters = \"DOTMASK_STRENGTH;maskDark;maskLight;shadowMask\"\nDOTMASK_STRENGTH = 0.3\nmaskDark = 0.6\nmaskLight = 1.3\nshadowMask = 1.0\n",
@@ -46,7 +46,7 @@ export const EJS_SHADERS = {
             },
         ],
     },
-    "2xsal-dotmask-4xsoft-lv1.5.glslp": {
+    "2xsal dotmask 4xsoft lv1.5": {
         "shader": {
             "type": "text",
             "value": "shaders = 3\n\nshader0 = \"2xsal.glsl\"\nfilter_linear0 = false\nscale_type0 = source\nscale0 = 1.5\n\nshader1 = \"dotmask.glsl\"\nfilter_linear1 = true\nscale_type1 = viewport\nscale_type_x1 = viewport\nscale_type_y1 = source\nscale1 = 1.0\n\nshader2 = \"4xsoft.glsl\"\nfilter_linear2 = false\nscale_type2 = source\nscale2 = 1\n\nparameters = \"DOTMASK_STRENGTH;maskDark;maskLight;shadowMask\"\nDOTMASK_STRENGTH = 0.3\nmaskDark = 0.6\nmaskLight = 1.3\nshadowMask = 1.0\n",
@@ -69,7 +69,7 @@ export const EJS_SHADERS = {
             },
         ],
     },
-    "2xsal-dotmask-4xsoft-lv2.glslp": {
+    "2xsal dotmask 4xsoft lv2": {
         "shader": {
             "type": "text",
             "value": "shaders = 3\n\nshader0 = \"2xsal.glsl\"\nfilter_linear0 = false\nscale_type0 = source\nscale0 = 2\n\nshader1 = \"dotmask.glsl\"\nfilter_linear1 = true\nscale_type1 = viewport\nscale_type_x1 = viewport\nscale_type_y1 = source\nscale1 = 1.0\n\nshader2 = \"4xsoft.glsl\"\nfilter_linear2 = false\nscale_type2 = source\nscale2 = 1\n\nparameters = \"DOTMASK_STRENGTH;maskDark;maskLight;shadowMask\"\nDOTMASK_STRENGTH = 0.3\nmaskDark = 0.6\nmaskLight = 1.3\nshadowMask = 1.0\n",
@@ -92,7 +92,7 @@ export const EJS_SHADERS = {
             },
         ],
     },
-    "xbr-dotmask-4xsoft-2xsal-lv1.glslp": {
+    "xbr dotmask 4xsoft 2xsal lv1": {
         "shader": {
             "type": "text",
             "value": "shaders = 4\n\nshader0 = \"xbr-lv2.glsl\"\nfilter_linear0 = false\nscale_type0 = source\nscale0 = 1\n\nshader1 = \"dotmask.glsl\"\nfilter_linear1 = true\nscale_type1 = viewport\nscale1 = 1.0\n\nshader2 = \"4xsoft.glsl\"\nfilter_linear2 = false\nscale_type2 = source\nscale2 = 1\n\nshader3 = \"2xsal.glsl\"\nfilter_linear3 = false\nscale_type3 = source\nscale3 = 1\n\nparameters = \"maskDark; maskLight\"\nmaskDark = 0.6\nmaskLight = 1.2\n",
@@ -120,7 +120,7 @@ export const EJS_SHADERS = {
             },
         ],
     },
-    "xbr-dotmask-4xsoft-2xsal-lv1.5.glslp": {
+    "xbr dotmask 4xsoft 2xsal lv1.5": {
         "shader": {
             "type": "text",
             "value": "shaders = 4\n\nshader0 = \"xbr-lv2.glsl\"\nfilter_linear0 = false\nscale_type0 = source\nscale0 = 1.5\n\nshader1 = \"dotmask.glsl\"\nfilter_linear1 = true\nscale_type1 = viewport\nscale1 = 1.0\n\nshader2 = \"4xsoft.glsl\"\nfilter_linear2 = false\nscale_type2 = source\nscale2 = 1\n\nshader3 = \"2xsal.glsl\"\nfilter_linear3 = false\nscale_type3 = source\nscale3 = 1\n\nparameters = \"maskDark; maskLight\"\nmaskDark = 0.6\nmaskLight = 1.2\n",
@@ -148,7 +148,7 @@ export const EJS_SHADERS = {
             },
         ],
     },
-    "xbr-dotmask-4xsoft-2xsal-lv2.glslp": {
+    "xbr dotmask 4xsoft 2xsal lv2": {
         "shader": {
             "type": "text",
             "value": "shaders = 4\n\nshader0 = \"xbr-lv2.glsl\"\nfilter_linear0 = false\nscale_type0 = source\nscale0 = 2\n\nshader1 = \"dotmask.glsl\"\nfilter_linear1 = true\nscale_type1 = viewport\nscale1 = 1.0\n\nshader2 = \"4xsoft.glsl\"\nfilter_linear2 = false\nscale_type2 = source\nscale2 = 1\n\nshader3 = \"2xsal.glsl\"\nfilter_linear3 = false\nscale_type3 = source\nscale3 = 1\n\nparameters = \"maskDark; maskLight\"\nmaskDark = 0.6\nmaskLight = 1.2\n",
