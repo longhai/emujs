@@ -1199,8 +1199,26 @@ maskLight = 1.2
 """
 
 
+def shader_preset_xbr_only(scale):
+    return """shaders = 1
+
+shader0 = "xbr-lv2.glsl"
+filter_linear0 = false
+scale_type0 = source
+scale0 = """ + scale + """
+
+parameters = "XBR_Y_WEIGHT;XBR_EQ_THRESHOLD;XBR_LV1_COEFFICIENT;XBR_LV2_COEFFICIENT;small_details"
+XBR_Y_WEIGHT = 48.0
+XBR_EQ_THRESHOLD = 15.0
+XBR_LV1_COEFFICIENT = 0.5
+XBR_LV2_COEFFICIENT = 2.0
+small_details = 0.0
+"""
+
+
 SHADER_RES_A = [("2xsal.glsl", SHADER_2XSAL), ("dotmask.glsl", SHADER_DOTMASK), ("4xsoft.glsl", SHADER_4XSOFT)]
 SHADER_RES_B = [("xbr-lv2.glsl", SHADER_XBR_LV2), ("dotmask.glsl", SHADER_DOTMASK), ("4xsoft.glsl", SHADER_4XSOFT), ("2xsal.glsl", SHADER_2XSAL)]
+SHADER_RES_XBR = [("xbr-lv2.glsl", SHADER_XBR_LV2)]
 SHADER_ENTRIES = [
     ("2xsal dotmask 4xsoft", shader_preset_a("1"), SHADER_RES_A),
     ("2xsal dotmask 4xsoft lv1.5", shader_preset_a("1.5"), SHADER_RES_A),
@@ -1208,6 +1226,7 @@ SHADER_ENTRIES = [
     ("xbr dotmask 4xsoft 2xsal lv1", shader_preset_b("1"), SHADER_RES_B),
     ("xbr dotmask 4xsoft 2xsal lv1.5", shader_preset_b("1.5"), SHADER_RES_B),
     ("xbr dotmask 4xsoft 2xsal lv2", shader_preset_b("2"), SHADER_RES_B),
+    ("xbr", shader_preset_xbr_only("2"), SHADER_RES_XBR),
 ]
 
 
@@ -1270,7 +1289,7 @@ def patch_shaders(path):
     if missing_blocks:
         text = text.replace(anchor, anchor + "".join(missing_blocks), 1)
     if not changed:
-        print("Shader: ca 6 shader da co roi, bo qua")
+        print("Shader: ca " + str(len(SHADER_ENTRIES)) + " shader da co roi, bo qua")
         return 0
     open(path, "w", encoding="utf-8").write(text)
     print("DA DOI: Shader: " + ", ".join(changed))
