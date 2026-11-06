@@ -2694,7 +2694,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v4 — keo tung nut, keo goc doi co, ngang/doc rieng, Dat lai
+        // HAI: chinh vi tri + do mo cum nut v5 — nhan giu 1s chon nut, nut goc to de keo, vuot doc doi co
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2783,8 +2783,10 @@ class EJS_Frontend {
             btn.style.outline = "2px dashed rgba(255,255,255,.9)";
             btn.style.outlineOffset = "2px";
             _gpHandle = document.createElement("div");
-            _gpHandle.style.cssText = "position:absolute;right:-10px;bottom:-10px;width:22px;height:22px;border-radius:50%;background:#fff;border:2.5px solid #3482ff;z-index:5;touch-action:none;";
+            _gpHandle.textContent = "⤢";
+            _gpHandle.style.cssText = "position:absolute;right:-16px;bottom:-16px;width:36px;height:36px;border-radius:50%;background:#fff;border:3px solid #3482ff;color:#3482ff;z-index:5;touch-action:none;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;line-height:1;";
             btn.appendChild(_gpHandle);
+            try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
             let _rs = null;
             _gpHandle.addEventListener("pointerdown", (e) => {
                 e.preventDefault(); e.stopPropagation();
@@ -2818,6 +2820,8 @@ class EJS_Frontend {
             _gpHandle.addEventListener("pointercancel", _rsEnd);
         };
         let _gpDrag = null;
+        let _gpHoldTimer = null;
+        const _gpClearHold = () => { if (_gpHoldTimer !== null) { clearTimeout(_gpHoldTimer); _gpHoldTimer = null; } };
         const _gpStart = (e) => {
             if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
             if (_gpDrag) return;
@@ -2830,11 +2834,13 @@ class EJS_Frontend {
             const _id = _btn ? _gpBtnId(_btn) : null;
             if (_btn && _id) {
                 const _p = _gpBtnPos[_id] || { x: 0, y: 0, s: 1 };
-                _gpDrag = { el: _btn, kind: "btn", id: _id, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false };
+                _gpDrag = { el: _btn, kind: "btn", id: _id, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false, mode: null, s0: _p.s || 1, s: null };
+                _gpClearHold();
+                _gpHoldTimer = setTimeout(() => { _gpHoldTimer = null; _gpSelect(_btn); }, 1000);
             } else {
                 const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k] === e.currentTarget) || "left";
                 const _p = _gpPos[_ck] || { x: 0, y: 0 };
-                _gpDrag = { el: e.currentTarget, kind: "cluster", id: _ck, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false };
+                _gpDrag = { el: e.currentTarget, kind: "cluster", id: _ck, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false, mode: "move" };
             }
             _gpDrag.el.style.outline = "2px dashed rgba(255,255,255,.9)";
             _gpDrag.el.style.outlineOffset = "2px";
@@ -2847,9 +2853,25 @@ class EJS_Frontend {
         const _gpMove = (e) => {
             if (!_gpDrag) return;
             const _t = (e.touches && e.touches[0]) || e;
-            if (Math.abs(_t.clientX - _gpDrag.sx) + Math.abs(_t.clientY - _gpDrag.sy) > 6) _gpDrag.moved = true;
-            const _nx = _gpDrag.ox + (_t.clientX - _gpDrag.sx);
-            const _ny = _gpDrag.oy + (_t.clientY - _gpDrag.sy);
+            const _dx = _t.clientX - _gpDrag.sx, _dy = _t.clientY - _gpDrag.sy;
+            if (Math.abs(_dx) + Math.abs(_dy) > 10) { _gpDrag.moved = true; _gpClearHold(); }
+            if (_gpDrag.kind === "btn" && _gpDrag.el === _gpSel && !_gpDrag.mode) {
+                if (Math.abs(_dy) > 12 && Math.abs(_dy) > Math.abs(_dx) * 1.5) {
+                    _gpDrag.mode = "resize";
+                } else if (Math.abs(_dx) > 6 || Math.abs(_dy) > 6) {
+                    _gpDrag.mode = "move";
+                }
+            }
+            if (_gpDrag.kind === "btn" && _gpDrag.mode === "resize") {
+                let _s = _gpDrag.s0 + (_gpDrag.sy - _t.clientY) / 120;
+                _s = Math.max(0.5, Math.min(2.5, Math.round(_s * 20) / 20));
+                const _d = _gpBtnPos[_gpDrag.id] || { x: _gpDrag.ox, y: _gpDrag.oy, s: 1 };
+                _gpBtnTransform(_gpDrag.el, { x: _d.x || 0, y: _d.y || 0, s: _s });
+                _gpDrag.s = _s;
+                return;
+            }
+            const _nx = _gpDrag.ox + _dx;
+            const _ny = _gpDrag.oy + _dy;
             if (_gpDrag.kind === "btn") {
                 const _d = _gpBtnPos[_gpDrag.id] || { x: 0, y: 0, s: 1 };
                 _gpBtnTransform(_gpDrag.el, { x: _nx, y: _ny, s: _d.s || 1 });
@@ -2859,11 +2881,18 @@ class EJS_Frontend {
             _gpDrag.nx = _nx; _gpDrag.ny = _ny;
         };
         const _gpEnd = () => {
+            _gpClearHold();
             if (!_gpDrag) return;
             const _d = _gpDrag;
             _d.el.style.outline = "";
             _d.el.style.outlineOffset = "";
-            if (_d.moved && typeof _d.nx === "number") {
+            if (_d.kind === "btn" && _d.mode === "resize" && typeof _d.s === "number") {
+                try {
+                    const _old = _gpBtnPos[_d.id] || { x: 0, y: 0, s: 1 };
+                    _gpBtnPos[_d.id] = { x: _old.x || 0, y: _old.y || 0, s: _d.s };
+                    localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
+                } catch (err) {}
+            } else if (_d.moved && typeof _d.nx === "number") {
                 try {
                     if (_d.kind === "btn") {
                         const _old = _gpBtnPos[_d.id] || { x: 0, y: 0, s: 1 };
@@ -2874,9 +2903,7 @@ class EJS_Frontend {
                         localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
                     }
                 } catch (err) {}
-            } else if (!_d.moved && _d.kind === "btn") {
-                _gpSelect(_d.el);
-            } else if (!_d.moved) {
+            } else if (!_d.moved && _d.kind !== "btn") {
                 _gpSelect(null);
             }
             _gpDrag = null;
