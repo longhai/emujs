@@ -101,14 +101,19 @@ jobs:
             echo "Ly do: Hai bat buoc dong bo lai."
             NEEDS_SYNC=true
           fi
-          # 3. Mod cua Hai chua co trong code hien tai: chay THU script
-          #    len ban sao cua file hien tai (khong doi file that), roi
-          #    so sanh — neu script doi gi thi nghia la mod dang thieu.
-          #    Tu gio them mod moi chi can sua file .py, khong can sua
-          #    yml nua (khong can them dong grep cho tung marker).
+          # 3. Mod cua Hai chua co trong code hien tai: lay file GOC
+          #    SACH tu upstream (ban checkout o buoc truoc), chay
+          #    script len do, roi so voi file hien tai trong repo.
+          #    Khac nhau nghia la mod dang thieu HOAC script moi doi
+          #    ma code hien tai chua co (vd doi ten nut).
+          #    Cach cu (chay thu script len chinh file hien tai) SAI:
+          #    script chi chen them, khong sua lai khoi mod da co san,
+          #    nen chay lai khong doi gi — lan doi ten nut XY/ABX/BXY
+          #    06/11 no bao "khong can dong bo" du file py da doi,
+          #    chay xong bo qua het (loi gap 07:21, Hai phat hien).
           mkdir -p /tmp/modcheck/src
-          cp src/frontend.js src/emulator.js src/gamepad.js /tmp/modcheck/src/ 2>/dev/null || true
-          cp emulator.css /tmp/modcheck/ 2>/dev/null || true
+          cp upstream/data/src/frontend.js upstream/data/src/emulator.js upstream/data/src/gamepad.js /tmp/modcheck/src/ 2>/dev/null || true
+          cp upstream/data/emulator.css /tmp/modcheck/ 2>/dev/null || true
           MOD_MISSING=false
           for f in src/frontend.js src/emulator.js src/gamepad.js emulator.css; do
             if [ "$f" = "emulator.css" ]; then copy="/tmp/modcheck/emulator.css"; else copy="/tmp/modcheck/src/$(basename "$f")"; fi
@@ -120,7 +125,7 @@ jobs:
             fi
           done
           if [ "$MOD_MISSING" = "true" ]; then
-            echo "Ly do: mod cua Hai chua co trong code hien tai (chay thu script thay file doi)."
+            echo "Ly do: mod cua Hai chua co trong code hien tai (file goc + script khac voi file hien tai)."
             NEEDS_SYNC=true
           fi
           echo "NEEDS_SYNC=$NEEDS_SYNC" >> $GITHUB_ENV
