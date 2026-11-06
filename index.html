@@ -1108,16 +1108,16 @@ $("deleteFilteredBtn").onclick = async ()=>{
 };
 
 /* ---------- trình chơi game ---------- */
-let playerCleanup = null, currentGameName = "";
+let playerCleanup = null, currentGameName = "", pendingGameFile = null;
 function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
   const opts = {"save-state-location": appSettings.saveLocation, "save-state-slot": appSettings.saveSlot};
-  if(appSettings.shader) opts.shader = appSettings.shader;
   const shaderReapply = `setTimeout(function(){ try{ var em=window.EJS_emulator; if(!em||!em.enableShader) return; var sh=null; try{ sh=em.preGetSetting?em.preGetSetting("shader"):null; }catch(e){} if(!sh) sh=${JSON.stringify(appSettings.shader||"")}; if(sh) em.enableShader(sh); }catch(e){} },500);`;
+  const useFile = !blobUrl || blobUrl.indexOf("blob:") === 0;
   const lines = [
     `EJS_player = '#game';`,
     `EJS_gameName = ${JSON.stringify(game.name)};`,
     `EJS_gameFileName = ${JSON.stringify(safeFileName(game.fileName||game.name))};`,
-    `EJS_gameUrl = ${JSON.stringify(blobUrl)};`,
+    useFile ? `` : `EJS_gameUrl = ${JSON.stringify(blobUrl)};`,
     `EJS_core = ${JSON.stringify(runtimeCore)};`,
     `EJS_pathtodata = 'https://longhai.github.io/emujs/';`,
     `EJS_startOnLoaded = true;`,
@@ -1134,6 +1134,7 @@ function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
     biosUrl ? `EJS_biosUrl = ${JSON.stringify(biosUrl)};` : ``,
     `EJS_onGameStart = function(){ try{ parent.postMessage({ejs:'started'}, '*'); }catch(e){} ${shaderReapply} };`,
     `EJS_onExit = function(){ try{ parent.postMessage({ejs:'exit'}, '*'); }catch(e){} };`,
+    useFile ? `(function(){var started=false;window.addEventListener("message",function(e){if(!e.data||e.data.ejs!=="gamefile"||!e.data.file||started)return;started=true;window.EJS_gameUrl=e.data.file;var s=document.createElement("script");s.src="https://longhai.github.io/emujs/loader.js";document.body.appendChild(s);});try{parent.postMessage({ejs:"player-ready"},"*");}catch(e){}})();` : ``,
     /* Vá stable (1/2) — QUAN TRỌNG NHẤT: loader.js của stable KHÔNG hề đăng
        ký EJS_onExit cho emulator (nightly có đăng ký ["exit", EJS_onExit]),
        nên khi game phát sự kiện exit thì không ai nhận, trang cha không nhận
@@ -1159,7 +1160,7 @@ function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
     `<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">`+
     `<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}</style></head>`+
     `<body><div id="game"></div><script>${lines}<\/script>`+
-    `<script src="https://longhai.github.io/emujs/loader.js"><\/script></body></html>`;
+    (useFile ? `` : `<script src="https://longhai.github.io/emujs/loader.js"><\/script>`) + `</body></html>`;
 }
 async function launchInstalledGame(id, overrideGame){
   const game = overrideGame || await dbGetGame(id);
@@ -1172,13 +1173,13 @@ async function launchInstalledGame(id, overrideGame){
     return;
   }
   dbg("chạy", game.name, "→", runtimeCore);
-  let gameUrl = null, blobUrl = null;
+  let gameUrl = null;
+  pendingGameFile = null;
   if(overrideGame && typeof overrideGame.url === "string"){
     gameUrl = overrideGame.url; // game từ URL (?rom=...)
   }else{
     const data = game.data instanceof ArrayBuffer ? game.data : await new Blob([game.data]).arrayBuffer();
-    blobUrl = URL.createObjectURL(new Blob([data]));
-    gameUrl = blobUrl;
+    pendingGameFile = new File([data], safeFileName(game.fileName||game.name));
   }
   let biosUrl = null;
   const biosFile = $("biosInput").files[0];
@@ -1195,14 +1196,16 @@ async function launchInstalledGame(id, overrideGame){
   document.body.classList.add("playing");
   playerCleanup = ()=>{
     fr.remove();
-    if(blobUrl) URL.revokeObjectURL(blobUrl);
     if(biosUrl) URL.revokeObjectURL(biosUrl);
     playerCleanup = null;
   };
 }
 window.addEventListener("message", e=>{
   if(!e.data) return;
-  if(e.data.ejs==="started") $("loading").style.display = "none";
+  if(e.data.ejs==="player-ready"){
+    if(pendingGameFile && e.source) e.source.postMessage({ejs:"gamefile", file:pendingGameFile}, "*");
+  }
+  else if(e.data.ejs==="started") $("loading").style.display = "none";
   else if(e.data.ejs==="exit") exitPlayer();
   else if(e.data.ejs==="savestate" && e.data.buf){
     downloadBlob(new Blob([e.data.buf]), (currentGameName||"game")+".state");
