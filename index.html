@@ -1118,7 +1118,7 @@ $("deleteFilteredBtn").onclick = async ()=>{
 let playerCleanup = null, currentGameName = "", pendingGameFile = null;
 function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
   const opts = {"save-state-location": appSettings.saveLocation, "save-state-slot": appSettings.saveSlot};
-  const shaderReapply = `setTimeout(function(){ try{ var em=window.EJS_emulator; if(!em||!em.enableShader) return; var sh=null; try{ sh=em.preGetSetting?em.preGetSetting("shader"):null; }catch(e){} if(!sh||sh==="disabled") sh=${JSON.stringify(appSettings.shader||"")}; if(sh) em.enableShader(sh); }catch(e){} },500);`;
+  const shaderReapply = `setTimeout(function(){ try{ var em=window.EJS_emulator; if(!em||!em.enableShader) return; var sh=${JSON.stringify(appSettings.shader||"")}; if(!sh) return; em.enableShader(sh); setTimeout(function(){ try{ em.enableShader(sh); }catch(e){} },1500); }catch(e){} },500);`;
   const useFile = !blobUrl || blobUrl.indexOf("blob:") === 0;
   const lines = [
     `EJS_player = '#game';`,
