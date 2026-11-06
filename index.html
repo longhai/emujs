@@ -1411,6 +1411,7 @@ $("importSavesBtn").onclick = ()=>{
 
 /* ---------- khởi động ---------- */
 (function init(){
+  try{ if(!localStorage.getItem("ejs-cache-cleared-v1")){ indexedDB.deleteDatabase("EmulatorJS-Cache"); localStorage.setItem("ejs-cache-cleared-v1","1"); } }catch(e){}
   // ?debug=1 ?threads=1 ?rom=...
   try{
     const q = new URLSearchParams(location.search);
