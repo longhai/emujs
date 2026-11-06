@@ -2694,7 +2694,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v13 — nhan giu chon nut/cum, nut icon + truot dung gon + nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu khi dang chinh, hien duoc khi fullscreen
+        // HAI: chinh vi tri + do mo cum nut v14 — nhan giu chon nut/cum, nut icon to + truot dung gon + nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove khi dang chinh, hien duoc khi fullscreen
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2758,7 +2758,7 @@ class EJS_Frontend {
         const _gpMkMini = (txt, bg) => {
             const _b = document.createElement("button");
             _b.textContent = txt;
-            _b.style.cssText = "padding:7px 11px;border-radius:999px;border:0;background:" + bg + ";color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
+            _b.style.cssText = "padding:10px 14px;border-radius:999px;border:0;background:" + bg + ";color:#fff;font-size:17px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
             return _b;
         };
         const _gpMiniDone = _gpMkMini("✓", "rgba(52,130,255,.95)");
@@ -2767,7 +2767,7 @@ class EJS_Frontend {
         _gpMiniBar.appendChild(_gpMiniReset);
         this.elements.parent.appendChild(_gpMiniBar);
         const _gpOffBtn = _gpMkMini("✕", "rgba(200,60,60,.95)");
-        _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;display:none;padding:7px 11px;border-radius:999px;border:0;background:rgba(200,60,60,.95);color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
+        _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;display:none;padding:10px 14px;border-radius:999px;border:0;background:rgba(200,60,60,.95);color:#fff;font-size:17px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
         this.elements.parent.appendChild(_gpOffBtn);
         const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} };
         const _gpMiniSlider = document.createElement("div");
@@ -2815,6 +2815,13 @@ class EJS_Frontend {
             _gpMiniSlider.style.transform = "";
         };
         const _gpPlaceMini = () => { _gpPlaceBar(); if (_gpMiniSlider.style.display !== "none") _gpPlaceSlider(); };
+        const _gpClusterBtnIds = (clusterEl) => {
+            const _ids = [];
+            if (!clusterEl || !clusterEl.querySelectorAll) return _ids;
+            clusterEl.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => { const _id = _gpBtnId(_b); if (_id) _ids.push(_id); });
+            if (clusterEl.querySelector(".b_dpad")) _ids.push("dpad");
+            return _ids;
+        };
         const _gpSelect = (el, id) => {
             _gpSyncOffBtn();
             if (_gpSel && _gpSel !== el) {
@@ -2831,7 +2838,12 @@ class EJS_Frontend {
             el.style.outline = "2px dashed rgba(255,255,255,.9)";
             el.style.outlineOffset = "2px";
             if (_gpClusters[id]) {
-                _gpMiniSlider.style.display = "none";
+                const _ids = _gpClusterBtnIds(el);
+                let _s = 1;
+                for (const _cid of _ids) { const _cd = _gpBtnPos[_cid]; if (_cd && _cd.s) { _s = _cd.s; break; } }
+                _gpMiniRange.value = String(_s);
+                _gpMiniPct.textContent = Math.round(_s * 100) + "%";
+                _gpMiniSlider.style.display = "flex";
             } else {
                 const _d = _gpBtnPos[id] || { x: 0, y: 0, s: 1 };
                 const _s = _d.s || 1;
@@ -2871,9 +2883,19 @@ class EJS_Frontend {
             _gpSelect(_gpSel, _gpSelId);
         });
         _gpMiniRange.addEventListener("input", () => {
-            if (!_gpSel || !_gpSelId || _gpClusters[_gpSelId]) return;
+            if (!_gpSel || !_gpSelId) return;
             const _s = parseFloat(_gpMiniRange.value) || 1;
             _gpMiniPct.textContent = Math.round(_s * 100) + "%";
+            if (_gpClusters[_gpSelId]) {
+                _gpClusterBtnIds(_gpSel).forEach((_cid) => {
+                    const _cd = _gpBtnPos[_cid] || { x: 0, y: 0, s: 1 };
+                    _cd.s = _s;
+                    _gpBtnPos[_cid] = _cd;
+                });
+                _gpApplyAll();
+                try { localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos)); } catch (err) {}
+                return;
+            }
             const _d = _gpBtnPos[_gpSelId] || { x: 0, y: 0, s: 1 };
             _d.s = _s;
             _gpBtnTransform(_gpSel, _d);
@@ -2988,6 +3010,12 @@ class EJS_Frontend {
             try {
                 if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
                 e.preventDefault();
+                e.stopPropagation();
+            } catch (_err) {}
+        }, true);
+        window.addEventListener("mousemove", (e) => {
+            try {
+                if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
                 e.stopPropagation();
             } catch (_err) {}
         }, true);
