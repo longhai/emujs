@@ -1131,16 +1131,16 @@ function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
     `EJS_alignStartButton = 'center';`,
     `EJS_defaultOptions = ${JSON.stringify(opts)};`,
     biosUrl ? `EJS_biosUrl = ${JSON.stringify(biosUrl)};` : ``,
-    `EJS_onGameStart = function(){ try{ parent.postMessage({ejs:'started'}, location.origin); }catch(e){} ${shaderReapply} };`,
-    `EJS_onExit = function(){ try{ parent.postMessage({ejs:'exit'}, location.origin); }catch(e){} };`,
-    useFile ? `(function(){var started=false;window.addEventListener("message",function(e){if(!e.data||e.origin!==location.origin||e.data.ejs!=="gamefile"||!e.data.file||started)return;started=true;window.EJS_gameUrl=e.data.file;var s=document.createElement("script");s.src="https://longhai.github.io/emujs/loader.js";document.body.appendChild(s);});try{parent.postMessage({ejs:"player-ready"},location.origin);}catch(e){}})();` : ``,
+    `EJS_onGameStart = function(){ try{ parent.postMessage({ejs:'started'}, '*'); }catch(e){} ${shaderReapply} };`,
+    `EJS_onExit = function(){ try{ parent.postMessage({ejs:'exit'}, '*'); }catch(e){} };`,
+    useFile ? `(function(){var started=false;window.addEventListener("message",function(e){if(!e.data||e.data.ejs!=="gamefile"||!e.data.file||started)return;started=true;window.EJS_gameUrl=e.data.file;var s=document.createElement("script");s.src="https://longhai.github.io/emujs/loader.js";document.body.appendChild(s);});try{parent.postMessage({ejs:"player-ready"},"*");}catch(e){}})();` : ``,
     /* Vá stable (1/2) — QUAN TRỌNG NHẤT: loader.js của stable KHÔNG hề đăng
        ký EJS_onExit cho emulator (nightly có đăng ký ["exit", EJS_onExit]),
        nên khi game phát sự kiện exit thì không ai nhận, trang cha không nhận
        được postMessage và không dọn iframe — bấm thoát xong kẹt trong game.
        Đoạn dưới tự đăng ký lại ngay khi EJS_emulator xuất hiện (kiểm tra mỗi
        200ms, tối đa 2 phút). */
-    `(function(){var n=0;var t=setInterval(function(){n++;if(window.EJS_emulator&&window.EJS_emulator.on){clearInterval(t);window.EJS_emulator.on('exit',function(){try{parent.postMessage({ejs:'exit'},location.origin);}catch(e){}});}else if(n>600)clearInterval(t);},200);})();`,
+    `(function(){var n=0;var t=setInterval(function(){n++;if(window.EJS_emulator&&window.EJS_emulator.on){clearInterval(t);window.EJS_emulator.on('exit',function(){try{parent.postMessage({ejs:'exit'},'*');}catch(e){}});}else if(n>600)clearInterval(t);},200);})();`,
     /* Vá stable (2/2): stable bỏ qua EJS_askBeforeExit, bấm thoát là luôn
        hiện hộp thoại "Are you sure you want to exit?" (nightly thì tôn trọng
        biến này). Khi người dùng TẮT "Xác nhận trước khi thoát" thì chèn đoạn
@@ -1152,7 +1152,7 @@ function buildPlayerHTML(game, blobUrl, biosUrl, runtimeCore){
     appSettings.askBeforeExit ? `` :
       `(function(){var done=false;var mo=null;function autoExit(){if(done)return;var hs=document.querySelectorAll('h2.ejs_cheat_heading');for(var i=0;i<hs.length;i++){var box=hs[i].parentElement;if(box)box=box.parentElement;if(!box)continue;var btns=box.querySelectorAll('footer button.ejs_popup_submit');if(btns.length){done=true;if(mo)mo.disconnect();btns[0].click();return;}}}mo=new MutationObserver(autoExit);mo.observe(document.documentElement,{childList:true,subtree:true});})();`,
     appSettings.saveLocation==="download"
-      ? `EJS_onSaveState = function(d){ try{ var b=(d instanceof Blob)?d:new Blob([d]); var r=new FileReader(); r.onload=function(){ parent.postMessage({ejs:'savestate', buf:r.result}, location.origin); }; r.readAsArrayBuffer(b); }catch(e){} };`
+      ? `EJS_onSaveState = function(d){ try{ var b=(d instanceof Blob)?d:new Blob([d]); var r=new FileReader(); r.onload=function(){ parent.postMessage({ejs:'savestate', buf:r.result}, '*'); }; r.readAsArrayBuffer(b); }catch(e){} };`
       : ``
   ].join("\n");
   return `<!DOCTYPE html><html><head><meta charset="utf-8">`+
@@ -1205,9 +1205,9 @@ async function launchInstalledGame(id, overrideGame){
   };
 }
 window.addEventListener("message", e=>{
-  if(!e.data || e.origin !== location.origin) return;
+  if(!e.data) return;
   if(e.data.ejs==="player-ready"){
-    if(pendingGameFile && e.source) e.source.postMessage({ejs:"gamefile", file:pendingGameFile}, location.origin);
+    if(pendingGameFile && e.source) e.source.postMessage({ejs:"gamefile", file:pendingGameFile}, "*");
   }
   else if(e.data.ejs==="started"){ clearTimeout(loadTimer); $("loading").style.display = "none"; }
   else if(e.data.ejs==="exit") exitPlayer();
