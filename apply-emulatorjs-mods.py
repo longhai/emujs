@@ -103,7 +103,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v11 — nhan giu chon nut/cum, nut icon + truot dung + nut Tat, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen
+        // HAI: chinh vi tri + do mo cum nut v12 — nhan giu chon nut/cum, nut icon + truot dung + nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -172,11 +172,13 @@ GP_LAYOUT_JS = '''
         };
         const _gpMiniDone = _gpMkMini("✓", "rgba(52,130,255,.95)");
         const _gpMiniReset = _gpMkMini("↺", "rgba(90,90,90,.92)");
-        const _gpMiniOff = _gpMkMini("✕", "rgba(200,60,60,.95)");
         _gpMiniBar.appendChild(_gpMiniDone);
         _gpMiniBar.appendChild(_gpMiniReset);
-        _gpMiniBar.appendChild(_gpMiniOff);
         this.elements.parent.appendChild(_gpMiniBar);
+        const _gpOffBtn = _gpMkMini("✕", "rgba(200,60,60,.95)");
+        _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;display:none;padding:7px 11px;border-radius:999px;border:0;background:rgba(200,60,60,.95);color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
+        this.elements.parent.appendChild(_gpOffBtn);
+        const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} };
         const _gpMiniSlider = document.createElement("div");
         _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:14px;padding:8px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
         const _gpMiniRange = document.createElement("input");
@@ -223,6 +225,7 @@ GP_LAYOUT_JS = '''
         };
         const _gpPlaceMini = () => { _gpPlaceBar(); if (_gpMiniSlider.style.display !== "none") _gpPlaceSlider(); };
         const _gpSelect = (el, id) => {
+            _gpSyncOffBtn();
             if (_gpSel && _gpSel !== el) {
                 _gpSel.style.outline = "";
                 _gpSel.style.outlineOffset = "";
@@ -250,9 +253,10 @@ GP_LAYOUT_JS = '''
             try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
         };
         _gpMiniDone.addEventListener("click", () => { _gpSelect(null, null); });
-        _gpMiniOff.addEventListener("click", () => {
+        _gpOffBtn.addEventListener("click", () => {
             _gpSelect(null, null);
             try { this.changeSettingOption("virtual-gamepad-edit-layout", "disabled"); } catch (err) {}
+            _gpSyncOffBtn();
         });
         _gpMiniReset.addEventListener("click", () => {
             if (!_gpSel || !_gpSelId) return;
@@ -296,6 +300,7 @@ GP_LAYOUT_JS = '''
             e.preventDefault();
             e.stopPropagation();
             _gpApplyOpacity();
+            _gpSyncOffBtn();
             const _t = (e.touches && e.touches[0]) || e;
             const _btn = (e.target && e.target.closest) ? e.target.closest(".ejs_virtualGamepad_button") : null;
             const _dpad = (!_btn && e.target && e.target.closest) ? e.target.closest(".b_dpad") : null;
@@ -379,15 +384,17 @@ GP_LAYOUT_JS = '''
         window.addEventListener("pointerup", _gpEnd);
         window.addEventListener("pointercancel", _gpEnd);
         _gpApplyOpacity();
-        this.virtualGamepad.addEventListener("pointerdown", () => { _gpApplyOpacity(); if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") _gpSelect(null, null); });
-        this.elements.parent.addEventListener("click", (e) => {
+        this.virtualGamepad.addEventListener("pointerdown", () => { _gpApplyOpacity(); _gpSyncOffBtn(); if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") _gpSelect(null, null); });
+        window.addEventListener("click", (e) => {
             try {
                 if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
                 if (this.isChild(this.elements.menu, e.target) || this.isChild(this.elements.menuToggle, e.target)) return;
+                if (_gpMiniBar.contains(e.target) || _gpMiniSlider.contains(e.target) || _gpOffBtn.contains(e.target)) return;
                 e.stopPropagation();
             } catch (_err) {}
         }, true);
         setTimeout(_gpApplyAll, 100);
+        setTimeout(_gpSyncOffBtn, 100);
         window.addEventListener("resize", () => {
             const _o = _gpOrient();
             if (_o === _gpCurOrient) return;
@@ -504,11 +511,13 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v11" in text:
-        print("Chinh cum nut: da co ban v11 (nhan giu chon nut/cum + nut icon + truot dung + nut Tat + chan menu + fullscreen), bo qua")
+    if "cum nut v12" in text:
+        print("Chinh cum nut: da co ban v12 (nhan giu chon nut/cum + nut icon + truot dung + nut Tat rieng + chan menu + fullscreen), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v12", r"        // HAI: chinh vi tri \+ do mo cum nut v12 — nhan giu chon nut/cum, nut icon \+ truot dung \+ nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v11", r"        // HAI: chinh vi tri \+ do mo cum nut v11 — nhan giu chon nut/cum, nut icon \+ truot dung \+ nut Tat, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v10", r"        // HAI: chinh vi tri \+ do mo cum nut v10 — nhan giu chon nut, 3 nut thao tac nho, Dat lai D-pad ve mac dinh, xoa vien khi bo chon/tat che do chinh\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v9", r"        // HAI: chinh vi tri \+ do mo cum nut v9 — nhan giu chon nut, 3 nut thao tac nho quanh nut do, Dat lai D-pad ve mac dinh\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v8", r"        // HAI: chinh vi tri \+ do mo cum nut v8 — nhan giu chon nut, 3 nut thao tac nho quanh nut do \(Xong/Dat lai tren, thanh truot ben canh\)\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -524,13 +533,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v11")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v12")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v11 (nhan giu chon nut/cum + nut icon + truot dung + nut Tat + chan menu + hien khi fullscreen)")
+        changed.append("Chinh cum nut: da them v12 (nhan giu chon nut/cum + nut icon + truot dung + nut Tat rieng + chan menu + hien khi fullscreen)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
