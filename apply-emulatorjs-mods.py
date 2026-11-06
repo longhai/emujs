@@ -103,7 +103,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v16 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen
+        // HAI: chinh vi tri + do mo cum nut v17 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -277,6 +277,8 @@ GP_LAYOUT_JS = '''
                 if (_gpClusters[_gpSelId]) {
                     delete _gpPos[_gpSelId];
                     localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
+                    _gpClusterBtnIds(_gpSel).forEach((_cid) => { delete _gpBtnPos[_cid]; });
+                    localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
                 } else {
                     delete _gpBtnPos[_gpSelId];
                     localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
@@ -553,11 +555,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v16" in text:
-        print("Chinh cum nut: da co ban v16 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + chan menu + contextmenu + mousemove + rightClick + fullscreen), bo qua")
+    if "cum nut v17" in text:
+        print("Chinh cum nut: da co ban v17 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v17", r"        // HAI: chinh vi tri \+ do mo cum nut v17 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v16", r"        // HAI: chinh vi tri \+ do mo cum nut v16 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v15", r"        // HAI: chinh vi tri \+ do mo cum nut v15 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v14", r"        // HAI: chinh vi tri \+ do mo cum nut v14 — nhan giu chon nut/cum, nut icon to \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -579,13 +582,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v16")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v17")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v16 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen)")
+        changed.append("Chinh cum nut: da them v17 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
