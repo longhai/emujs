@@ -1873,6 +1873,16 @@
 .ejs_virtualGamepad_button.b_c { color: #ff9800 !important; }
 .ejs_virtualGamepad_button.b_z { color: #ab47bc !important; }
 
+/* HAI: nut bam co mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_virtualGamepad_button_down.b_a, .ejs_virtualGamepad_button_down.b_ta { background: rgba(76,175,80,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_b, .ejs_virtualGamepad_button_down.b_tb { background: rgba(229,57,53,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_x { background: rgba(30,136,229,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_y { background: rgba(253,216,53,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_ab, .ejs_virtualGamepad_button_down.b_c { background: rgba(255,152,0,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_cd, .ejs_virtualGamepad_button_down.b_z { background: rgba(171,71,188,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_abc { background: rgba(236,64,122,.55) !important; color: #fff !important; }
+.ejs_virtualGamepad_button_down.b_bcd { background: rgba(38,166,154,.55) !important; color: #fff !important; }
+
 /* HAI: volume hien ro — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_volume_parent input[type='range'] { --value: 50%; }
 .ejs_volume_parent input[type='range']::-webkit-slider-runnable-track { background-image: linear-gradient(to right, #1e88e5 var(--value, 50%), rgba(255,255,255,0.25) var(--value, 50%)) !important; }
