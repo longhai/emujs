@@ -756,7 +756,7 @@ function extOf(fn){ const m = String(fn||"").toLowerCase().match(/\.([a-z0-9]+)$
 function baseName(fn){ return String(fn||"").replace(/\.[^.]+$/,""); }
 function safeFileName(fn){
   const ext = extOf(fn) || "rom";
-  const base = baseName(fn).replace(/[^A-Za-z0-9._-]+/g,"_").replace(/^_+|_+$/g,"") || "game";
+  const base = baseName(fn).replace(/_\d{1,2}_[a-z0-9]{3,5}$/,"").replace(/[^A-Za-z0-9._-]+/g,"_").replace(/^_+|_+$/g,"") || "game";
   return base + "." + ext;
 }
 function dbg(...a){ if(appSettings.debug) console.log("[launcher]",...a); }
