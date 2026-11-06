@@ -128,6 +128,16 @@ jobs:
             echo "Ly do: mod cua Hai chua co trong code hien tai (file goc + script khac voi file hien tai)."
             NEEDS_SYNC=true
           fi
+          # 4. Thu muc cores/reports/ chua co trong repo: file bao cao
+          #    nay EmulatorJS dung de biet core da tai dung ban chua
+          #    (de cache, khoi tai lai moi lan mo game). Ben goc tren
+          #    GitHub khong co thu muc nay (chi co tren CDN) nen buoc
+          #    copy data/ khong mang theo duoc — thieu thi bao 404
+          #    "Core caching will be disabled" (loi Hai gap 06/11).
+          if [ ! -d cores/reports ] || [ -z "$(ls -A cores/reports 2>/dev/null)" ]; then
+            echo "Ly do: chua co cores/reports/ trong repo."
+            NEEDS_SYNC=true
+          fi
           echo "NEEDS_SYNC=$NEEDS_SYNC" >> $GITHUB_ENV
           if [ "$NEEDS_SYNC" = "false" ]; then
             echo "Khong can dong bo — dung o day, khong mo PR."
@@ -185,6 +195,20 @@ jobs:
           done < /tmp/core-files.txt
           ls | wc -l
           du -sh .
+          # Tai them cores/reports/*.json (48 file nho): EmulatorJS
+          # dung de biet core da tai dung ban chua, de cache lai khoi
+          # tai lai core moi lan mo game. Thu muc nay chi co tren CDN,
+          # ben goc GitHub khong co nen buoc copy data/ khong mang
+          # theo duoc (thieu thi bao 404 "Core caching will be
+          # disabled", game van chay nhung tai lai core moi lan).
+          mkdir -p reports
+          cd reports
+          curl -s "https://cdn.emulatorjs.org/stable/data/cores/reports/" | grep -o 'href="[^"]*\.json"' | sed 's/href="//;s/"//' | sort -u > /tmp/report-files.txt
+          wc -l /tmp/report-files.txt
+          while read -r f; do
+            curl -fL -o "$f" "https://cdn.emulatorjs.org/stable/data/cores/reports/$f" || echo "Khong tai duoc $f"
+          done < /tmp/report-files.txt
+          ls | wc -l
 
       - name: Mo PR neu co thay doi
         id: cpr
