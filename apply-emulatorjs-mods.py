@@ -103,12 +103,21 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v2 — keo de doi vi tri, luu theo he may
+        // HAI: chinh vi tri + do mo cum nut v4 — keo tung nut, keo goc doi co, ngang/doc rieng, Dat lai
         try {
         const _gpScheme = this.ejs.getControlScheme();
-        const _gpKey = "ejs-gamepad-layout-" + _gpScheme;
-        let _gpPos = {};
-        try { _gpPos = JSON.parse(localStorage.getItem(_gpKey) || "{}") || {}; } catch (e) { _gpPos = {}; }
+        const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
+        let _gpCurOrient = _gpOrient();
+        const _gpKeyFor = (o) => "ejs-gamepad-layout-" + _gpScheme + "-" + o;
+        const _gpBtnKeyFor = (o) => "ejs-gamepad-buttons-" + _gpScheme + "-" + o;
+        const _gpLoad = (k, oldK) => {
+            let v = null;
+            try { v = JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { v = null; }
+            if (!v && oldK) { try { v = JSON.parse(localStorage.getItem(oldK) || "null"); } catch (e) { v = null; } }
+            return v || {};
+        };
+        let _gpPos = _gpLoad(_gpKeyFor(_gpCurOrient), "ejs-gamepad-layout-" + _gpScheme);
+        let _gpBtnPos = _gpLoad(_gpBtnKeyFor(_gpCurOrient), "ejs-gamepad-buttons-" + _gpScheme);
         const _gpClusters = { top: up, center: down, left: left, right: right };
         const _gpGetSetting = (id) => { try { return this.ejs.getSettingValue(id); } catch (e) { return null; } };
         const _gpApplyOpacity = () => {
@@ -117,56 +126,192 @@ GP_LAYOUT_JS = '''
             if (isNaN(_v)) return;
             for (const _k in _gpClusters) _gpClusters[_k].style.opacity = String(_v);
         };
-        for (const _gpK in _gpClusters) {
-            const _gpEl = _gpClusters[_gpK];
-            const _gpP = _gpPos[_gpK];
-            if (_gpP && typeof _gpP.x === "number" && typeof _gpP.y === "number") {
-                _gpEl.style.transform = "translate(" + _gpP.x + "px," + _gpP.y + "px)";
-            }
-            let _gpDrag = null;
-            const _gpStart = (e) => {
-                if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
-                if (_gpDrag) return;
-                e.preventDefault();
-                e.stopPropagation();
-                _gpApplyOpacity();
-                const _t = (e.touches && e.touches[0]) || e;
-                _gpDrag = { sx: _t.clientX, sy: _t.clientY, ox: (_gpPos[_gpK] && _gpPos[_gpK].x) || 0, oy: (_gpPos[_gpK] && _gpPos[_gpK].y) || 0, nx: null, ny: null };
-                _gpEl.style.outline = "2px dashed rgba(255,255,255,.9)";
-                _gpEl.style.outlineOffset = "2px";
-            };
-            const _gpBlock = (e) => {
-                if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
-                e.preventDefault();
-                e.stopPropagation();
-            };
-            const _gpMove = (e) => {
-                if (!_gpDrag) return;
-                const _t = (e.touches && e.touches[0]) || e;
-                const _nx = _gpDrag.ox + (_t.clientX - _gpDrag.sx);
-                const _ny = _gpDrag.oy + (_t.clientY - _gpDrag.sy);
-                _gpEl.style.transform = "translate(" + _nx + "px," + _ny + "px)";
-                _gpDrag.nx = _nx; _gpDrag.ny = _ny;
-            };
-            const _gpEnd = () => {
-                if (!_gpDrag) return;
-                _gpEl.style.outline = "";
-                _gpEl.style.outlineOffset = "";
-                if (typeof _gpDrag.nx === "number") {
-                    _gpPos[_gpK] = { x: Math.round(_gpDrag.nx), y: Math.round(_gpDrag.ny) };
-                    try { localStorage.setItem(_gpKey, JSON.stringify(_gpPos)); } catch (err) {}
+        const _gpBtnId = (el) => {
+            if (!el || !el.classList) return null;
+            for (const c of el.classList) { if (c.indexOf("b_") === 0) return c.slice(2); }
+            return null;
+        };
+        const _gpBtnTransform = (el, d) => {
+            const _x = (d && d.x) || 0, _y = (d && d.y) || 0, _s = (d && d.s) || 1;
+            el.style.transform = "translate(" + _x + "px," + _y + "px)" + (_s !== 1 ? " scale(" + _s + ")" : "");
+        };
+        const _gpApplyAll = () => {
+            for (const _k in _gpClusters) {
+                const _el = _gpClusters[_k];
+                const _p = _gpPos[_k];
+                _el.style.transform = (_p && (typeof _p.x === "number" || typeof _p.y === "number")) ? "translate(" + ((_p.x) || 0) + "px," + ((_p.y) || 0) + "px)" : "";
+                const _btns = _el.querySelectorAll(".ejs_virtualGamepad_button");
+                for (const _b of _btns) {
+                    const _id = _gpBtnId(_b);
+                    _gpBtnTransform(_b, _id ? _gpBtnPos[_id] : null);
                 }
-                _gpDrag = null;
+            }
+        };
+        _gpApplyAll();
+        const _gpBar = document.createElement("div");
+        _gpBar.style.cssText = "position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;display:none;gap:10px;";
+        const _gpMkBtn = (txt, bg) => {
+            const _b = document.createElement("button");
+            _b.textContent = txt;
+            _b.style.cssText = "padding:10px 18px;border-radius:999px;border:0;background:" + bg + ";color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 12px rgba(0,0,0,.4);";
+            return _b;
+        };
+        const _gpDone = _gpMkBtn("✓ Xong", "rgba(52,130,255,.95)");
+        const _gpReset = _gpMkBtn("↺ Đặt lại", "rgba(90,90,90,.92)");
+        _gpDone.addEventListener("click", () => {
+            try { this.changeSettingOption("virtual-gamepad-edit-layout", "disabled"); } catch (e) {}
+            _gpBar.style.display = "none";
+            _gpSelect(null);
+        });
+        _gpReset.addEventListener("click", () => {
+            try {
+                ["portrait", "landscape"].forEach((o) => {
+                    localStorage.removeItem(_gpKeyFor(o));
+                    localStorage.removeItem(_gpBtnKeyFor(o));
+                });
+                localStorage.removeItem("ejs-gamepad-layout-" + _gpScheme);
+                localStorage.removeItem("ejs-gamepad-buttons-" + _gpScheme);
+            } catch (e) {}
+            _gpPos = {}; _gpBtnPos = {};
+            _gpApplyAll();
+            _gpSelect(null);
+        });
+        _gpBar.appendChild(_gpDone);
+        _gpBar.appendChild(_gpReset);
+        document.body.appendChild(_gpBar);
+        const _gpSyncBar = () => {
+            try { _gpBar.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "flex" : "none"; } catch (e) { _gpBar.style.display = "none"; }
+            if (_gpBar.style.display === "none") _gpSelect(null);
+        };
+        let _gpSel = null;
+        let _gpHandle = null;
+        const _gpSelect = (btn) => {
+            if (_gpHandle) { try { _gpHandle.remove(); } catch (e) {} _gpHandle = null; }
+            _gpSel = btn;
+            if (!btn) return;
+            btn.style.outline = "2px dashed rgba(255,255,255,.9)";
+            btn.style.outlineOffset = "2px";
+            _gpHandle = document.createElement("div");
+            _gpHandle.style.cssText = "position:absolute;right:-10px;bottom:-10px;width:22px;height:22px;border-radius:50%;background:#fff;border:2.5px solid #3482ff;z-index:5;touch-action:none;";
+            btn.appendChild(_gpHandle);
+            let _rs = null;
+            _gpHandle.addEventListener("pointerdown", (e) => {
+                e.preventDefault(); e.stopPropagation();
+                const _r = btn.getBoundingClientRect();
+                const _cx = _r.left + _r.width / 2, _cy = _r.top + _r.height / 2;
+                const _id = _gpBtnId(btn);
+                const _d = (_id && _gpBtnPos[_id]) || { x: 0, y: 0, s: 1 };
+                _rs = { cx: _cx, cy: _cy, base: Math.max(20, btn.offsetWidth / 2), s0: _d.s || 1, id: _id };
+            });
+            _gpHandle.addEventListener("pointermove", (e) => {
+                if (!_rs) return;
+                const _dist = Math.hypot(e.clientX - _rs.cx, e.clientY - _rs.cy);
+                let _s = _dist / _rs.base;
+                _s = Math.max(0.5, Math.min(2.5, Math.round(_s * 20) / 20));
+                const _d = (_rs.id && _gpBtnPos[_rs.id]) || { x: 0, y: 0, s: 1 };
+                _d.s = _s;
+                _gpBtnTransform(btn, _d);
+                _rs.s = _s;
+            });
+            const _rsEnd = () => {
+                if (!_rs) return;
+                const _d = (_rs.id && _gpBtnPos[_rs.id]) || { x: 0, y: 0, s: 1 };
+                _d.s = _rs.s;
+                if (_rs.id) {
+                    _gpBtnPos[_rs.id] = _d;
+                    try { localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos)); } catch (err) {}
+                }
+                _rs = null;
             };
-            _gpEl.addEventListener("pointerdown", _gpStart, true);
-            _gpEl.addEventListener("touchstart", _gpBlock, true);
-            window.addEventListener("pointermove", _gpMove);
-            window.addEventListener("pointerup", _gpEnd);
-            window.addEventListener("pointercancel", _gpEnd);
+            _gpHandle.addEventListener("pointerup", _rsEnd);
+            _gpHandle.addEventListener("pointercancel", _rsEnd);
+        };
+        let _gpDrag = null;
+        const _gpStart = (e) => {
+            if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
+            if (_gpDrag) return;
+            e.preventDefault();
+            e.stopPropagation();
+            _gpApplyOpacity();
+            _gpSyncBar();
+            const _t = (e.touches && e.touches[0]) || e;
+            const _btn = (e.target && e.target.closest) ? e.target.closest(".ejs_virtualGamepad_button") : null;
+            const _id = _btn ? _gpBtnId(_btn) : null;
+            if (_btn && _id) {
+                const _p = _gpBtnPos[_id] || { x: 0, y: 0, s: 1 };
+                _gpDrag = { el: _btn, kind: "btn", id: _id, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false };
+            } else {
+                const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k] === e.currentTarget) || "left";
+                const _p = _gpPos[_ck] || { x: 0, y: 0 };
+                _gpDrag = { el: e.currentTarget, kind: "cluster", id: _ck, sx: _t.clientX, sy: _t.clientY, ox: _p.x || 0, oy: _p.y || 0, nx: null, ny: null, moved: false };
+            }
+            _gpDrag.el.style.outline = "2px dashed rgba(255,255,255,.9)";
+            _gpDrag.el.style.outlineOffset = "2px";
+        };
+        const _gpBlock = (e) => {
+            if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
+            e.preventDefault();
+            e.stopPropagation();
+        };
+        const _gpMove = (e) => {
+            if (!_gpDrag) return;
+            const _t = (e.touches && e.touches[0]) || e;
+            if (Math.abs(_t.clientX - _gpDrag.sx) + Math.abs(_t.clientY - _gpDrag.sy) > 6) _gpDrag.moved = true;
+            const _nx = _gpDrag.ox + (_t.clientX - _gpDrag.sx);
+            const _ny = _gpDrag.oy + (_t.clientY - _gpDrag.sy);
+            if (_gpDrag.kind === "btn") {
+                const _d = _gpBtnPos[_gpDrag.id] || { x: 0, y: 0, s: 1 };
+                _gpBtnTransform(_gpDrag.el, { x: _nx, y: _ny, s: _d.s || 1 });
+            } else {
+                _gpDrag.el.style.transform = "translate(" + _nx + "px," + _ny + "px)";
+            }
+            _gpDrag.nx = _nx; _gpDrag.ny = _ny;
+        };
+        const _gpEnd = () => {
+            if (!_gpDrag) return;
+            const _d = _gpDrag;
+            _d.el.style.outline = "";
+            _d.el.style.outlineOffset = "";
+            if (_d.moved && typeof _d.nx === "number") {
+                try {
+                    if (_d.kind === "btn") {
+                        const _old = _gpBtnPos[_d.id] || { x: 0, y: 0, s: 1 };
+                        _gpBtnPos[_d.id] = { x: Math.round(_d.nx), y: Math.round(_d.ny), s: _old.s || 1 };
+                        localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
+                    } else {
+                        _gpPos[_d.id] = { x: Math.round(_d.nx), y: Math.round(_d.ny) };
+                        localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
+                    }
+                } catch (err) {}
+            } else if (!_d.moved && _d.kind === "btn") {
+                _gpSelect(_d.el);
+            } else if (!_d.moved) {
+                _gpSelect(null);
+            }
+            _gpDrag = null;
+        };
+        for (const _gpK in _gpClusters) {
+            _gpClusters[_gpK].addEventListener("pointerdown", _gpStart, true);
+            _gpClusters[_gpK].addEventListener("touchstart", _gpBlock, true);
         }
+        window.addEventListener("pointermove", _gpMove);
+        window.addEventListener("pointerup", _gpEnd);
+        window.addEventListener("pointercancel", _gpEnd);
         _gpApplyOpacity();
-        this.virtualGamepad.addEventListener("pointerdown", _gpApplyOpacity);
+        _gpSyncBar();
+        this.virtualGamepad.addEventListener("pointerdown", () => { _gpApplyOpacity(); _gpSyncBar(); });
+        setTimeout(_gpApplyAll, 100);
+        window.addEventListener("resize", () => {
+            const _o = _gpOrient();
+            if (_o === _gpCurOrient) return;
+            _gpCurOrient = _o;
+            _gpPos = _gpLoad(_gpKeyFor(_o), "ejs-gamepad-layout-" + _gpScheme);
+            _gpBtnPos = _gpLoad(_gpBtnKeyFor(_o), "ejs-gamepad-buttons-" + _gpScheme);
+            _gpSelect(null);
+            _gpApplyAll();
+        });
         } catch (_gpErr) {}'''
+
 
 GP_LAYOUT_MENU_ANCHOR = '''            addToMenu(this.localization("Left Handed Mode"), "virtual-gamepad-left-handed-mode", {
                 "enabled": this.localization("Enabled"),
@@ -267,20 +412,32 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "_gpGetSetting" in text:
-        print("Chinh cum nut: da co ban v2 an toan, bo qua")
+    if "cum nut v4" in text:
+        print("Chinh cum nut: da co ban v4 (doi co + ngang/doc + Dat lai), bo qua")
     else:
         import re
-        old_pat = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut — keo de doi vi tri, luu theo he may\n[\s\S]*?        this\.virtualGamepad\.addEventListener\(\"pointerdown\", _gpApplyOpacity\);\n")
+        old_pat = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut v3 — keo tung nut / cum nut, nut Xong thoat\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n")
         _m = old_pat.search(text)
         if _m:
             text = text[:_m.start()] + text[_m.end():]
-            print("Chinh cum nut: da go ban v1 (gay ket game), chen ban v2")
+            print("Chinh cum nut: da go ban v3, chen ban v4")
+        else:
+            old_pat2 = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut v2 — keo de doi vi tri, luu theo he may\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n")
+            _m2 = old_pat2.search(text)
+            if _m2:
+                text = text[:_m2.start()] + text[_m2.end():]
+                print("Chinh cum nut: da go ban v2, chen ban v4")
+            else:
+                old_pat1 = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut — keo de doi vi tri, luu theo he may\n[\s\S]*?        this\.virtualGamepad\.addEventListener\(\"pointerdown\", _gpApplyOpacity\);\n")
+                _m1 = old_pat1.search(text)
+                if _m1:
+                    text = text[:_m1.start()] + text[_m1.end():]
+                    print("Chinh cum nut: da go ban v1 (gay ket game), chen ban v4")
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them keo doi vi tri + do mo v2 (khong ket game)")
+        changed.append("Chinh cum nut: da them v4 (doi co + ngang/doc + Dat lai)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
