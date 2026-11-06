@@ -103,14 +103,16 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut — keo de doi vi tri, luu theo he may
+        // HAI: chinh vi tri + do mo cum nut v2 — keo de doi vi tri, luu theo he may
+        try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpKey = "ejs-gamepad-layout-" + _gpScheme;
         let _gpPos = {};
         try { _gpPos = JSON.parse(localStorage.getItem(_gpKey) || "{}") || {}; } catch (e) { _gpPos = {}; }
         const _gpClusters = { top: up, center: down, left: left, right: right };
+        const _gpGetSetting = (id) => { try { return this.ejs.getSettingValue(id); } catch (e) { return null; } };
         const _gpApplyOpacity = () => {
-            const _op = this.ejs.getSettingValue("virtual-gamepad-opacity");
+            const _op = _gpGetSetting("virtual-gamepad-opacity");
             const _v = _op ? parseFloat(_op) : 1;
             if (isNaN(_v)) return;
             for (const _k in _gpClusters) _gpClusters[_k].style.opacity = String(_v);
@@ -123,7 +125,7 @@ GP_LAYOUT_JS = '''
             }
             let _gpDrag = null;
             const _gpStart = (e) => {
-                if (this.ejs.getSettingValue("virtual-gamepad-edit-layout") !== "enabled") return;
+                if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
                 if (_gpDrag) return;
                 e.preventDefault();
                 e.stopPropagation();
@@ -134,7 +136,7 @@ GP_LAYOUT_JS = '''
                 _gpEl.style.outlineOffset = "2px";
             };
             const _gpBlock = (e) => {
-                if (this.ejs.getSettingValue("virtual-gamepad-edit-layout") !== "enabled") return;
+                if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
                 e.preventDefault();
                 e.stopPropagation();
             };
@@ -163,7 +165,8 @@ GP_LAYOUT_JS = '''
             window.addEventListener("pointercancel", _gpEnd);
         }
         _gpApplyOpacity();
-        this.virtualGamepad.addEventListener("pointerdown", _gpApplyOpacity);'''
+        this.virtualGamepad.addEventListener("pointerdown", _gpApplyOpacity);
+        } catch (_gpErr) {}'''
 
 GP_LAYOUT_MENU_ANCHOR = '''            addToMenu(this.localization("Left Handed Mode"), "virtual-gamepad-left-handed-mode", {
                 "enabled": this.localization("Enabled"),
@@ -264,14 +267,20 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "HAI: chinh vi tri + do mo cum nut" in text:
-        print("Chinh cum nut: da co keo doi vi tri + do mo, bo qua")
+    if "_gpGetSetting" in text:
+        print("Chinh cum nut: da co ban v2 an toan, bo qua")
     else:
+        import re
+        old_pat = re.compile(r"        // HAI: chinh vi tri \+ do mo cum nut — keo de doi vi tri, luu theo he may\n[\s\S]*?        this\.virtualGamepad\.addEventListener\(\"pointerdown\", _gpApplyOpacity\);\n")
+        _m = old_pat.search(text)
+        if _m:
+            text = text[:_m.start()] + text[_m.end():]
+            print("Chinh cum nut: da go ban v1 (gay ket game), chen ban v2")
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them keo doi vi tri + do mo (luu theo he may)")
+        changed.append("Chinh cum nut: da them keo doi vi tri + do mo v2 (khong ket game)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
