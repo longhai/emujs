@@ -4,8 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Test mod EmulatorJS</title>
- <style>* {margin: 0;padding: 0;}</style>
 </head>
+<style>
+  * {
+  margin: 0;
+  padding: 0;
+  }
+  </style>
 <body>
 <select id="core">
   <option value="nes">NES</option>
@@ -20,7 +25,8 @@
 </select>
 <input type="file" id="rom">
 <button onclick="play()">Chơi</button>
-<div style="width: 100%; height: 100%;">
+
+<div style="width: 100%; height: calc(100vh - 60px);">
   <div id="game"></div>
 </div>
 <script>
@@ -28,8 +34,10 @@
     const file = document.getElementById('rom').files[0];
     window.EJS_player = '#game';
     window.EJS_core = document.getElementById('core').value;
+
     window.EJS_gameUrl = file;
     window.EJS_gameName = file.name.replace(/\.[^.]+$/, '');
+
     window.EJS_pathtodata = './';
     window.EJS_startOnLoaded = true;
     const s = document.createElement('script');
