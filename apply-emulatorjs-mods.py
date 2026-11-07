@@ -14,7 +14,12 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
         if ("nes" === this.ejs.getControlScheme()) {
             info.push(
                 { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true },
-                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true }
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true },
+                { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
+                { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
+                { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
+                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
             );
         }
         // HAI: nut combo arcade — 1 nut bam nhieu nut cung luc (kieu nut
@@ -38,7 +43,10 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
                 { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
                 { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
                 { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
-                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
+                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] },
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true }
             );
         }
 '''
@@ -103,7 +111,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v19 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc)
+        // HAI: chinh vi tri + do mo cum nut v20 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu chinh sua tren dau (nut ket hop chung + an/hien nut), TAB turbo A+B
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -135,6 +143,26 @@ GP_LAYOUT_JS = '''
             const _x = (d && d.x) || 0, _y = (d && d.y) || 0, _s = (d && d.s) || 1;
             el.style.transform = "translate(" + _x + "px," + _y + "px)" + (_s !== 1 ? " scale(" + _s + ")" : "");
         };
+        const _gpHiddenKeyFor = (o) => "ejs-gamepad-hidden-" + _gpScheme + "-" + o;
+        let _gpHidden = _gpLoad(_gpHiddenKeyFor(_gpCurOrient), "ejs-gamepad-hidden-" + _gpScheme);
+        const _gpComboIds = ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
+        const _gpDefaultHiddenIds = () => {
+            if (_gpScheme === "nes") return ["ab", "cd", "abc", "bcd"];
+            if (["arcade", "mame", "fbneo"].includes(_gpScheme)) return ["ta", "tb", "tab"];
+            return [];
+        };
+        try { if (!localStorage.getItem(_gpHiddenKeyFor(_gpCurOrient))) _gpDefaultHiddenIds().forEach((id) => { _gpHidden[id] = true; }); } catch (e) {}
+        const _gpBtnEl = (id) => (this.virtualGamepad ? this.virtualGamepad.querySelector(".b_" + id) : null);
+        const _gpApplyHidden = () => {
+            if (!this.virtualGamepad) return;
+            this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => {
+                const _id = _gpBtnId(_b);
+                if (!_id) return;
+                _b.style.display = _gpHidden[_id] ? "none" : "";
+            });
+            const _dp = this.virtualGamepad.querySelector(".b_dpad");
+            if (_dp) _dp.style.display = _gpHidden["dpad"] ? "none" : "";
+        };
         const _gpApplyAll = () => {
             for (const _k in _gpClusters) {
                 const _el = _gpClusters[_k];
@@ -158,6 +186,7 @@ GP_LAYOUT_JS = '''
                     _gpBtnTransform(_dp, _gpBtnPos["dpad"] || null);
                 }
             }
+            _gpApplyHidden();
         };
         _gpApplyAll();
         const _gpMiniStyle = document.createElement("style");
@@ -179,7 +208,7 @@ GP_LAYOUT_JS = '''
         const _gpOffBtn = _gpMkMini("✕", "rgba(200,60,60,.95)");
         _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;display:none;padding:7px 11px;border-radius:999px;border:0;background:rgba(200,60,60,.95);color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
         this.elements.parent.appendChild(_gpOffBtn);
-        const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} _gpSyncRightClick(); };
+        const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} _gpSyncRightClick(); try { _gpSyncEditMenu(); } catch (err) {} };
         const _gpSyncRightClick = () => { try { if (!this.ejs.config.buttonOpts) this.ejs.config.buttonOpts = {}; this.ejs.config.buttonOpts.rightClick = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? false : true; } catch (err) {} };
         const _gpMiniSlider = document.createElement("div");
         _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:12px;padding:6px 3px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
@@ -197,6 +226,65 @@ GP_LAYOUT_JS = '''
         _gpMiniSlider.appendChild(_gpMiniRange);
         _gpMiniSlider.appendChild(_gpMiniPct);
         this.elements.parent.appendChild(_gpMiniSlider);
+        const _gpEditMenu = document.createElement("div");
+        _gpEditMenu.style.cssText = "position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10002;display:none;max-width:94vw;max-height:48vh;overflow:auto;background:rgba(0,0,0,.85);border-radius:12px;padding:10px 12px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);font-size:13px;";
+        this.elements.parent.appendChild(_gpEditMenu);
+        const _gpEditMenuRow = (label, checked, onChange) => {
+            const _r = document.createElement("label");
+            _r.style.cssText = "display:flex;align-items:center;gap:8px;padding:4px 2px;white-space:nowrap;cursor:pointer;";
+            const _c = document.createElement("input");
+            _c.type = "checkbox";
+            _c.checked = checked;
+            _c.addEventListener("change", () => onChange(_c.checked));
+            const _s = document.createElement("span");
+            _s.textContent = label;
+            _r.appendChild(_c);
+            _r.appendChild(_s);
+            return _r;
+        };
+        const _gpSaveHidden = () => { try { localStorage.setItem(_gpHiddenKeyFor(_gpCurOrient), JSON.stringify(_gpHidden)); } catch (e) {} };
+        const _gpBuildEditMenu = () => {
+            _gpEditMenu.innerHTML = "";
+            const _t = document.createElement("div");
+            _t.textContent = "Chỉnh nút";
+            _t.style.cssText = "font-weight:700;margin-bottom:4px;text-align:center;";
+            _gpEditMenu.appendChild(_t);
+            const _sec = (txt) => {
+                const _d = document.createElement("div");
+                _d.textContent = txt;
+                _d.style.cssText = "font-weight:700;opacity:.75;margin-top:6px;";
+                _gpEditMenu.appendChild(_d);
+            };
+            const _tog = (id, label) => {
+                _gpEditMenu.appendChild(_gpEditMenuRow(label, !_gpHidden[id], (on) => {
+                    _gpHidden[id] = !on;
+                    _gpSaveHidden();
+                    _gpApplyHidden();
+                }));
+            };
+            _sec("Nút kết hợp");
+            _gpComboIds.forEach((id) => {
+                const _el = _gpBtnEl(id);
+                if (!_el) return;
+                _tog(id, _el.innerText || id.toUpperCase());
+            });
+            _sec("Nút chính");
+            if (this.virtualGamepad) {
+                this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => {
+                    const _id = _gpBtnId(_b);
+                    if (!_id || _gpComboIds.includes(_id)) return;
+                    _tog(_id, _b.innerText || _id.toUpperCase());
+                });
+                if (this.virtualGamepad.querySelector(".b_dpad")) _tog("dpad", "Cần di chuyển");
+            }
+        };
+        const _gpSyncEditMenu = () => {
+            try {
+                const _on = _gpGetSetting("virtual-gamepad-edit-layout") === "enabled";
+                _gpEditMenu.style.display = _on ? "" : "none";
+                if (_on) _gpBuildEditMenu();
+            } catch (err) {}
+        };
         let _gpSel = null;
         let _gpSelId = null;
         const _gpPlaceBar = () => {
@@ -525,6 +613,40 @@ def main(path):
         changed.append("PS1: da them L1/R1/L2/R2; NES: da them Turbo A / Turbo B")
 
 
+    # v20 migration: file da co APPEND_BLOCK cu (chua TAB/combo he khac) thi chen them.
+    # NES cu chi co TA/TB; arcade cu chi co 4 combo. Thay bang ban moi co TAB + combo he khac.
+    _nes_old = '''        if ("nes" === this.ejs.getControlScheme()) {
+            info.push(
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true }
+            );
+        }'''
+    _nes_new = '''        if ("nes" === this.ejs.getControlScheme()) {
+            info.push(
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true },
+                { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
+                { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
+                { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
+                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
+            );
+        }'''
+    _arc_old = '''                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
+            );'''
+    _arc_new = '''                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] },
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true }
+            );'''
+    if _nes_old in text and '"TAB"' not in text:
+        text = text.replace(_nes_old, _nes_new, 1)
+        changed.append("Nut them: migration NES cu -> them TAB + combo arcade (hang 2)")
+    if _arc_old in text and text.count('"TAB"') < 2:
+        text = text.replace(_arc_old, _arc_new, 1)
+        changed.append("Nut them: migration arcade cu -> them TA/TB/TAB (hang 2)")
+
+
     MENU_SHOW_OLD = '''        const show = () => {
             clearTimeout(timeout);
             timeout = setTimeout(hide, 3000);
@@ -553,7 +675,7 @@ def main(path):
                         if ((info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo'''
     COMBO_DOWN_NEW = '''                        // HAI: nut combo — bam 1 nut ma gui nhieu nut cung luc (arcade AB/XY/ABX/BXY)
                         (info[i].combo || [value]).forEach((v) => this.ejs.gameManager.simulateInput(0, v, downValue));
-                        if (!info[i].combo && (info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo'''
+                        if ((info[i].autofire === true || (!info[i].combo && this.ejs.isAutofireEnabled(0, value))) && !isAnalog) { // HAI: nut turbo'''
     COMBO_UP_OLD = '''                        window.setTimeout(() => {
                             this.ejs.stopAutofire(0, value);
                             this.ejs.gameManager.simulateInput(0, value, 0);
@@ -574,6 +696,19 @@ def main(path):
         changed.append("Nut combo: da patch xu ly cham nut (arcade AB/XY/ABX/BXY)")
 
 
+    # v20: turbo cho nut combo (TAB = A+B autofire) — startAutofire cho tung nut trong combo.
+    # Chay ca khi file moi patch lan dau lan file da patch v19 (migration): dong if cu
+    # (chan combo autofire) va dong startAutofire don deu duoc doi thanh ban combo.
+    _old_combo_if = '                        if (!info[i].combo && (info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo'
+    _new_combo_if = '                        if ((info[i].autofire === true || (!info[i].combo && this.ejs.isAutofireEnabled(0, value))) && !isAnalog) { // HAI: nut turbo'
+    _old_af = '                            this.ejs.startAutofire(0, value, downValue);'
+    _new_af = '                            (info[i].combo || [value]).forEach((v) => this.ejs.startAutofire(0, v, downValue));'
+    if _old_combo_if in text:
+        text = text.replace(_old_combo_if, _new_combo_if, 1)
+        changed.append("Turbo combo: dong if cu (chan combo autofire) -> cho combo+autofire")
+    if 'HAI: nut combo' in text and _old_af in text and _new_af not in text:
+        text = text.replace(_old_af, _new_af, 1)
+        changed.append("Turbo combo: startAutofire ap dung cho ca combo (TAB)")
     if "getGamepadDisplayLabel" in text:
         print("Ky hieu nut: da co hien thi ky hieu, bo qua")
     else:
@@ -587,11 +722,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v19" in text:
-        print("Chinh cum nut: da co ban v19 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau), bo qua")
+    if "cum nut v20" in text:
+        print("Chinh cum nut: da co ban v20 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu chinh sua + TAB), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v20", r"        // HAI: chinh vi tri \+ do mo cum nut v20 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu chinh sua tren dau \(nut ket hop chung \+ an/hien nut\), TAB turbo A\+B\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v19", r"        // HAI: chinh vi tri \+ do mo cum nut v19 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\)\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v18", r"        // HAI: chinh vi tri \+ do mo cum nut v18 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v17", r"        // HAI: chinh vi tri \+ do mo cum nut v17 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -616,13 +752,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v19")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v20")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v19 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum)")
+        changed.append("Chinh cum nut: da them v20 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu chinh sua + TAB)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
