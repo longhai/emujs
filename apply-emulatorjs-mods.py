@@ -103,7 +103,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v18 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang
+        // HAI: chinh vi tri + do mo cum nut v19 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc)
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -233,6 +233,15 @@ GP_LAYOUT_JS = '''
             if (clusterEl.querySelector(".b_dpad")) _ids.push("dpad");
             return _ids;
         };
+        const _gpDpadClusterKey = (el) => {
+            if (!el) return null;
+            let _n = el;
+            while (_n) {
+                for (const _k in _gpClusters) { if (_gpClusters[_k] === _n) return _k; }
+                _n = _n.parentElement;
+            }
+            return Object.keys(_gpClusters).find((k) => _gpClusters[k].contains(el)) || null;
+        };
         const _gpSelect = (el, id) => {
             _gpSyncOffBtn();
             if (_gpSel && _gpSel !== el) {
@@ -251,6 +260,14 @@ GP_LAYOUT_JS = '''
             if (_gpClusters[id]) {
                 const _cp = _gpPos[id] || {};
                 const _s = _cp.s || 1;
+                _gpMiniRange.value = String(_s);
+                _gpMiniPct.textContent = Math.round(_s * 100) + "%";
+                _gpMiniSlider.style.display = "flex";
+            } else if (id === "dpad") {
+                const _ck = _gpDpadClusterKey(el);
+                const _cs = (_ck && _gpPos[_ck] && _gpPos[_ck].s) || 1;
+                const _ds = (_gpBtnPos["dpad"] && _gpBtnPos["dpad"].s) || 1;
+                const _s = _cs * _ds;
                 _gpMiniRange.value = String(_s);
                 _gpMiniPct.textContent = Math.round(_s * 100) + "%";
                 _gpMiniSlider.style.display = "flex";
@@ -283,7 +300,7 @@ GP_LAYOUT_JS = '''
                     delete _gpBtnPos[_gpSelId];
                     localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
                     if (_gpSelId === "dpad") {
-                        const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k].contains(_gpSel));
+                        const _ck = _gpDpadClusterKey(_gpSel);
                         if (_ck) {
                             delete _gpPos[_ck];
                             localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
@@ -310,6 +327,21 @@ GP_LAYOUT_JS = '''
                 _gpApplyAll();
                 try { localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos)); } catch (err) {}
                 try { localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos)); } catch (err) {}
+                return;
+            }
+            if (_gpSelId === "dpad") {
+                const _ck = _gpDpadClusterKey(_gpSel);
+                if (_ck) {
+                    const _cp = _gpPos[_ck] || { x: 0, y: 0 };
+                    _cp.s = _s;
+                    _gpPos[_ck] = _cp;
+                    const _dd = _gpBtnPos["dpad"] || { x: 0, y: 0, s: 1 };
+                    _dd.s = 1;
+                    _gpBtnPos["dpad"] = _dd;
+                    _gpApplyAll();
+                    try { localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos)); } catch (err) {}
+                    try { localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos)); } catch (err) {}
+                }
                 return;
             }
             const _d = _gpBtnPos[_gpSelId] || { x: 0, y: 0, s: 1 };
@@ -555,11 +587,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v18" in text:
-        print("Chinh cum nut: da co ban v18 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau), bo qua")
+    if "cum nut v19" in text:
+        print("Chinh cum nut: da co ban v19 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v19", r"        // HAI: chinh vi tri \+ do mo cum nut v19 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\)\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v18", r"        // HAI: chinh vi tri \+ do mo cum nut v18 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v17", r"        // HAI: chinh vi tri \+ do mo cum nut v17 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v16", r"        // HAI: chinh vi tri \+ do mo cum nut v16 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -583,13 +616,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v18")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v19")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v18 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut)")
+        changed.append("Chinh cum nut: da them v19 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
