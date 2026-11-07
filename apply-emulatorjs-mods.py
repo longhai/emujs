@@ -2110,6 +2110,26 @@ def patch_emulator(path):
             print("DA DOI: " + _c)
     return 0
 
+def patch_consts(path):
+    text = open(path, encoding="utf-8").read()
+    changed = []
+    _old = '    "nes": ["fceumm", "nestopia"],'
+    _new = '    "nes": ["fceumm", "nestopia", "mesen"], // HAI: them core Mesen (test)'
+    if '"mesen"' in text:
+        print("Core NES: da co mesen, bo qua")
+    elif _old in text:
+        text = text.replace(_old, _new, 1)
+        changed.append('Core NES: da them "mesen" (mac dinh van fceumm)')
+    else:
+        print("LOI: khong tim thay dong nes trong consts.js — ban goc doi roi", file=sys.stderr)
+        return 2
+    if changed:
+        open(path, "w", encoding="utf-8").write(text)
+        print("DA DOI: " + "; ".join(changed))
+    else:
+        print("Core NES: khong co gi doi.")
+    return 0
+
 if __name__ == "__main__":
     import os
     _p = sys.argv[1] if len(sys.argv) > 1 else "src/frontend.js"
@@ -2122,4 +2142,6 @@ if __name__ == "__main__":
         sys.exit(patch_emulator(_p))
     if "shaders" in _b:
         sys.exit(patch_shaders(_p))
+    if "consts" in _b:
+        sys.exit(patch_consts(_p))
     sys.exit(main(_p))
