@@ -125,7 +125,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v26 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v27 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -225,6 +225,14 @@ GP_LAYOUT_JS = '''
         const _gpSaveBtnShapeMap = () => { try { localStorage.setItem(_gpBtnShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShapeMap)); } catch (e) {} };
         const _gpShapeOf = (id) => (_gpBtnShapeMap && _gpBtnShapeMap[id]) ? _gpShapeFrom(_gpBtnShapeMap[id]) : _gpBtnShape;
         const _gpApplyShapeTo = (_b, _s) => {
+            // Nut khoi (combo AB/XY/ABX/BXY, Fast/Slow): von la chu nhat, giu nguyen dang
+            // chu nhat — chi doi bo goc. Nhan biet bang line-height 31px tu blockCSS.
+            if (_b.style.lineHeight === "31px") {
+                _b.style.width = "";
+                _b.style.height = "31px";
+                _b.style.borderRadius = (_s.form === "circle") ? "5px" : (_s.round + "%");
+                return;
+            }
             const _h = _b.offsetHeight || 56;
             if (_s.form === "rect") {
                 _b.style.width = Math.round(_h * 1.6) + "px";
@@ -880,11 +888,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v26" in text:
-        print("Chinh cum nut: da co ban v26 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den), bo qua")
+    if "cum nut v27" in text:
+        print("Chinh cum nut: da co ban v27 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi giu chu nhat) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v27", r"        // HAI: chinh vi tri \+ do mo cum nut v27 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), chon hinh dang nut \(Tron/Vuong/Chu nhat \+ thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v26", r"        // HAI: chinh vi tri \+ do mo cum nut v26 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), chon hinh dang nut \(Tron/Vuong/Chu nhat \+ thanh truot bo goc, ap tat ca hoac rieng nut dang chon\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v25", r"        // HAI: chinh vi tri \+ do mo cum nut v25 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), chon hinh dang nut \(Tron/Vuong/Vuong bo goc, ap cho tat ca nut\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v24", r"        // HAI: chinh vi tri \+ do mo cum nut v24 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -916,13 +925,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v26")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v27")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v26 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den)")
+        changed.append("Chinh cum nut: da them v27 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi giu chu nhat) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
