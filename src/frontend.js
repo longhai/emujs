@@ -2716,7 +2716,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v25 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Vuong bo goc, ap cho tat ca nut), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v26 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2790,20 +2790,65 @@ class EJS_Frontend {
             try { localStorage.setItem(_gpDpadTypeKeyFor(_gpCurOrient), ty); } catch (e) {}
             _gpApplyDpadType();
         };
-        // Hinh dang nut (ap cho TAT CA nut, ke ca nut ket hop): tron (mac dinh) / vuong /
-        // vuong bo goc. Luu theo he + xoay man hinh nhu cac cai dat cum nut khac.
+        // Hinh dang nut: dang (tron/vuong/chu nhat) + do bo goc (0-50%).
+        // Tron = vuong + bo 50%; chu nhat rong gap 1,6 lan cao. Luu theo he + xoay man hinh.
+        // Khong chon nut thi doi tat ca nut (xoa dang rieng cua tung nut); dang chon 1 nut
+        // (bam giu vao nut) thi chi doi dang nut do. Doc ca gia tri cu v25 ("round"/"square"/"rounded").
         const _gpShapeKeyFor = (o) => "ejs-gamepad-shape-" + _gpScheme + "-" + o;
-        let _gpBtnShape = "round";
-        try { const _sv = localStorage.getItem(_gpShapeKeyFor(_gpCurOrient)) || localStorage.getItem("ejs-gamepad-shape-" + _gpScheme); if (["round", "square", "rounded"].includes(_sv)) _gpBtnShape = _sv; } catch (e) {}
-        const _gpShapeRadius = () => _gpBtnShape === "square" ? "0" : (_gpBtnShape === "rounded" ? "12px" : "50%");
+        const _gpBtnShapeKeyFor = (o) => "ejs-gamepad-btnshape-" + _gpScheme + "-" + o;
+        const _gpShapeFrom = (v) => {
+            if (v && typeof v === "object" && (v.form === "circle" || v.form === "square" || v.form === "rect")) return {form: v.form, round: (typeof v.round === "number" ? Math.max(0, Math.min(50, v.round)) : 50)};
+            if (v === "square") return {form: "square", round: 0};
+            if (v === "rounded") return {form: "square", round: 20};
+            return {form: "circle", round: 50};
+        };
+        let _gpBtnShape = {form: "circle", round: 50};
+        try {
+            const _sv = localStorage.getItem(_gpShapeKeyFor(_gpCurOrient)) || localStorage.getItem("ejs-gamepad-shape-" + _gpScheme);
+            if (_sv) { let _parsed = null; try { _parsed = JSON.parse(_sv); } catch (e) { _parsed = null; } _gpBtnShape = _gpShapeFrom(_parsed !== null ? _parsed : _sv); }
+        } catch (e) {}
+        let _gpBtnShapeMap = {};
+        try {
+            const _mv = localStorage.getItem(_gpBtnShapeKeyFor(_gpCurOrient)) || localStorage.getItem("ejs-gamepad-btnshape-" + _gpScheme);
+            if (_mv) { const _o = JSON.parse(_mv); if (_o && typeof _o === "object") _gpBtnShapeMap = _o; }
+        } catch (e) {}
+        const _gpSaveShape = () => { try { localStorage.setItem(_gpShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShape)); } catch (e) {} };
+        const _gpSaveBtnShapeMap = () => { try { localStorage.setItem(_gpBtnShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShapeMap)); } catch (e) {} };
+        const _gpShapeOf = (id) => (_gpBtnShapeMap && _gpBtnShapeMap[id]) ? _gpShapeFrom(_gpBtnShapeMap[id]) : _gpBtnShape;
+        const _gpApplyShapeTo = (_b, _s) => {
+            const _h = _b.offsetHeight || 56;
+            if (_s.form === "rect") {
+                _b.style.width = Math.round(_h * 1.6) + "px";
+                _b.style.height = _h + "px";
+            } else {
+                _b.style.width = _h + "px";
+                _b.style.height = _h + "px";
+            }
+            _b.style.borderRadius = (_s.form === "circle") ? "50%" : (_s.round + "%");
+        };
         const _gpApplyShape = () => {
             if (!this.virtualGamepad) return;
-            const _r = _gpShapeRadius();
-            this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => { _b.style.borderRadius = _r; });
+            this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => {
+                _gpApplyShapeTo(_b, _gpShapeOf(_gpBtnId(_b)));
+            });
         };
-        const _gpSetShape = (s) => {
-            _gpBtnShape = s;
-            try { localStorage.setItem(_gpShapeKeyFor(_gpCurOrient), s); } catch (e) {}
+        const _gpSetShape = (form, round) => {
+            const _apply = (_cur) => {
+                let _f = (form !== undefined && form !== null) ? form : _cur.form;
+                let _r = (typeof round === "number") ? round : _cur.round;
+                if ((form === undefined || form === null) && _cur.form === "circle" && typeof round === "number" && round < 50) _f = "square";
+                if (_f === "circle") _r = 50;
+                return {form: _f, round: _r};
+            };
+            if (_gpSelId) {
+                _gpBtnShapeMap[_gpSelId] = _apply(_gpShapeOf(_gpSelId));
+                _gpSaveBtnShapeMap();
+            } else {
+                _gpBtnShape = _apply(_gpBtnShape);
+                _gpSaveShape();
+                _gpBtnShapeMap = {};
+                _gpSaveBtnShapeMap();
+            }
             _gpApplyShape();
         };
         const _gpApplyAll = () => {
@@ -2899,6 +2944,7 @@ class EJS_Frontend {
             _tabs.appendChild(_gpTabBtn("stick", "✛ Cần"));
             _tabs.appendChild(_gpTabBtn("btn", "◉ Nút"));
             _tabs.appendChild(_gpTabBtn("combo", "⊕ Kết hợp"));
+            _tabs.appendChild(_gpTabBtn("shape", "▣ Hình dạng"));
             const _exit = document.createElement("button");
             _exit.textContent = "✕";
             _exit.style.cssText = "padding:5px 11px;border-radius:999px;border:0;font-size:12px;font-weight:700;white-space:nowrap;flex:0 0 auto;background:rgba(200,60,60,.95);color:#fff;";
@@ -2927,9 +2973,6 @@ class EJS_Frontend {
                     _tog(id, _el.innerText || id.toUpperCase());
                 });
             } else if (_gpMenuTab === "btn") {
-                _row.appendChild(_gpChip("● Tròn", _gpBtnShape === "round", () => { _gpSetShape("round"); }));
-                _row.appendChild(_gpChip("■ Vuông", _gpBtnShape === "square", () => { _gpSetShape("square"); }));
-                _row.appendChild(_gpChip("▢ Bo góc", _gpBtnShape === "rounded", () => { _gpSetShape("rounded"); }));
                 if (this.virtualGamepad) {
                     this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => {
                         const _id = _gpBtnId(_b);
@@ -2937,6 +2980,31 @@ class EJS_Frontend {
                         _tog(_id, _b.innerText || _id.toUpperCase());
                     });
                 }
+            } else if (_gpMenuTab === "shape") {
+                const _cur = _gpSelId ? _gpShapeOf(_gpSelId) : _gpBtnShape;
+                const _scope = document.createElement("span");
+                _scope.textContent = _gpSelId ? ("Nút " + String(_gpSelId).toUpperCase()) : "Tất cả nút";
+                _scope.style.cssText = "font-size:12px;font-weight:700;color:#fff;white-space:nowrap;flex:0 0 auto;";
+                _row.appendChild(_scope);
+                _row.appendChild(_gpChip("● Tròn", _cur.form === "circle", () => { _gpSetShape("circle", 50); }));
+                _row.appendChild(_gpChip("■ Vuông", _cur.form === "square", () => { _gpSetShape("square", 0); }));
+                _row.appendChild(_gpChip("▬ Chữ nhật", _cur.form === "rect", () => { _gpSetShape("rect", 0); }));
+                const _sl = document.createElement("input");
+                _sl.type = "range";
+                _sl.min = "0"; _sl.max = "50"; _sl.step = "1";
+                _sl.value = String(_cur.round);
+                _sl.className = "_gpMiniRange";
+                _sl.style.cssText = "width:120px;flex:0 0 auto;";
+                const _pct = document.createElement("span");
+                _pct.textContent = "Bo góc " + _cur.round + "%";
+                _pct.style.cssText = "font-size:12px;font-weight:700;color:#fff;white-space:nowrap;flex:0 0 auto;min-width:64px;";
+                _sl.addEventListener("input", () => {
+                    const _v = parseInt(_sl.value, 10) || 0;
+                    _pct.textContent = "Bo góc " + _v + "%";
+                    _gpSetShape(null, _v);
+                });
+                _row.appendChild(_sl);
+                _row.appendChild(_pct);
             } else {
                 if (this.virtualGamepad && this.virtualGamepad.querySelector(".b_dpad, .b_dpadx, .b_dpadz")) {
                     _tog("dpad", "Cần");
