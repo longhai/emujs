@@ -1,7 +1,6 @@
 
 import sys
 
-
 APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem apply-emulatorjs-mods.py
         if ("psx" === this.ejs.getControlScheme()) {
             info.push(
@@ -15,8 +14,6 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
             info.push(
                 { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true, "autoFireInterval": 40 },
                 { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },
-                { "type": "button", "text": "X", "id": "x", "location": "right", "right": 5, "top": -70, "bold": true, "input_value": 8, "autofire": true, "autoFireInterval": 40 },
-                { "type": "button", "text": "Y", "id": "y", "location": "right", "right": 75, "top": -70, "bold": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },
                 { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true, "autoFireInterval": 40 },
                 { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
                 { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
@@ -67,7 +64,6 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
         }
 '''
 
-
 LOCALIZE_ANCHOR = '''        for (let i = 0; i < info.length; i++) {
             if (info[i].text) {
                 info[i].text = this.localization(info[i].text);
@@ -76,7 +72,6 @@ LOCALIZE_ANCHOR = '''        for (let i = 0; i < info.length; i++) {
 
 AUTOFIRE_OLD = "if (this.ejs.isAutofireEnabled(0, value) && !isAnalog) {"
 AUTOFIRE_NEW = "if ((info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo"
-
 
 DISPLAY_LABEL_ANCHOR = '''    updateGamepadLabels() {
         for (let i = 0; i < this.gamepadLabels.length; i++) {
@@ -120,14 +115,13 @@ DISPLAY_LABEL_HELPER = '''
         } catch (e) { return this.localization(value2); }
     }'''
 
-
 GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v29 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den, nut X/Y NES gan chuc nang (mac dinh Turbo A/B, doi duoc A/B/Turbo/Len/Xuong/Trai/Phai/Start/Select)
+        // HAI: chinh vi tri + do mo cum nut v1 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -226,53 +220,6 @@ GP_LAYOUT_JS = '''
         const _gpSaveShape = () => { try { localStorage.setItem(_gpShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShape)); } catch (e) {} };
         const _gpSaveBtnShapeMap = () => { try { localStorage.setItem(_gpBtnShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShapeMap)); } catch (e) {} };
         const _gpShapeOf = (id) => (_gpBtnShapeMap && _gpBtnShapeMap[id]) ? _gpShapeFrom(_gpBtnShapeMap[id]) : _gpBtnShape;
-        // Chuc nang nut X/Y (NES, ABXY nhu ban cu): moi nut X/Y gan duoc 1 chuc nang
-        // (A, B, Turbo A, Turbo B, Len/Xuong/Trai/Phai, Start, Select), mac dinh X = Turbo A,
-        // Y = Turbo B. Luu theo he + xoay man hinh. Touch handler doc bang nay luc bam
-        // (qua this._gpBtnFunc) nen doi chuc nang co hieu luc ngay, khong can nap lai game.
-        const _gpFuncList = [
-            { key: "a", input: 8, autofire: false, label: "A" },
-            { key: "b", input: 0, autofire: false, label: "B" },
-            { key: "ta", input: 8, autofire: true, label: "TA" },
-            { key: "tb", input: 0, autofire: true, label: "TB" },
-            { key: "up", input: 4, autofire: false, label: "↑" },
-            { key: "down", input: 5, autofire: false, label: "↓" },
-            { key: "left", input: 6, autofire: false, label: "←" },
-            { key: "right", input: 7, autofire: false, label: "→" },
-            { key: "start", input: 3, autofire: false, label: "ST" },
-            { key: "select", input: 2, autofire: false, label: "SE" }
-        ];
-        const _gpFuncByKey = (k) => { for (let _i = 0; _i < _gpFuncList.length; _i++) { if (_gpFuncList[_i].key === k) return _gpFuncList[_i]; } return null; };
-        const _gpBtnFuncKeyFor = (o) => "ejs-gamepad-btnfunc-" + _gpScheme + "-" + o;
-        // Chi he NES moi co nut X/Y gan chuc nang (nut X/Y them vao); he khac (SNES/arcade)
-        // co nut X/Y that cua no nen khong dung bang nay (de {} = khong ghi de).
-        this._gpBtnFunc = (_gpScheme === "nes") ? { x: { key: "ta", input: 8, autofire: true, label: "TA" }, y: { key: "tb", input: 0, autofire: true, label: "TB" } } : {};
-        try {
-            const _fv = localStorage.getItem(_gpBtnFuncKeyFor(_gpCurOrient)) || localStorage.getItem("ejs-gamepad-btnfunc-" + _gpScheme);
-            if (_fv) { const _fo = JSON.parse(_fv); if (_fo && typeof _fo === "object") { ["x", "y"].forEach((_bid) => { if (_fo[_bid] && typeof _fo[_bid].input === "number") { const _fl = _gpFuncByKey(_fo[_bid].key); this._gpBtnFunc[_bid] = _fl ? { key: _fl.key, input: _fl.input, autofire: _fl.autofire, label: _fl.label } : { key: "", input: _fo[_bid].input, autofire: !!_fo[_bid].autofire, label: _fo[_bid].label || _bid.toUpperCase() }; } }); } }
-        } catch (e) {}
-        const _gpSaveBtnFunc = () => { try { localStorage.setItem(_gpBtnFuncKeyFor(_gpCurOrient), JSON.stringify(this._gpBtnFunc)); } catch (e) {} };
-        const _gpBtnFuncOf = (id) => (this._gpBtnFunc && this._gpBtnFunc[id]) ? this._gpBtnFunc[id] : null;
-        const _gpSetBtnFunc = (id, funcKey) => {
-            const _f = _gpFuncByKey(funcKey);
-            if (!_f) return;
-            if (!this._gpBtnFunc) this._gpBtnFunc = {};
-            this._gpBtnFunc[id] = { key: _f.key, input: _f.input, autofire: _f.autofire, label: _f.label };
-            _gpSaveBtnFunc();
-            const _el = _gpBtnEl(id);
-            if (_el) _el.innerText = _f.label;
-        };
-        // Ap chuc nang da luu vao nhan nut X/Y trong info (nut tao sau se hien dung nhan).
-        // Chi he NES (nut X/Y them vao); he khac giu nhan goc.
-        try {
-            if (_gpScheme === "nes") {
-                for (let _fi = 0; _fi < info.length; _fi++) {
-                    if ((info[_fi].id === "x" || info[_fi].id === "y") && this._gpBtnFunc[info[_fi].id]) {
-                        info[_fi].text = this._gpBtnFunc[info[_fi].id].label;
-                    }
-                }
-            }
-        } catch (e) {}
         const _gpApplyShapeTo = (_b, _s) => {
             // Nut khoi (combo AB/XY/ABX/BXY, Fast/Slow): von la chu nhat, giu nguyen dang
             // chu nhat — chi doi bo goc. Nhan biet bang line-height 31px tu blockCSS.
@@ -444,18 +391,6 @@ GP_LAYOUT_JS = '''
                         const _id = _gpBtnId(_b);
                         if (!_id || _gpComboIds.includes(_id)) return;
                         _tog(_id, _b.innerText || _id.toUpperCase());
-                    });
-                }
-                // Nut X/Y gan chuc nang (chi he NES): khi dang chon X hoac Y thi hien them hang chon
-                // chuc nang (A, B, Turbo A/B, Len/Xuong/Trai/Phai, Start, Select).
-                if ((_gpSelId === "x" || _gpSelId === "y") && _gpScheme === "nes") {
-                    const _curF = _gpBtnFuncOf(_gpSelId);
-                    const _flabel = document.createElement("span");
-                    _flabel.textContent = "Chức năng " + _gpSelId.toUpperCase() + ":";
-                    _flabel.style.cssText = "font-size:12px;font-weight:700;color:#fff;white-space:nowrap;flex:0 0 auto;";
-                    _row.appendChild(_flabel);
-                    _gpFuncList.forEach((_fn) => {
-                        _row.appendChild(_gpChip(_fn.label, !!_curF && _curF.key === _fn.key, () => { _gpSetBtnFunc(_gpSelId, _fn.key); }));
                     });
                 }
             } else if (_gpMenuTab === "shape") {
@@ -785,11 +720,6 @@ GP_LAYOUT_JS = '''
         } catch (_gpErr) {}
 '''
 
-
-
-
-
-
 GP_LAYOUT_MENU_ANCHOR = '''            addToMenu(this.localization("Left Handed Mode"), "virtual-gamepad-left-handed-mode", {
                 "enabled": this.localization("Enabled"),
                 "disabled": this.localization("Disabled")
@@ -807,7 +737,6 @@ GP_LAYOUT_MENU = '''
                 "0.4": "40%"
             }, "1", virtualGamepad, true); // HAI: do mo cum nut'''
 
-
 def main(path):
     text = open(path, encoding="utf-8").read()
     changed = []
@@ -815,7 +744,6 @@ def main(path):
     if "    setVirtualGamepad() {" not in text:
         print("LOI: khong tim thay setVirtualGamepad() — ban goc doi ten ham roi", file=sys.stderr)
         return 2
-
 
     if "HAI: chi them nut thieu" in text:
         print("Nut them: da co roi, bo qua")
@@ -826,9 +754,6 @@ def main(path):
         text = text.replace(LOCALIZE_ANCHOR, APPEND_BLOCK + LOCALIZE_ANCHOR, 1)
         changed.append("PS1: da them L1/R1/L2/R2; NES: da them Turbo A / Turbo B")
 
-
-    # v20 migration: file da co APPEND_BLOCK cu (chua TAB/combo he khac) thi chen them.
-    # NES cu chi co TA/TB; arcade cu chi co 4 combo. Thay bang ban moi co TAB + combo he khac.
     _nes_old = '''        if ("nes" === this.ejs.getControlScheme()) {
             info.push(
                 { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true },
@@ -859,28 +784,30 @@ def main(path):
     if _arc_old in text and text.count('"TAB"') < 2:
         text = text.replace(_arc_old, _arc_new, 1)
         changed.append("Nut them: migration arcade cu -> them TA/TB/TAB (hang 2)")
-    # v21 migration: file da co APPEND_BLOCK (v20) thi chen them D-pad doi loai.
-    # APPEND_BLOCK bi bo qua tren file da patch nen phai chen tay sau khoi arcade.
+
     _dpad_alt = "        // HAI: can doi loai — them D-pad loai con lai de doi qua lai trong menu chinh sua.\n        // Game thung dung vung tron (zone, nipplejs) -> them chu thap (dpad). NES dung chu\n        // thap -> them vung tron. Chi 1 trong 2 hien tuy theo lua chon (luu localStorage),\n        // cai con lai an (display:none) nen khong nhan cham. id khac nhau (dpadx/dpadz)\n        // de khoi dung id \"dpad\" goc; menu doi loai se bat/tat theo id nay.\n        if ([\"arcade\", \"mame\", \"fbneo\"].includes(this.ejs.getControlScheme())) {\n            info.push(\n                { \"type\": \"dpad\", \"id\": \"dpadx\", \"location\": \"left\", \"left\": \"50%\", \"top\": \"50%\", \"joystickInput\": false, \"inputValues\": [4, 5, 6, 7] }\n            );\n        } else if (\"nes\" === this.ejs.getControlScheme()) {\n            info.push(\n                { \"type\": \"zone\", \"id\": \"dpadz\", \"location\": \"left\", \"left\": \"50%\", \"top\": \"50%\", \"joystickInput\": false, \"inputValues\": [4, 5, 6, 7] }\n            );\n        }"
     _arc_tab = "                { \"type\": \"button\", \"text\": \"TAB\", \"id\": \"tab\", \"location\": \"right\", \"left\": 30, \"top\": -90, \"bold\": true, \"fontSize\": 14, \"block\": true, \"input_value\": 8, \"combo\": [8, 0], \"autofire\": true }\n            );\n        }"
     if '"dpadx"' not in text and '"dpadz"' not in text and _arc_tab in text:
         text = text.replace(_arc_tab, _arc_tab + "\n" + _dpad_alt, 1)
         changed.append("Can doi loai: migration -> chen D-pad doi loai (dpadx/dpadz) sau khoi arcade")
-    # v24 migration: file da co TA/TB/TAB (chua autoFireInterval) thi them toc do turbo nhanh.
-    # getAutofireInterval uu tien control.autoFireInterval truoc cai dat chung, nen chi
-    # nut turbo nhanh len (~12 phat/giay), nut thuong va cai dat Autofire Interval khong doi.
+
     if '"autoFireInterval"' not in text and '"autofire": true' in text:
         text = text.replace('"autofire": true', '"autofire": true, "autoFireInterval": 40')
         changed.append("Turbo: migration -> them autoFireInterval 40ms cho TA/TB/TAB (~12 phat/giay)")
-    # v29 migration: file da co khoi NES (TAB + combo) nhung chua co nut X/Y tren man hinh
-    # thi chen X/Y sau dong TB cua NES (nut X/Y gan chuc nang, mac dinh Turbo A/B).
-    # Guard dung dong X day du vi "id": "x" da co san o he khac (SNES).
-    _nes_xy_anchor = '                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },'
-    _nes_xy_add = '\n                { "type": "button", "text": "X", "id": "x", "location": "right", "right": 5, "top": -70, "bold": true, "input_value": 8, "autofire": true, "autoFireInterval": 40 },\n                { "type": "button", "text": "Y", "id": "y", "location": "right", "right": 75, "top": -70, "bold": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },'
-    if '"text": "X", "id": "x", "location": "right", "right": 5, "top": -70' not in text and _nes_xy_anchor in text:
-        text = text.replace(_nes_xy_anchor, _nes_xy_anchor + _nes_xy_add, 1)
-        changed.append("Nut X/Y: migration -> them nut X/Y tren man hinh cho NES (mac dinh Turbo A/B, gan chuc nang)")
 
+    _xy_remove_lines = [
+        '                { "type": "button", "text": "X", "id": "x", "location": "right", "right": 5, "top": -70, "bold": true, "input_value": 8, "autofire": true, "autoFireInterval": 40 },\n',
+        '                { "type": "button", "text": "X", "id": "x", "location": "right", "right": 5, "top": -70, "bold": true, "input_value": 8 },\n',
+        '                { "type": "button", "text": "Y", "id": "y", "location": "right", "right": 75, "top": -70, "bold": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },\n',
+        '                { "type": "button", "text": "Y", "id": "y", "location": "right", "right": 75, "top": -70, "bold": true, "input_value": 0 },\n',
+    ]
+    _xy_removed = False
+    for _xy_ln in _xy_remove_lines:
+        if _xy_ln in text:
+            text = text.replace(_xy_ln, "", 1)
+            _xy_removed = True
+    if _xy_removed:
+        changed.append("Nut X/Y: da go nut X/Y tren man hinh khoi NES (v32, theo yeu cau)")
 
     MENU_SHOW_OLD = '''        const show = () => {
             clearTimeout(timeout);
@@ -895,7 +822,6 @@ def main(path):
         text = text.replace(MENU_SHOW_NEW, MENU_SHOW_OLD, 1)
         changed.append("Menu: da tra show() ve ban goc (PC mo menu bang chuot)")
 
-
     if "info[i].autofire === true" in text:
         print("Turbo: xu ly cham nut da co autofire, bo qua")
     else:
@@ -904,7 +830,6 @@ def main(path):
             return 2
         text = text.replace(AUTOFIRE_OLD, AUTOFIRE_NEW, 1)
         changed.append("Turbo: da patch xu ly cham nut (autofire:true)")
-
 
     COMBO_DOWN_OLD = '''                        this.ejs.gameManager.simulateInput(0, value, downValue);
                         if ((info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo'''
@@ -919,7 +844,6 @@ def main(path):
                             (info[i].combo || [value]).forEach((v) => { this.ejs.stopAutofire(0, v); this.ejs.gameManager.simulateInput(0, v, 0); }); // HAI: nut combo
                         })'''
 
-
     if "HAI: nut combo — bam 1 nut" in text:
         print("Nut combo: xu ly cham nut da co combo, bo qua")
     else:
@@ -930,10 +854,6 @@ def main(path):
         text = text.replace(COMBO_UP_OLD, COMBO_UP_NEW, 1)
         changed.append("Nut combo: da patch xu ly cham nut (arcade AB/XY/ABX/BXY)")
 
-
-    # v20: turbo cho nut combo (TAB = A+B autofire) — startAutofire cho tung nut trong combo.
-    # Chay ca khi file moi patch lan dau lan file da patch v19 (migration): dong if cu
-    # (chan combo autofire) va dong startAutofire don deu duoc doi thanh ban combo.
     _old_combo_if = '                        if (!info[i].combo && (info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo'
     _new_combo_if = '                        if ((info[i].autofire === true || (!info[i].combo && this.ejs.isAutofireEnabled(0, value))) && !isAnalog) { // HAI: nut turbo'
     _old_af = '                            this.ejs.startAutofire(0, value, downValue);'
@@ -944,18 +864,12 @@ def main(path):
     if 'HAI: nut combo' in text and _old_af in text and _new_af not in text:
         text = text.replace(_old_af, _new_af, 1)
         changed.append("Turbo combo: startAutofire ap dung cho ca combo (TAB)")
-    # v29: nut X/Y gan chuc nang — touch handler doc chuc nang da luu luc bam.
-    # Nut thuong giu nguyen (gia tri mac dinh = gia tri goc), chi X/Y he NES moi doc this._gpBtnFunc.
+
     if "HAI: nut X/Y gan chuc nang" in text:
-        print("Nut X/Y gan chuc nang: touch handler da co, bo qua")
-    else:
-        _xy_head_old = '''                this.ejs.addEventListener(button, "touchstart touchend touchcancel", (e) => {
-                    e.preventDefault();
-                    const isAnalog = this.ejs.analogAxes.includes(value);'''
-        _xy_head_new = '''                this.ejs.addEventListener(button, "touchstart touchend touchcancel", (e) => {
-                    e.preventDefault();
-                    // HAI: nut X/Y gan chuc nang — doc chuc nang da luu luc bam (mac dinh Turbo A/B, chi he NES)
-                    let _gpVal = value;
+        import re as _re32
+
+        text = _re32.sub(r"                    // HAI: nut X/Y gan chuc nang[^\n]*\n", "", text, count=1)
+        _xy_calc = '''                    let _gpVal = value;
                     let _gpAuto = (info[i].autofire === true);
                     let _gpCombo = info[i].combo;
                     if ((info[i].id === "x" || info[i].id === "y") && this.ejs.getControlScheme() === "nes") {
@@ -967,18 +881,15 @@ def main(path):
                         }
                     }
                     const isAnalog = this.ejs.analogAxes.includes(_gpVal);'''
-        if _xy_head_old not in text:
-            print("LOI: khong tim thay dong mo dau touch handler — ban goc doi xu ly nut roi", file=sys.stderr)
-            return 2
-        text = text.replace(_xy_head_old, _xy_head_new, 1)
-        text = text.replace("(info[i].combo || [value])", "(_gpCombo || [_gpVal])")
-        _xy_if_old = "if ((info[i].autofire === true || (!info[i].combo && this.ejs.isAutofireEnabled(0, value))) && !isAnalog) { // HAI: nut turbo"
+        _xy_calc_orig = '''                    const isAnalog = this.ejs.analogAxes.includes(value);'''
+        if _xy_calc in text:
+            text = text.replace(_xy_calc, _xy_calc_orig, 1)
+        text = text.replace("(_gpCombo || [_gpVal])", "(info[i].combo || [value])")
         _xy_if_new = "if ((_gpAuto || (!_gpCombo && this.ejs.isAutofireEnabled(0, _gpVal))) && !isAnalog) { // HAI: nut turbo"
-        if _xy_if_old not in text:
-            print("LOI: khong tim thay dong if turbo — ban goc doi xu ly nut roi", file=sys.stderr)
-            return 2
-        text = text.replace(_xy_if_old, _xy_if_new, 1)
-        changed.append("Nut X/Y gan chuc nang: touch handler doc chuc nang da luu luc bam (mac dinh Turbo A/B, chi he NES)")
+        _xy_if_old = "if ((info[i].autofire === true || (!info[i].combo && this.ejs.isAutofireEnabled(0, value))) && !isAnalog) { // HAI: nut turbo"
+        if _xy_if_new in text:
+            text = text.replace(_xy_if_new, _xy_if_old, 1)
+        changed.append("Nut X/Y: da go touch handler XYFUNC, tra ve ban goc (v32)")
     if "getGamepadDisplayLabel" in text:
         print("Ky hieu nut: da co hien thi ky hieu, bo qua")
     else:
@@ -992,51 +903,29 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v29" in text:
-        print("Chinh cum nut: da co ban v29 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi giu chu nhat) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den), bo qua")
+    if "cum nut v1" in text:
+        print("Chinh cum nut: da co ban v1 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi giu chu nhat) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v1", r"        // HAI: chinh vi tri \+ do mo cum nut v1 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), chon hinh dang nut \(Tron/Vuong/Chu nhat \+ thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v32", r"        // HAI: chinh vi tri \+ do mo cum nut v32 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), chon hinh dang nut \(Tron/Vuong/Chu nhat \+ thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v31", r"        // HAI: chinh vi tri \+ do mo cum nut v31 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), chon hinh dang nut \(Tron/Vuong/Chu nhat \+ thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den, nut X/Y NES gan chuc nang \(mac dinh A/B thuong, doi duoc A/B/Turbo/Len/Xuong/Trai/Phai/Start/Select, nhan luon X/Y\)\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v30", r"        // HAI: chinh vi tri \+ do mo cum nut v30 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), chon hinh dang nut \(Tron/Vuong/Chu nhat \+ thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den, nut X/Y NES gan chuc nang \(mac dinh Turbo A/B, doi duoc A/B/Turbo/Len/Xuong/Trai/Phai/Start/Select, nhan luon X/Y\)\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v29", r"        // HAI: chinh vi tri \+ do mo cum nut v29 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), chon hinh dang nut \(Tron/Vuong/Chu nhat \+ thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den, nut X/Y NES gan chuc nang \(mac dinh Turbo A/B, doi duoc A/B/Turbo/Len/Xuong/Trai/Phai/Start/Select\)\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v27", r"        // HAI: chinh vi tri \+ do mo cum nut v27 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), chon hinh dang nut \(Tron/Vuong/Chu nhat \+ thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v26", r"        // HAI: chinh vi tri \+ do mo cum nut v26 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), chon hinh dang nut \(Tron/Vuong/Chu nhat \+ thanh truot bo goc, ap tat ca hoac rieng nut dang chon\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v25", r"        // HAI: chinh vi tri \+ do mo cum nut v25 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), chon hinh dang nut \(Tron/Vuong/Vuong bo goc, ap cho tat ca nut\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v24", r"        // HAI: chinh vi tri \+ do mo cum nut v24 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v23", r"        // HAI: chinh vi tri \+ do mo cum nut v23 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B, keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v22", r"        // HAI: chinh vi tri \+ do mo cum nut v22 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu chinh sua thanh ngang gon \(chip toggle kieu COIN-OPX \+ chon loai can, khong hien thanh cuon\), TAB turbo A\+B, keo cum giu ti le phong to\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v21", r"        // HAI: chinh vi tri \+ do mo cum nut v21 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu chinh sua thanh ngang gon \(chip toggle kieu COIN-OPX \+ chon loai can\), TAB turbo A\+B, keo cum giu ti le phong to\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v20", r"        // HAI: chinh vi tri \+ do mo cum nut v20 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu chinh sua tren dau \(nut ket hop chung \+ an/hien nut\), TAB turbo A\+B\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v19", r"        // HAI: chinh vi tri \+ do mo cum nut v19 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\)\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v18", r"        // HAI: chinh vi tri \+ do mo cum nut v18 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v17", r"        // HAI: chinh vi tri \+ do mo cum nut v17 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v16", r"        // HAI: chinh vi tri \+ do mo cum nut v16 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v15", r"        // HAI: chinh vi tri \+ do mo cum nut v15 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v14", r"        // HAI: chinh vi tri \+ do mo cum nut v14 — nhan giu chon nut/cum, nut icon to \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v13", r"        // HAI: chinh vi tri \+ do mo cum nut v13 — nhan giu chon nut/cum, nut icon \+ truot dung gon \+ nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v12", r"        // HAI: chinh vi tri \+ do mo cum nut v12 — nhan giu chon nut/cum, nut icon \+ truot dung \+ nut Tat rieng, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v11", r"        // HAI: chinh vi tri \+ do mo cum nut v11 — nhan giu chon nut/cum, nut icon \+ truot dung \+ nut Tat, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu khi dang chinh, hien duoc khi fullscreen\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v10", r"        // HAI: chinh vi tri \+ do mo cum nut v10 — nhan giu chon nut, 3 nut thao tac nho, Dat lai D-pad ve mac dinh, xoa vien khi bo chon/tat che do chinh\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v9", r"        // HAI: chinh vi tri \+ do mo cum nut v9 — nhan giu chon nut, 3 nut thao tac nho quanh nut do, Dat lai D-pad ve mac dinh\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v8", r"        // HAI: chinh vi tri \+ do mo cum nut v8 — nhan giu chon nut, 3 nut thao tac nho quanh nut do \(Xong/Dat lai tren, thanh truot ben canh\)\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v7", r"        // HAI: chinh vi tri \+ do mo cum nut v7 — nhan giu chon nut/D-pad, doi co bang thanh truot, ep D-pad hien du 4 huong\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v6", r"        // HAI: chinh vi tri \+ do mo cum nut v6 — nhan giu chon nut/D-pad, doi co bang thanh truot\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v5", r"        // HAI: chinh vi tri \+ do mo cum nut v5 — nhan giu 1s chon nut, nut goc to de keo, vuot doc doi co\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v4", r"        // HAI: chinh vi tri \+ do mo cum nut v4 — keo tung nut, keo goc doi co, ngang/doc rieng, Dat lai\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v3", r"        // HAI: chinh vi tri \+ do mo cum nut v3 — keo tung nut / cum nut, nut Xong thoat\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v2", r"        // HAI: chinh vi tri \+ do mo cum nut v2 — keo de doi vi tri, luu theo he may\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
-            ("v1", r"        // HAI: chinh vi tri \+ do mo cum nut — keo de doi vi tri, luu theo he may\n[\s\S]*?        this\.virtualGamepad\.addEventListener\(\"pointerdown\", _gpApplyOpacity\);\n"),
         ]
         for _lbl, _pat in _gp_vers:
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v29")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v1")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v29 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi giu chu nhat) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den)")
+        changed.append("Chinh cum nut: da them v1 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi giu chu nhat) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
@@ -1053,7 +942,6 @@ def main(path):
     else:
         print("Khong co gi doi — mod da co san.")
     return 0
-
 
 GAMEPAD_HELPER = '''
     // HAI: tu nhan loai tay cam that qua Gamepad API (gamepad.id).
@@ -1089,7 +977,6 @@ GAMEPAD_LABEL_OLD = """    getButtonLabel(index) {
         return this.buttonLabels[index];
     }"""
 
-
 GAMEPAD_LABEL_BROKEN = """    getButtonLabel(index, gamepadIndex) {
         if (index === null || index === undefined) {
             return null;
@@ -1110,11 +997,9 @@ GAMEPAD_LABEL_BROKEN = """    getButtonLabel(index, gamepadIndex) {
         return this.buttonLabels[index];
     }"""
 
-
 def patch_gamepad(path):
     text = open(path, encoding="utf-8").read()
     changed = []
-
 
     if GAMEPAD_LABEL_BROKEN in text:
         text = text.replace(GAMEPAD_LABEL_BROKEN, GAMEPAD_LABEL_OLD, 1)
@@ -1128,7 +1013,6 @@ def patch_gamepad(path):
             return 2
         text = text.replace(GAMEPAD_LABEL_OLD, GAMEPAD_HELPER + "\n" + GAMEPAD_LABEL_OLD, 1)
         changed.append("Tay cam: da them nhan loai Sony/Xbox/Switch (chi de hien thi)")
-
 
     if "this.getButtonLabel(buttonIndex, gamepad.index)" in text:
         text = text.replace(
@@ -1147,7 +1031,6 @@ def patch_gamepad(path):
         print("Tay cam: khong co gi doi.")
     return 0
 
-
 BUTTON_COLOR_CSS = '''
 /* HAI: nut co mau v2 (chu co mau, nen mac dinh) — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_virtualGamepad_button.b_a, .ejs_virtualGamepad_button.b_ta { color: #4caf50 !important; }
@@ -1157,7 +1040,6 @@ BUTTON_COLOR_CSS = '''
 .ejs_virtualGamepad_button_down { filter: brightness(1.4); }
 '''
 
-
 COMBO_COLOR_CSS = '''
 /* HAI: nut combo mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_virtualGamepad_button.b_ab { color: #ff9800 !important; }
@@ -1166,13 +1048,11 @@ COMBO_COLOR_CSS = '''
 .ejs_virtualGamepad_button.b_bcd { color: #26a69a !important; }
 '''
 
-
 MD_COLOR_CSS = '''
 /* HAI: nut md mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_virtualGamepad_button.b_c { color: #ff9800 !important; }
 .ejs_virtualGamepad_button.b_z { color: #ab47bc !important; }
 '''
-
 
 BUTTON_PRESS_CSS = '''
 /* HAI: nut bam co mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
@@ -1186,7 +1066,6 @@ BUTTON_PRESS_CSS = '''
 .ejs_virtualGamepad_button_down.b_bcd { background: rgba(38,166,154,.55) !important; color: #fff !important; }
 '''
 
-
 VOLUME_CSS = '''
 /* HAI: volume hien ro — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_volume_parent input[type='range'] { --value: 50%; }
@@ -1194,7 +1073,6 @@ VOLUME_CSS = '''
 .ejs_volume_parent input[type='range']::-webkit-slider-thumb { background: #fff !important; border: 1px solid #999 !important; }
 .ejs_volume_parent input[type='range']::-moz-range-progress { background: #1e88e5 !important; }
 '''
-
 
 def patch_css(path):
     text = open(path, encoding="utf-8").read()
@@ -1239,7 +1117,6 @@ def patch_css(path):
     else:
         print("Khong co gi doi — CSS mod da co san.")
     return 0
-
 
 SHADER_2XSAL = """#if defined(VERTEX)
 
@@ -1381,7 +1258,6 @@ uniform COMPAT_PRECISION vec2 OutputSize;
 uniform COMPAT_PRECISION vec2 TextureSize;
 uniform COMPAT_PRECISION vec2 InputSize;
 
-
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize)
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
@@ -1425,7 +1301,6 @@ uniform COMPAT_PRECISION vec2 InputSize;
 uniform sampler2D Texture;
 COMPAT_VARYING vec4 TEX0;
 
-
 #define Source Texture
 #define vTexCoord TEX0.xy
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize)
@@ -1448,11 +1323,9 @@ uniform COMPAT_PRECISION float maskLight;
 
 #define mod_factor vTexCoord.x * outsize.x/InputSize.x* SourceSize.x
 
-
 vec3 Mask(vec2 pos)
 {
    vec3 mask = vec3(maskDark, maskDark, maskDark);
-
 
    if (shadowMask == 1.0)
    {
@@ -1472,7 +1345,6 @@ vec3 Mask(vec2 pos)
       mask*=line;
    }
 
-
    else if (shadowMask == 2.0)
    {
       pos.x = fract(pos.x/3.0);
@@ -1481,7 +1353,6 @@ vec3 Mask(vec2 pos)
       else if (pos.x<0.6666)         mask.g = maskLight;
       else          mask.rgb = (BGR == 1.0) ? vec3(maskLight, mask.g, mask.b) : vec3(mask.r, mask.g, maskLight);
    }
-
 
    else if (shadowMask == 3.0)
    {
@@ -1492,7 +1363,6 @@ vec3 Mask(vec2 pos)
       else if (pos.x<0.6666)         mask.g = maskLight;
       else          mask.rgb = (BGR == 1.0) ? vec3(maskLight, mask.g, mask.b) : vec3(mask.r, mask.g, maskLight);
    }
-
 
    else if (shadowMask == 4.0)
    {
@@ -1513,8 +1383,6 @@ void main()
    vec3 res = pow(COMPAT_TEXTURE(Source, vTexCoord).rgb, vec3(2.2,2.2,2.2));
 
    float mask = 1.0 - DOTMASK_STRENGTH;
-
-
 
    vec3 dotMaskWeights = mix(vec3(1.0, mask, 1.0),
                              vec3(mask, 1.0, mask),
@@ -1699,12 +1567,7 @@ SHADER_XBR_LV2 = """#pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
 #pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 0.1
 #pragma parameter small_details "Preserve Small Details" 0.0 0.0 1.0 1.0
 
-
-
-
-
 #define CORNER_C
-
 
 #ifndef CORNER_A
   #define SMOOTH_TIPS
@@ -1740,7 +1603,6 @@ SHADER_XBR_LV2 = """#pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
 #else
 #define PRECISION
 #endif
-
 
 IN  vec4 VertexCoord;
 IN  vec4 Color;
@@ -1781,7 +1643,6 @@ void main()
     t6 = TexCoord.xyyy + vec4(-2.0*dx,-dy, 0,  dy);
     t7 = TexCoord.xyyy + vec4( 2.0*dx,-dy, 0,  dy);
 }
-
 
 #elif defined(FRAGMENT)
 
@@ -1835,11 +1696,9 @@ uniform PRECISION float small_details;
 #define small_details 0.0
 #endif
 
-
 const float coef         = 2.0;
 const vec3 rgbw          = vec3(14.352, 28.176, 5.472);
 const vec4 eq_threshold  = vec4(15.0, 15.0, 15.0, 15.0);
-
 
 const  vec4 Ao = vec4( 1.0, -1.0, -1.0, 1.0 );
 const  vec4 Bo = vec4( 1.0,  1.0, -1.0,-1.0 );
@@ -1854,30 +1713,25 @@ const  vec4 Ci = vec4(0.25, 0.25, 0.25, 0.25);
 
 const vec3 Y = vec3(0.2126, 0.7152, 0.0722);
 
-
 vec4 df(vec4 A, vec4 B)
 {
     return vec4(abs(A-B));
 }
-
 
 vec4 diff(vec4 A, vec4 B)
 {
     return vec4(notEqual(A, B));
 }
 
-
 vec4 eq(vec4 A, vec4 B)
 {
     return (step(df(A, B), vec4(XBR_EQ_THRESHOLD)));
 }
 
-
 vec4 neq(vec4 A, vec4 B)
 {
     return (vec4(1.0, 1.0, 1.0, 1.0) - eq(A, B));
 }
-
 
 vec4 wd(vec4 a, vec4 b, vec4 c, vec4 d, vec4 e, vec4 f, vec4 g, vec4 h)
 {
@@ -1955,7 +1809,6 @@ void main()
 	}
     f4 = h5.yzwx;
 
-
     fx   = (Ao*fp.y+Bo*fp.x);
     fx_l = (Ax*fp.y+Bx*fp.x);
     fx_u = (Ay*fp.y+By*fp.x);
@@ -2028,7 +1881,6 @@ void main()
 #endif
 """
 
-
 def shader_preset_a(scale):
     return """shaders = 3
 
@@ -2055,7 +1907,6 @@ maskDark = 0.6
 maskLight = 1.3
 shadowMask = 1.0
 """
-
 
 def shader_preset_b(scale):
     return """shaders = 4
@@ -2085,7 +1936,6 @@ maskDark = 0.6
 maskLight = 1.2
 """
 
-
 def shader_preset_xbr_only(scale):
     return """shaders = 1
 
@@ -2102,7 +1952,6 @@ XBR_LV2_COEFFICIENT = 2.0
 small_details = 0.0
 """
 
-
 SHADER_RES_A = [("2xsal.glsl", SHADER_2XSAL), ("dotmask.glsl", SHADER_DOTMASK), ("4xsoft.glsl", SHADER_4XSOFT)]
 SHADER_RES_B = [("xbr-lv2.glsl", SHADER_XBR_LV2), ("dotmask.glsl", SHADER_DOTMASK), ("4xsoft.glsl", SHADER_4XSOFT), ("2xsal.glsl", SHADER_2XSAL)]
 SHADER_RES_XBR = [("xbr-lv2.glsl", SHADER_XBR_LV2)]
@@ -2116,7 +1965,6 @@ SHADER_ENTRIES = [
     ("xbr", shader_preset_xbr_only("2"), SHADER_RES_XBR),
 ]
 
-
 SHADER_OLD_NAMES = [
     "2xsal-dotmask-4xsoft.glslp",
     "2xsal-dotmask-4xsoft-lv1.5.glslp",
@@ -2125,7 +1973,6 @@ SHADER_OLD_NAMES = [
     "xbr-dotmask-4xsoft-2xsal-lv1.5.glslp",
     "xbr-dotmask-4xsoft-2xsal-lv2.glslp",
 ]
-
 
 def shader_entry_block(name, preset, resources):
     import base64
@@ -2145,7 +1992,6 @@ def shader_entry_block(name, preset, resources):
     block += '        ],\n'
     block += '    },\n'
     return block
-
 
 def patch_shaders(path):
     import re
@@ -2182,10 +2028,8 @@ def patch_shaders(path):
     print("DA DOI: Shader: " + ", ".join(changed))
     return 0
 
-
 MENU_OPEN_OLD = "            this.frontend.menu.open();\n"
 MENU_OPEN_NEW = "            // HAI: tat tu mo menu khi load game — chi mo khi bam nut ☰\n"
-
 
 GPAD_TURBO_MARKER = "HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES)"
 GPAD_TURBO_ANCHOR = "        if (this.frontend.isSettingsMenuOpen() || this.frontend.isPopupOpen()) return;\n"
@@ -2213,7 +2057,6 @@ GPAD_TURBO_NEW = """        // HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES
         }
 """
 
-
 def patch_emulator(path):
     text = open(path, encoding="utf-8").read()
     changed = []
@@ -2225,20 +2068,20 @@ def patch_emulator(path):
     else:
         text = text.replace(MENU_OPEN_OLD, MENU_OPEN_NEW, 1)
         changed.append("Menu: da xoa dong menu.open() khi game bat dau (emulator.js)")
+
     if GPAD_TURBO_MARKER in text:
-        print("Tay cam X/Y turbo (emulator.js): da co roi, bo qua")
-    elif GPAD_TURBO_ANCHOR not in text:
-        print("LOI: khong tim thay dong isSettingsMenuOpen trong gamepadEvent — ban goc doi emulator.js roi", file=sys.stderr)
-        return 2
+        if GPAD_TURBO_NEW in text:
+            text = text.replace(GPAD_TURBO_NEW, "", 1)
+            changed.append("Tay cam: da go X = Turbo A, Y = Turbo B (v32, theo yeu cau)")
+        else:
+            print("Tay cam X/Y turbo: co marker nhung khong tim thay khoi ma — bo qua", file=sys.stderr)
     else:
-        text = text.replace(GPAD_TURBO_ANCHOR, GPAD_TURBO_ANCHOR + GPAD_TURBO_NEW, 1)
-        changed.append("Tay cam: X = Turbo A, Y = Turbo B (chi he NES, 40ms ~12 phat/giay)")
+        print("Tay cam X/Y turbo (emulator.js): khong co, bo qua")
     if changed:
         open(path, "w", encoding="utf-8").write(text)
         for _c in changed:
             print("DA DOI: " + _c)
     return 0
-
 
 if __name__ == "__main__":
     import os
