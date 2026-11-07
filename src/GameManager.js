@@ -51,7 +51,7 @@ class EJS_GameManager {
                 this.saveSaveFiles();
             }
             this.toggleMainLoop(0);
-            this.FS.unmount("/data/saves");
+            if (this._idbfsMounted) this.FS.unmount("/data/saves"); // HAI: Mesen khong co IDBFS, chi go mount khi da mount
             setTimeout(() => {
                 try {
                     this.Module.abort();
@@ -71,7 +71,11 @@ class EJS_GameManager {
         return new Promise(async resolve => {
             this.mkdir("/data");
             this.mkdir("/data/saves");
-            this.FS.mount(this.FS.filesystems.IDBFS, { autoPersist: true }, "/data/saves");
+            // HAI: Mesen khong co IDBFS (Emscripten 7) -> de /data/saves o MEMFS, save chi ton tai trong phien choi
+            if (this.FS.filesystems && this.FS.filesystems.IDBFS) {
+                this._idbfsMounted = true;
+                this.FS.mount(this.FS.filesystems.IDBFS, { autoPersist: true }, "/data/saves");
+            }
             this.FS.syncfs(true, resolve);
         });
     }
