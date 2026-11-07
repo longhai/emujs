@@ -125,7 +125,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v22 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu chinh sua thanh ngang gon (chip toggle kieu COIN-OPX + chon loai can, khong hien thanh cuon), TAB turbo A+B, keo cum giu ti le phong to
+        // HAI: chinh vi tri + do mo cum nut v23 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B, keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -242,17 +242,13 @@ GP_LAYOUT_JS = '''
         _gpMiniBar.appendChild(_gpMiniDone);
         _gpMiniBar.appendChild(_gpMiniReset);
         this.elements.parent.appendChild(_gpMiniBar);
-        // Nut vao/ra che do chinh sua: 1 nut co dinh giong nut thoat, luon o goc tren trai.
-        // Khong nam trong cum nut, khong phai nut gamepad nen khong keo/di chuyen/doi co/
-        // an duoc — bam vao chi de bat/tat che do chinh sua. Chua chinh: ✏️ xanh (bam de vao);
-        // dang chinh: ✕ do (bam de thoat).
-        const _gpOffBtn = _gpMkMini("✏️", "rgba(52,130,255,.95)");
-        _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;padding:7px 11px;border-radius:999px;border:0;background:rgba(52,130,255,.95);color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
-        this.elements.parent.appendChild(_gpOffBtn);
-        const _gpSyncOffBtn = () => { try { const _on = _gpGetSetting("virtual-gamepad-edit-layout") === "enabled"; _gpOffBtn.textContent = _on ? "✕" : "✏️"; _gpOffBtn.style.background = _on ? "rgba(200,60,60,.95)" : "rgba(52,130,255,.95)"; } catch (err) {} _gpSyncRightClick(); try { _gpSyncEditMenu(); } catch (err) {} };
+        // Dong bo khi che do chinh sua doi: chan chuot phai + hien/an thanh menu.
+        // Khong co nut noi luc choi (man hinh sach); vao che do chinh sua bang menu game
+        // (☰) → Virtual Gamepad → "Chỉnh vị trí nút"; thoat bang nut ✕ ben phai thanh menu.
+        const _gpSyncOffBtn = () => { _gpSyncRightClick(); try { _gpSyncEditMenu(); } catch (err) {} };
         const _gpSyncRightClick = () => { try { if (!this.ejs.config.buttonOpts) this.ejs.config.buttonOpts = {}; this.ejs.config.buttonOpts.rightClick = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? false : true; } catch (err) {} };
         const _gpMiniSlider = document.createElement("div");
-        _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:12px;padding:6px 3px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
+        _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:transparent;border-radius:12px;padding:6px 3px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);";
         const _gpMiniRange = document.createElement("input");
         _gpMiniRange.type = "range";
         _gpMiniRange.min = "0.5";
@@ -292,9 +288,18 @@ GP_LAYOUT_JS = '''
             _gpEditMenu.style.display = "flex";
             const _tabs = document.createElement("div");
             _tabs.style.cssText = "display:flex;gap:6px;align-items:center;";
-            _tabs.appendChild(_gpTabBtn("stick", "Cần"));
-            _tabs.appendChild(_gpTabBtn("btn", "Nút"));
-            _tabs.appendChild(_gpTabBtn("combo", "Kết hợp"));
+            _tabs.appendChild(_gpTabBtn("stick", "✛ Cần"));
+            _tabs.appendChild(_gpTabBtn("btn", "◉ Nút"));
+            _tabs.appendChild(_gpTabBtn("combo", "⊕ Kết hợp"));
+            const _exit = document.createElement("button");
+            _exit.textContent = "✕";
+            _exit.style.cssText = "padding:5px 11px;border-radius:999px;border:0;font-size:12px;font-weight:700;white-space:nowrap;flex:0 0 auto;background:rgba(200,60,60,.95);color:#fff;";
+            _exit.addEventListener("click", () => {
+                _gpSelect(null, null);
+                try { this.changeSettingOption("virtual-gamepad-edit-layout", "disabled"); } catch (err) {}
+                _gpSyncOffBtn();
+            });
+            _tabs.appendChild(_exit);
             _gpEditMenu.appendChild(_tabs);
             const _row = document.createElement("div");
             _row.classList.add("_gpEditMenuBar");
@@ -425,11 +430,6 @@ GP_LAYOUT_JS = '''
             try { if (navigator.vibrate) navigator.vibrate(15); } catch (e) {}
         };
         _gpMiniDone.addEventListener("click", () => { _gpSelect(null, null); });
-        _gpOffBtn.addEventListener("click", () => {
-            _gpSelect(null, null);
-            try { const _on = _gpGetSetting("virtual-gamepad-edit-layout") === "enabled"; this.changeSettingOption("virtual-gamepad-edit-layout", _on ? "disabled" : "enabled"); } catch (err) {}
-            _gpSyncOffBtn();
-        });
         _gpMiniReset.addEventListener("click", () => {
             if (!_gpSel || !_gpSelId) return;
             try {
@@ -597,7 +597,7 @@ GP_LAYOUT_JS = '''
             try {
                 if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
                 if (this.isChild(this.elements.menu, e.target) || this.isChild(this.elements.menuToggle, e.target)) return;
-                if (_gpMiniBar.contains(e.target) || _gpMiniSlider.contains(e.target) || _gpOffBtn.contains(e.target) || _gpEditMenu.contains(e.target)) return;
+                if (_gpMiniBar.contains(e.target) || _gpMiniSlider.contains(e.target) || _gpEditMenu.contains(e.target)) return;
                 e.stopPropagation();
             } catch (_err) {}
         }, true);
@@ -786,11 +786,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v22" in text:
-        print("Chinh cum nut: da co ban v22 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu ngang gon + chon loai can + TAB + keo cum giu ti le + chip menu bam duoc + an thanh cuon), bo qua")
+    if "cum nut v23" in text:
+        print("Chinh cum nut: da co ban v23 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v23", r"        // HAI: chinh vi tri \+ do mo cum nut v23 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B, keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v22", r"        // HAI: chinh vi tri \+ do mo cum nut v22 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu chinh sua thanh ngang gon \(chip toggle kieu COIN-OPX \+ chon loai can, khong hien thanh cuon\), TAB turbo A\+B, keo cum giu ti le phong to\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v21", r"        // HAI: chinh vi tri \+ do mo cum nut v21 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu chinh sua thanh ngang gon \(chip toggle kieu COIN-OPX \+ chon loai can\), TAB turbo A\+B, keo cum giu ti le phong to\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v20", r"        // HAI: chinh vi tri \+ do mo cum nut v20 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu chinh sua tren dau \(nut ket hop chung \+ an/hien nut\), TAB turbo A\+B\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -818,13 +819,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v22")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v23")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v22 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu ngang gon + chon loai can + TAB + keo cum giu ti le + chip menu bam duoc + an thanh cuon)")
+        changed.append("Chinh cum nut: da them v23 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
