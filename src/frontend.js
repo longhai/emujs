@@ -2694,7 +2694,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v18 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang
+        // HAI: chinh vi tri + do mo cum nut v19 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc)
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2824,6 +2824,15 @@ class EJS_Frontend {
             if (clusterEl.querySelector(".b_dpad")) _ids.push("dpad");
             return _ids;
         };
+        const _gpDpadClusterKey = (el) => {
+            if (!el) return null;
+            let _n = el;
+            while (_n) {
+                for (const _k in _gpClusters) { if (_gpClusters[_k] === _n) return _k; }
+                _n = _n.parentElement;
+            }
+            return Object.keys(_gpClusters).find((k) => _gpClusters[k].contains(el)) || null;
+        };
         const _gpSelect = (el, id) => {
             _gpSyncOffBtn();
             if (_gpSel && _gpSel !== el) {
@@ -2842,6 +2851,14 @@ class EJS_Frontend {
             if (_gpClusters[id]) {
                 const _cp = _gpPos[id] || {};
                 const _s = _cp.s || 1;
+                _gpMiniRange.value = String(_s);
+                _gpMiniPct.textContent = Math.round(_s * 100) + "%";
+                _gpMiniSlider.style.display = "flex";
+            } else if (id === "dpad") {
+                const _ck = _gpDpadClusterKey(el);
+                const _cs = (_ck && _gpPos[_ck] && _gpPos[_ck].s) || 1;
+                const _ds = (_gpBtnPos["dpad"] && _gpBtnPos["dpad"].s) || 1;
+                const _s = _cs * _ds;
                 _gpMiniRange.value = String(_s);
                 _gpMiniPct.textContent = Math.round(_s * 100) + "%";
                 _gpMiniSlider.style.display = "flex";
@@ -2874,7 +2891,7 @@ class EJS_Frontend {
                     delete _gpBtnPos[_gpSelId];
                     localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos));
                     if (_gpSelId === "dpad") {
-                        const _ck = Object.keys(_gpClusters).find((k) => _gpClusters[k].contains(_gpSel));
+                        const _ck = _gpDpadClusterKey(_gpSel);
                         if (_ck) {
                             delete _gpPos[_ck];
                             localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos));
@@ -2901,6 +2918,21 @@ class EJS_Frontend {
                 _gpApplyAll();
                 try { localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos)); } catch (err) {}
                 try { localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos)); } catch (err) {}
+                return;
+            }
+            if (_gpSelId === "dpad") {
+                const _ck = _gpDpadClusterKey(_gpSel);
+                if (_ck) {
+                    const _cp = _gpPos[_ck] || { x: 0, y: 0 };
+                    _cp.s = _s;
+                    _gpPos[_ck] = _cp;
+                    const _dd = _gpBtnPos["dpad"] || { x: 0, y: 0, s: 1 };
+                    _dd.s = 1;
+                    _gpBtnPos["dpad"] = _dd;
+                    _gpApplyAll();
+                    try { localStorage.setItem(_gpKeyFor(_gpCurOrient), JSON.stringify(_gpPos)); } catch (err) {}
+                    try { localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos)); } catch (err) {}
+                }
                 return;
             }
             const _d = _gpBtnPos[_gpSelId] || { x: 0, y: 0, s: 1 };
