@@ -2681,6 +2681,20 @@ class EJS_Frontend {
                 { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true }
             );
         }
+        // HAI: can doi loai — them D-pad loai con lai de doi qua lai trong menu chinh sua.
+        // Game thung dung vung tron (zone, nipplejs) -> them chu thap (dpad). NES dung chu
+        // thap -> them vung tron. Chi 1 trong 2 hien tuy theo lua chon (luu localStorage),
+        // cai con lai an (display:none) nen khong nhan cham. id khac nhau (dpadx/dpadz)
+        // de khoi dung id "dpad" goc; menu doi loai se bat/tat theo id nay.
+        if (["arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
+            info.push(
+                { "type": "dpad", "id": "dpadx", "location": "left", "left": "50%", "top": "50%", "joystickInput": false, "inputValues": [4, 5, 6, 7] }
+            );
+        } else if ("nes" === this.ejs.getControlScheme()) {
+            info.push(
+                { "type": "zone", "id": "dpadz", "location": "left", "left": "50%", "top": "50%", "joystickInput": false, "inputValues": [4, 5, 6, 7] }
+            );
+        }
         for (let i = 0; i < info.length; i++) {
             if (info[i].text) {
                 info[i].text = this.localization(info[i].text);
@@ -2702,7 +2716,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v20 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu chinh sua tren dau (nut ket hop chung + an/hien nut), TAB turbo A+B
+        // HAI: chinh vi tri + do mo cum nut v21 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu chinh sua thanh ngang gon (chip toggle kieu COIN-OPX + chon loai can), TAB turbo A+B, keo cum giu ti le phong to
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2754,6 +2768,28 @@ class EJS_Frontend {
             const _dp = this.virtualGamepad.querySelector(".b_dpad");
             if (_dp) _dp.style.display = _gpHidden["dpad"] ? "none" : "";
         };
+        const _gpDpadTypeKeyFor = (o) => "ejs-gamepad-dpadtype-" + _gpScheme + "-" + o;
+        const _gpNativeDpadType = (["arcade", "mame", "fbneo"].includes(_gpScheme)) ? "zone" : "dpad";
+        let _gpDpadType = _gpNativeDpadType;
+        try { const _sv = localStorage.getItem(_gpDpadTypeKeyFor(_gpCurOrient)) || localStorage.getItem("ejs-gamepad-dpadtype-" + _gpScheme); if (_sv === "dpad" || _sv === "zone") _gpDpadType = _sv; } catch (e) {}
+        const _gpDpadTypeOf = (id) => {
+            if (id === "dpadx") return "dpad";
+            if (id === "dpadz") return "zone";
+            return _gpNativeDpadType;
+        };
+        const _gpApplyDpadType = () => {
+            if (!this.virtualGamepad) return;
+            ["dpad", "dpadx", "dpadz"].forEach((id) => {
+                const _el = this.virtualGamepad.querySelector(".b_" + id);
+                if (!_el) return;
+                _el.style.display = (_gpDpadTypeOf(id) === _gpDpadType && !_gpHidden["dpad"]) ? "" : "none";
+            });
+        };
+        const _gpSetDpadType = (ty) => {
+            _gpDpadType = ty;
+            try { localStorage.setItem(_gpDpadTypeKeyFor(_gpCurOrient), ty); } catch (e) {}
+            _gpApplyDpadType();
+        };
         const _gpApplyAll = () => {
             for (const _k in _gpClusters) {
                 const _el = _gpClusters[_k];
@@ -2778,6 +2814,7 @@ class EJS_Frontend {
                 }
             }
             _gpApplyHidden();
+            _gpApplyDpadType();
         };
         _gpApplyAll();
         const _gpMiniStyle = document.createElement("style");
@@ -2818,61 +2855,60 @@ class EJS_Frontend {
         _gpMiniSlider.appendChild(_gpMiniPct);
         this.elements.parent.appendChild(_gpMiniSlider);
         const _gpEditMenu = document.createElement("div");
-        _gpEditMenu.style.cssText = "position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10002;display:none;max-width:94vw;max-height:48vh;overflow:auto;background:rgba(0,0,0,.85);border-radius:12px;padding:10px 12px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);font-size:13px;";
+        _gpEditMenu.style.cssText = "position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10002;display:none;max-width:96vw;overflow-x:auto;background:rgba(0,0,0,.85);border-radius:999px;padding:5px 8px;box-shadow:0 2px 12px rgba(0,0,0,.5);gap:6px;align-items:center;";
         this.elements.parent.appendChild(_gpEditMenu);
-        const _gpEditMenuRow = (label, checked, onChange) => {
-            const _r = document.createElement("label");
-            _r.style.cssText = "display:flex;align-items:center;gap:8px;padding:4px 2px;white-space:nowrap;cursor:pointer;";
-            const _c = document.createElement("input");
-            _c.type = "checkbox";
-            _c.checked = checked;
-            _c.addEventListener("change", () => onChange(_c.checked));
+        const _gpChip = (label, on, onClick) => {
+            const _c = document.createElement("button");
+            _c.textContent = label;
+            _c.style.cssText = "padding:5px 11px;border-radius:999px;border:0;font-size:12px;font-weight:700;white-space:nowrap;flex:0 0 auto;background:" + (on ? "#3482ff" : "#2a2a2a") + ";color:" + (on ? "#fff" : "#bbb") + ";";
+            _c.addEventListener("click", () => { onClick(); _gpBuildEditMenu(); });
+            return _c;
+        };
+        const _gpChipSep = () => {
             const _s = document.createElement("span");
-            _s.textContent = label;
-            _r.appendChild(_c);
-            _r.appendChild(_s);
-            return _r;
+            _s.style.cssText = "width:1px;height:20px;background:rgba(255,255,255,.25);flex:0 0 auto;";
+            return _s;
         };
         const _gpSaveHidden = () => { try { localStorage.setItem(_gpHiddenKeyFor(_gpCurOrient), JSON.stringify(_gpHidden)); } catch (e) {} };
         const _gpBuildEditMenu = () => {
             _gpEditMenu.innerHTML = "";
-            const _t = document.createElement("div");
-            _t.textContent = "Chỉnh nút";
-            _t.style.cssText = "font-weight:700;margin-bottom:4px;text-align:center;";
-            _gpEditMenu.appendChild(_t);
-            const _sec = (txt) => {
-                const _d = document.createElement("div");
-                _d.textContent = txt;
-                _d.style.cssText = "font-weight:700;opacity:.75;margin-top:6px;";
-                _gpEditMenu.appendChild(_d);
-            };
+            _gpEditMenu.style.display = "flex";
             const _tog = (id, label) => {
-                _gpEditMenu.appendChild(_gpEditMenuRow(label, !_gpHidden[id], (on) => {
-                    _gpHidden[id] = !on;
+                _gpEditMenu.appendChild(_gpChip(label, !_gpHidden[id], () => {
+                    _gpHidden[id] = !_gpHidden[id];
                     _gpSaveHidden();
                     _gpApplyHidden();
+                    _gpApplyDpadType();
                 }));
             };
-            _sec("Nút kết hợp");
             _gpComboIds.forEach((id) => {
                 const _el = _gpBtnEl(id);
                 if (!_el) return;
                 _tog(id, _el.innerText || id.toUpperCase());
             });
-            _sec("Nút chính");
             if (this.virtualGamepad) {
+                let _hasMain = false;
                 this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => {
                     const _id = _gpBtnId(_b);
                     if (!_id || _gpComboIds.includes(_id)) return;
+                    if (!_hasMain) { _gpEditMenu.appendChild(_gpChipSep()); _hasMain = true; }
                     _tog(_id, _b.innerText || _id.toUpperCase());
                 });
-                if (this.virtualGamepad.querySelector(".b_dpad")) _tog("dpad", "Cần di chuyển");
+                if (this.virtualGamepad.querySelector(".b_dpad, .b_dpadx, .b_dpadz")) {
+                    if (!_hasMain) _gpEditMenu.appendChild(_gpChipSep());
+                    _tog("dpad", "Cần");
+                }
+            }
+            if (this.virtualGamepad && this.virtualGamepad.querySelector(".b_dpadx, .b_dpadz")) {
+                _gpEditMenu.appendChild(_gpChipSep());
+                _gpEditMenu.appendChild(_gpChip("＋", _gpDpadType === "dpad", () => { _gpSetDpadType("dpad"); }));
+                _gpEditMenu.appendChild(_gpChip("◯", _gpDpadType === "zone", () => { _gpSetDpadType("zone"); }));
             }
         };
         const _gpSyncEditMenu = () => {
             try {
                 const _on = _gpGetSetting("virtual-gamepad-edit-layout") === "enabled";
-                _gpEditMenu.style.display = _on ? "" : "none";
+                _gpEditMenu.style.display = _on ? "flex" : "none";
                 if (_on) _gpBuildEditMenu();
             } catch (err) {}
         };
@@ -3044,7 +3080,7 @@ class EJS_Frontend {
             _gpSyncRightClick();
             const _t = (e.touches && e.touches[0]) || e;
             const _btn = (e.target && e.target.closest) ? e.target.closest(".ejs_virtualGamepad_button") : null;
-            const _dpad = (!_btn && e.target && e.target.closest) ? e.target.closest(".b_dpad") : null;
+            const _dpad = (!_btn && e.target && e.target.closest) ? e.target.closest(".b_dpad, .b_dpadx, .b_dpadz") : null;
             let _selEl = null, _selId = null;
             if (_btn) {
                 const _id = _gpBtnId(_btn);
@@ -3090,7 +3126,9 @@ class EJS_Frontend {
                 const _d = _gpBtnPos[_gpDrag.id] || { x: 0, y: 0, s: 1 };
                 _gpBtnTransform(_gpDrag.el, { x: _nx, y: _ny, s: _d.s || 1 });
             } else {
-                _gpDrag.el.style.transform = "translate(" + _nx + "px," + _ny + "px)";
+                const _cp = _gpPos[_gpDrag.id] || {};
+                const _cs = _cp.s || 1;
+                _gpDrag.el.style.transform = "translate(" + _nx + "px," + _ny + "px)" + (_cs !== 1 ? " scale(" + _cs + ")" : "");
             }
             _gpDrag.nx = _nx; _gpDrag.ny = _ny;
             if (_gpSel) _gpPlaceMini();
@@ -3116,6 +3154,7 @@ class EJS_Frontend {
             } else if (!_d.moved && _d.kind !== "btn" && !_d.held) {
                 _gpSelect(null, null);
             }
+            try { _gpApplyAll(); } catch (err) {}
             _gpDrag = null;
         };
         for (const _gpK in _gpClusters) {
