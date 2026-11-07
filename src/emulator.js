@@ -1741,28 +1741,6 @@ class EmulatorJS {
             return;
         }
         if (this.frontend.isSettingsMenuOpen() || this.frontend.isPopupOpen()) return;
-        // HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES) — nut X/Y tren tay that
-        // thua vi NES chi co A/B, gan X->turbo A (input 8), Y->turbo B (input 0).
-        // Chi ap khi he NES de he khac (SNES/arcade) van dung X/Y nhu nut that cua no.
-        // Toc do 40ms (~12 phat/giay) nhu nut TA/TB tren man hinh: dat
-        // controls[player][input].autoFireInterval = 40 truoc khi goi startAutofire
-        // vi getAutofireInterval uu tien gia tri nay.
-        if ((e.type === "buttondown" || e.type === "buttonup") && this.getControlScheme() === "nes") {
-            const _gpTurboByIndex = { 2: 8, 3: 0 };
-            const _gpTurboByLabel = { "BUTTON_3": 8, "BUTTON_4": 0 };
-            const _gpTurboInput = _gpTurboByIndex[e.index] !== undefined ? _gpTurboByIndex[e.index] : _gpTurboByLabel[e.label];
-            if (_gpTurboInput !== undefined) {
-                if (e.type === "buttonup") {
-                    this.stopAutofire(gamepadIndex, _gpTurboInput);
-                } else {
-                    if (!this.controls[gamepadIndex]) this.controls[gamepadIndex] = [];
-                    if (!this.controls[gamepadIndex][_gpTurboInput]) this.controls[gamepadIndex][_gpTurboInput] = {};
-                    this.controls[gamepadIndex][_gpTurboInput].autoFireInterval = 40;
-                    this.startAutofire(gamepadIndex, _gpTurboInput, 1);
-                }
-                return;
-            }
-        }
         for (let i = 0; i < 4; i++) {
             if (gamepadIndex !== i) continue;
             for (let j = 0; j < 30; j++) {
