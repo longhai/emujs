@@ -2716,7 +2716,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v21 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu chinh sua thanh ngang gon (chip toggle kieu COIN-OPX + chon loai can), TAB turbo A+B, keo cum giu ti le phong to
+        // HAI: chinh vi tri + do mo cum nut v22 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu chinh sua thanh ngang gon (chip toggle kieu COIN-OPX + chon loai can, khong hien thanh cuon), TAB turbo A+B, keo cum giu ti le phong to
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2818,7 +2818,7 @@ class EJS_Frontend {
         };
         _gpApplyAll();
         const _gpMiniStyle = document.createElement("style");
-        _gpMiniStyle.textContent = "._gpMiniRange{accent-color:#3482ff;}._gpMiniRange::-webkit-slider-thumb{width:24px;height:24px;border-radius:50%;background:#3482ff;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.5);}";
+        _gpMiniStyle.textContent = "._gpMiniRange{accent-color:#3482ff;}._gpMiniRange::-webkit-slider-thumb{width:24px;height:24px;border-radius:50%;background:#3482ff;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.5);}._gpEditMenuBar{scrollbar-width:none;}._gpEditMenuBar::-webkit-scrollbar{display:none;}";
         document.head.appendChild(_gpMiniStyle);
         const _gpMiniBar = document.createElement("div");
         _gpMiniBar.style.cssText = "position:fixed;z-index:10000;display:none;gap:6px;";
@@ -2833,10 +2833,14 @@ class EJS_Frontend {
         _gpMiniBar.appendChild(_gpMiniDone);
         _gpMiniBar.appendChild(_gpMiniReset);
         this.elements.parent.appendChild(_gpMiniBar);
-        const _gpOffBtn = _gpMkMini("✕", "rgba(200,60,60,.95)");
-        _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;display:none;padding:7px 11px;border-radius:999px;border:0;background:rgba(200,60,60,.95);color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
+        // Nut vao/ra che do chinh sua: 1 nut co dinh giong nut thoat, luon o goc tren trai.
+        // Khong nam trong cum nut, khong phai nut gamepad nen khong keo/di chuyen/doi co/
+        // an duoc — bam vao chi de bat/tat che do chinh sua. Chua chinh: ✏️ xanh (bam de vao);
+        // dang chinh: ✕ do (bam de thoat).
+        const _gpOffBtn = _gpMkMini("✏️", "rgba(52,130,255,.95)");
+        _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;padding:7px 11px;border-radius:999px;border:0;background:rgba(52,130,255,.95);color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
         this.elements.parent.appendChild(_gpOffBtn);
-        const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} _gpSyncRightClick(); try { _gpSyncEditMenu(); } catch (err) {} };
+        const _gpSyncOffBtn = () => { try { const _on = _gpGetSetting("virtual-gamepad-edit-layout") === "enabled"; _gpOffBtn.textContent = _on ? "✕" : "✏️"; _gpOffBtn.style.background = _on ? "rgba(200,60,60,.95)" : "rgba(52,130,255,.95)"; } catch (err) {} _gpSyncRightClick(); try { _gpSyncEditMenu(); } catch (err) {} };
         const _gpSyncRightClick = () => { try { if (!this.ejs.config.buttonOpts) this.ejs.config.buttonOpts = {}; this.ejs.config.buttonOpts.rightClick = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? false : true; } catch (err) {} };
         const _gpMiniSlider = document.createElement("div");
         _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:12px;padding:6px 3px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
@@ -2855,7 +2859,7 @@ class EJS_Frontend {
         _gpMiniSlider.appendChild(_gpMiniPct);
         this.elements.parent.appendChild(_gpMiniSlider);
         const _gpEditMenu = document.createElement("div");
-        _gpEditMenu.style.cssText = "position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10002;display:none;max-width:96vw;overflow-x:auto;background:rgba(0,0,0,.85);border-radius:999px;padding:5px 8px;box-shadow:0 2px 12px rgba(0,0,0,.5);gap:6px;align-items:center;";
+        _gpEditMenu.style.cssText = "position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10002;display:none;max-width:96vw;background:rgba(0,0,0,.85);border-radius:12px;padding:6px 8px;box-shadow:0 2px 12px rgba(0,0,0,.5);flex-direction:column;gap:6px;";
         this.elements.parent.appendChild(_gpEditMenu);
         const _gpChip = (label, on, onClick) => {
             const _c = document.createElement("button");
@@ -2864,46 +2868,60 @@ class EJS_Frontend {
             _c.addEventListener("click", () => { onClick(); _gpBuildEditMenu(); });
             return _c;
         };
-        const _gpChipSep = () => {
-            const _s = document.createElement("span");
-            _s.style.cssText = "width:1px;height:20px;background:rgba(255,255,255,.25);flex:0 0 auto;";
-            return _s;
+        let _gpMenuTab = "combo";
+        const _gpTabBtn = (key, label) => {
+            const _b = document.createElement("button");
+            _b.textContent = label;
+            const _on = _gpMenuTab === key;
+            _b.style.cssText = "padding:5px 12px;border-radius:999px;border:0;font-size:12px;font-weight:700;white-space:nowrap;flex:1;background:" + (_on ? "#3482ff" : "#2a2a2a") + ";color:" + (_on ? "#fff" : "#bbb") + ";";
+            _b.addEventListener("click", () => { _gpMenuTab = key; _gpBuildEditMenu(); });
+            return _b;
         };
         const _gpSaveHidden = () => { try { localStorage.setItem(_gpHiddenKeyFor(_gpCurOrient), JSON.stringify(_gpHidden)); } catch (e) {} };
         const _gpBuildEditMenu = () => {
             _gpEditMenu.innerHTML = "";
             _gpEditMenu.style.display = "flex";
+            const _tabs = document.createElement("div");
+            _tabs.style.cssText = "display:flex;gap:6px;align-items:center;";
+            _tabs.appendChild(_gpTabBtn("stick", "Cần"));
+            _tabs.appendChild(_gpTabBtn("btn", "Nút"));
+            _tabs.appendChild(_gpTabBtn("combo", "Kết hợp"));
+            _gpEditMenu.appendChild(_tabs);
+            const _row = document.createElement("div");
+            _row.classList.add("_gpEditMenuBar");
+            _row.style.cssText = "display:flex;gap:6px;align-items:center;overflow-x:auto;";
             const _tog = (id, label) => {
-                _gpEditMenu.appendChild(_gpChip(label, !_gpHidden[id], () => {
+                _row.appendChild(_gpChip(label, !_gpHidden[id], () => {
                     _gpHidden[id] = !_gpHidden[id];
                     _gpSaveHidden();
                     _gpApplyHidden();
                     _gpApplyDpadType();
                 }));
             };
-            _gpComboIds.forEach((id) => {
-                const _el = _gpBtnEl(id);
-                if (!_el) return;
-                _tog(id, _el.innerText || id.toUpperCase());
-            });
-            if (this.virtualGamepad) {
-                let _hasMain = false;
-                this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => {
-                    const _id = _gpBtnId(_b);
-                    if (!_id || _gpComboIds.includes(_id)) return;
-                    if (!_hasMain) { _gpEditMenu.appendChild(_gpChipSep()); _hasMain = true; }
-                    _tog(_id, _b.innerText || _id.toUpperCase());
+            if (_gpMenuTab === "combo") {
+                _gpComboIds.forEach((id) => {
+                    const _el = _gpBtnEl(id);
+                    if (!_el) return;
+                    _tog(id, _el.innerText || id.toUpperCase());
                 });
-                if (this.virtualGamepad.querySelector(".b_dpad, .b_dpadx, .b_dpadz")) {
-                    if (!_hasMain) _gpEditMenu.appendChild(_gpChipSep());
+            } else if (_gpMenuTab === "btn") {
+                if (this.virtualGamepad) {
+                    this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => {
+                        const _id = _gpBtnId(_b);
+                        if (!_id || _gpComboIds.includes(_id)) return;
+                        _tog(_id, _b.innerText || _id.toUpperCase());
+                    });
+                }
+            } else {
+                if (this.virtualGamepad && this.virtualGamepad.querySelector(".b_dpad, .b_dpadx, .b_dpadz")) {
                     _tog("dpad", "Cần");
                 }
+                if (this.virtualGamepad && this.virtualGamepad.querySelector(".b_dpadx, .b_dpadz")) {
+                    _row.appendChild(_gpChip("＋", _gpDpadType === "dpad", () => { _gpSetDpadType("dpad"); }));
+                    _row.appendChild(_gpChip("◯", _gpDpadType === "zone", () => { _gpSetDpadType("zone"); }));
+                }
             }
-            if (this.virtualGamepad && this.virtualGamepad.querySelector(".b_dpadx, .b_dpadz")) {
-                _gpEditMenu.appendChild(_gpChipSep());
-                _gpEditMenu.appendChild(_gpChip("＋", _gpDpadType === "dpad", () => { _gpSetDpadType("dpad"); }));
-                _gpEditMenu.appendChild(_gpChip("◯", _gpDpadType === "zone", () => { _gpSetDpadType("zone"); }));
-            }
+            _gpEditMenu.appendChild(_row);
         };
         const _gpSyncEditMenu = () => {
             try {
@@ -3000,7 +3018,7 @@ class EJS_Frontend {
         _gpMiniDone.addEventListener("click", () => { _gpSelect(null, null); });
         _gpOffBtn.addEventListener("click", () => {
             _gpSelect(null, null);
-            try { this.changeSettingOption("virtual-gamepad-edit-layout", "disabled"); } catch (err) {}
+            try { const _on = _gpGetSetting("virtual-gamepad-edit-layout") === "enabled"; this.changeSettingOption("virtual-gamepad-edit-layout", _on ? "disabled" : "enabled"); } catch (err) {}
             _gpSyncOffBtn();
         });
         _gpMiniReset.addEventListener("click", () => {
@@ -3170,7 +3188,7 @@ class EJS_Frontend {
             try {
                 if (_gpGetSetting("virtual-gamepad-edit-layout") !== "enabled") return;
                 if (this.isChild(this.elements.menu, e.target) || this.isChild(this.elements.menuToggle, e.target)) return;
-                if (_gpMiniBar.contains(e.target) || _gpMiniSlider.contains(e.target) || _gpOffBtn.contains(e.target)) return;
+                if (_gpMiniBar.contains(e.target) || _gpMiniSlider.contains(e.target) || _gpOffBtn.contains(e.target) || _gpEditMenu.contains(e.target)) return;
                 e.stopPropagation();
             } catch (_err) {}
         }, true);
