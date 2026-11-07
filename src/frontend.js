@@ -2716,7 +2716,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v26 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v27 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2816,6 +2816,14 @@ class EJS_Frontend {
         const _gpSaveBtnShapeMap = () => { try { localStorage.setItem(_gpBtnShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShapeMap)); } catch (e) {} };
         const _gpShapeOf = (id) => (_gpBtnShapeMap && _gpBtnShapeMap[id]) ? _gpShapeFrom(_gpBtnShapeMap[id]) : _gpBtnShape;
         const _gpApplyShapeTo = (_b, _s) => {
+            // Nut khoi (combo AB/XY/ABX/BXY, Fast/Slow): von la chu nhat, giu nguyen dang
+            // chu nhat — chi doi bo goc. Nhan biet bang line-height 31px tu blockCSS.
+            if (_b.style.lineHeight === "31px") {
+                _b.style.width = "";
+                _b.style.height = "31px";
+                _b.style.borderRadius = (_s.form === "circle") ? "5px" : (_s.round + "%");
+                return;
+            }
             const _h = _b.offsetHeight || 56;
             if (_s.form === "rect") {
                 _b.style.width = Math.round(_h * 1.6) + "px";
