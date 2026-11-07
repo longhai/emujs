@@ -2646,7 +2646,12 @@ class EJS_Frontend {
         if ("nes" === this.ejs.getControlScheme()) {
             info.push(
                 { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true },
-                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true }
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true },
+                { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
+                { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
+                { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
+                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
             );
         }
         // HAI: nut combo arcade — 1 nut bam nhieu nut cung luc (kieu nut
@@ -2670,7 +2675,10 @@ class EJS_Frontend {
                 { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
                 { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
                 { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
-                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
+                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] },
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true }
             );
         }
         for (let i = 0; i < info.length; i++) {
@@ -2694,7 +2702,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v19 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc)
+        // HAI: chinh vi tri + do mo cum nut v20 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu chinh sua tren dau (nut ket hop chung + an/hien nut), TAB turbo A+B
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2726,6 +2734,26 @@ class EJS_Frontend {
             const _x = (d && d.x) || 0, _y = (d && d.y) || 0, _s = (d && d.s) || 1;
             el.style.transform = "translate(" + _x + "px," + _y + "px)" + (_s !== 1 ? " scale(" + _s + ")" : "");
         };
+        const _gpHiddenKeyFor = (o) => "ejs-gamepad-hidden-" + _gpScheme + "-" + o;
+        let _gpHidden = _gpLoad(_gpHiddenKeyFor(_gpCurOrient), "ejs-gamepad-hidden-" + _gpScheme);
+        const _gpComboIds = ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
+        const _gpDefaultHiddenIds = () => {
+            if (_gpScheme === "nes") return ["ab", "cd", "abc", "bcd"];
+            if (["arcade", "mame", "fbneo"].includes(_gpScheme)) return ["ta", "tb", "tab"];
+            return [];
+        };
+        try { if (!localStorage.getItem(_gpHiddenKeyFor(_gpCurOrient))) _gpDefaultHiddenIds().forEach((id) => { _gpHidden[id] = true; }); } catch (e) {}
+        const _gpBtnEl = (id) => (this.virtualGamepad ? this.virtualGamepad.querySelector(".b_" + id) : null);
+        const _gpApplyHidden = () => {
+            if (!this.virtualGamepad) return;
+            this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => {
+                const _id = _gpBtnId(_b);
+                if (!_id) return;
+                _b.style.display = _gpHidden[_id] ? "none" : "";
+            });
+            const _dp = this.virtualGamepad.querySelector(".b_dpad");
+            if (_dp) _dp.style.display = _gpHidden["dpad"] ? "none" : "";
+        };
         const _gpApplyAll = () => {
             for (const _k in _gpClusters) {
                 const _el = _gpClusters[_k];
@@ -2749,6 +2777,7 @@ class EJS_Frontend {
                     _gpBtnTransform(_dp, _gpBtnPos["dpad"] || null);
                 }
             }
+            _gpApplyHidden();
         };
         _gpApplyAll();
         const _gpMiniStyle = document.createElement("style");
@@ -2770,7 +2799,7 @@ class EJS_Frontend {
         const _gpOffBtn = _gpMkMini("✕", "rgba(200,60,60,.95)");
         _gpOffBtn.style.cssText = "position:fixed;left:8px;top:8px;z-index:10001;display:none;padding:7px 11px;border-radius:999px;border:0;background:rgba(200,60,60,.95);color:#fff;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap;";
         this.elements.parent.appendChild(_gpOffBtn);
-        const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} _gpSyncRightClick(); };
+        const _gpSyncOffBtn = () => { try { _gpOffBtn.style.display = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? "" : "none"; } catch (err) {} _gpSyncRightClick(); try { _gpSyncEditMenu(); } catch (err) {} };
         const _gpSyncRightClick = () => { try { if (!this.ejs.config.buttonOpts) this.ejs.config.buttonOpts = {}; this.ejs.config.buttonOpts.rightClick = (_gpGetSetting("virtual-gamepad-edit-layout") === "enabled") ? false : true; } catch (err) {} };
         const _gpMiniSlider = document.createElement("div");
         _gpMiniSlider.style.cssText = "position:fixed;z-index:10000;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(0,0,0,.78);border-radius:12px;padding:6px 3px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);";
@@ -2788,6 +2817,65 @@ class EJS_Frontend {
         _gpMiniSlider.appendChild(_gpMiniRange);
         _gpMiniSlider.appendChild(_gpMiniPct);
         this.elements.parent.appendChild(_gpMiniSlider);
+        const _gpEditMenu = document.createElement("div");
+        _gpEditMenu.style.cssText = "position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:10002;display:none;max-width:94vw;max-height:48vh;overflow:auto;background:rgba(0,0,0,.85);border-radius:12px;padding:10px 12px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.5);font-size:13px;";
+        this.elements.parent.appendChild(_gpEditMenu);
+        const _gpEditMenuRow = (label, checked, onChange) => {
+            const _r = document.createElement("label");
+            _r.style.cssText = "display:flex;align-items:center;gap:8px;padding:4px 2px;white-space:nowrap;cursor:pointer;";
+            const _c = document.createElement("input");
+            _c.type = "checkbox";
+            _c.checked = checked;
+            _c.addEventListener("change", () => onChange(_c.checked));
+            const _s = document.createElement("span");
+            _s.textContent = label;
+            _r.appendChild(_c);
+            _r.appendChild(_s);
+            return _r;
+        };
+        const _gpSaveHidden = () => { try { localStorage.setItem(_gpHiddenKeyFor(_gpCurOrient), JSON.stringify(_gpHidden)); } catch (e) {} };
+        const _gpBuildEditMenu = () => {
+            _gpEditMenu.innerHTML = "";
+            const _t = document.createElement("div");
+            _t.textContent = "Chỉnh nút";
+            _t.style.cssText = "font-weight:700;margin-bottom:4px;text-align:center;";
+            _gpEditMenu.appendChild(_t);
+            const _sec = (txt) => {
+                const _d = document.createElement("div");
+                _d.textContent = txt;
+                _d.style.cssText = "font-weight:700;opacity:.75;margin-top:6px;";
+                _gpEditMenu.appendChild(_d);
+            };
+            const _tog = (id, label) => {
+                _gpEditMenu.appendChild(_gpEditMenuRow(label, !_gpHidden[id], (on) => {
+                    _gpHidden[id] = !on;
+                    _gpSaveHidden();
+                    _gpApplyHidden();
+                }));
+            };
+            _sec("Nút kết hợp");
+            _gpComboIds.forEach((id) => {
+                const _el = _gpBtnEl(id);
+                if (!_el) return;
+                _tog(id, _el.innerText || id.toUpperCase());
+            });
+            _sec("Nút chính");
+            if (this.virtualGamepad) {
+                this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => {
+                    const _id = _gpBtnId(_b);
+                    if (!_id || _gpComboIds.includes(_id)) return;
+                    _tog(_id, _b.innerText || _id.toUpperCase());
+                });
+                if (this.virtualGamepad.querySelector(".b_dpad")) _tog("dpad", "Cần di chuyển");
+            }
+        };
+        const _gpSyncEditMenu = () => {
+            try {
+                const _on = _gpGetSetting("virtual-gamepad-edit-layout") === "enabled";
+                _gpEditMenu.style.display = _on ? "" : "none";
+                if (_on) _gpBuildEditMenu();
+            } catch (err) {}
+        };
         let _gpSel = null;
         let _gpSelId = null;
         const _gpPlaceBar = () => {
@@ -3140,8 +3228,8 @@ class EJS_Frontend {
                         e.target.classList.add("ejs_virtualGamepad_button_down");
                         // HAI: nut combo — bam 1 nut ma gui nhieu nut cung luc (arcade AB/XY/ABX/BXY)
                         (info[i].combo || [value]).forEach((v) => this.ejs.gameManager.simulateInput(0, v, downValue));
-                        if (!info[i].combo && (info[i].autofire === true || this.ejs.isAutofireEnabled(0, value)) && !isAnalog) { // HAI: nut turbo
-                            this.ejs.startAutofire(0, value, downValue);
+                        if ((info[i].autofire === true || (!info[i].combo && this.ejs.isAutofireEnabled(0, value))) && !isAnalog) { // HAI: nut turbo
+                            (info[i].combo || [value]).forEach((v) => this.ejs.startAutofire(0, v, downValue));
                         }
                     }
                 })
