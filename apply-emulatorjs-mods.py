@@ -936,6 +936,33 @@ def main(path):
         text = text.replace(GP_LAYOUT_MENU_ANCHOR, GP_LAYOUT_MENU_ANCHOR + GP_LAYOUT_MENU, 1)
         changed.append("Menu: da them 'Chinh vi tri nut' + 'Do mo nut' vao muc Virtual Gamepad")
 
+    _ctl_nes_old = '''        } else if ("nes" === this.ejs.getControlScheme()) {
+            buttons = [
+                { id: 8, label: this.localization("A") },
+                { id: 0, label: this.localization("B") },
+                { id: 2, label: this.localization("SELECT") },'''
+    _ctl_nes_new = '''        } else if ("nes" === this.ejs.getControlScheme()) {
+            buttons = [
+                { id: 8, label: this.localization("A") },
+                { id: 0, label: this.localization("B") },
+                // HAI: NES X/Y bang dieu khien (Nestopia: X=Turbo A, Y=Turbo B; FCEUmm khong doc)
+                { id: 9, label: this.localization("X") },
+                { id: 1, label: this.localization("Y") },
+                { id: 2, label: this.localization("SELECT") },'''
+    if "HAI: NES X/Y bang dieu khien" in text:
+        print("Bang dieu khien NES: da co X/Y roi, bo qua")
+    elif _ctl_nes_old in text:
+        text = text.replace(_ctl_nes_old, _ctl_nes_new, 1)
+        changed.append("Bang dieu khien NES: da them hang X (id 9) / Y (id 1) — Nestopia doc X=Turbo A, Y=Turbo B")
+    else:
+        import re as _rexy
+        _mxy = _rexy.search(r'\} else if \("nes" === this\.ejs\.getControlScheme\(\)\) \{\s*buttons = \[(.*?)\];', text, _rexy.S)
+        if _mxy and "{ id: 9," in _mxy.group(1):
+            print("Bang dieu khien NES: X/Y da co san (ban sua tay), bo qua")
+        else:
+            print("LOI: khong tim thay list NES trong createControlSettingMenu — ban goc doi roi", file=sys.stderr)
+            return 2
+
     if changed:
         open(path, "w", encoding="utf-8").write(text)
         print("DA DOI: " + "; ".join(changed))
