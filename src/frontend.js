@@ -2716,7 +2716,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v24 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v25 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Vuong bo goc, ap cho tat ca nut), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2790,6 +2790,22 @@ class EJS_Frontend {
             try { localStorage.setItem(_gpDpadTypeKeyFor(_gpCurOrient), ty); } catch (e) {}
             _gpApplyDpadType();
         };
+        // Hinh dang nut (ap cho TAT CA nut, ke ca nut ket hop): tron (mac dinh) / vuong /
+        // vuong bo goc. Luu theo he + xoay man hinh nhu cac cai dat cum nut khac.
+        const _gpShapeKeyFor = (o) => "ejs-gamepad-shape-" + _gpScheme + "-" + o;
+        let _gpBtnShape = "round";
+        try { const _sv = localStorage.getItem(_gpShapeKeyFor(_gpCurOrient)) || localStorage.getItem("ejs-gamepad-shape-" + _gpScheme); if (["round", "square", "rounded"].includes(_sv)) _gpBtnShape = _sv; } catch (e) {}
+        const _gpShapeRadius = () => _gpBtnShape === "square" ? "0" : (_gpBtnShape === "rounded" ? "12px" : "50%");
+        const _gpApplyShape = () => {
+            if (!this.virtualGamepad) return;
+            const _r = _gpShapeRadius();
+            this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => { _b.style.borderRadius = _r; });
+        };
+        const _gpSetShape = (s) => {
+            _gpBtnShape = s;
+            try { localStorage.setItem(_gpShapeKeyFor(_gpCurOrient), s); } catch (e) {}
+            _gpApplyShape();
+        };
         const _gpApplyAll = () => {
             for (const _k in _gpClusters) {
                 const _el = _gpClusters[_k];
@@ -2815,6 +2831,7 @@ class EJS_Frontend {
             }
             _gpApplyHidden();
             _gpApplyDpadType();
+            _gpApplyShape();
         };
         _gpApplyAll();
         const _gpMiniStyle = document.createElement("style");
@@ -2910,6 +2927,9 @@ class EJS_Frontend {
                     _tog(id, _el.innerText || id.toUpperCase());
                 });
             } else if (_gpMenuTab === "btn") {
+                _row.appendChild(_gpChip("● Tròn", _gpBtnShape === "round", () => { _gpSetShape("round"); }));
+                _row.appendChild(_gpChip("■ Vuông", _gpBtnShape === "square", () => { _gpSetShape("square"); }));
+                _row.appendChild(_gpChip("▢ Bo góc", _gpBtnShape === "rounded", () => { _gpSetShape("rounded"); }));
                 if (this.virtualGamepad) {
                     this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => {
                         const _id = _gpBtnId(_b);
