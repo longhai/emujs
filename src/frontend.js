@@ -2647,6 +2647,8 @@ class EJS_Frontend {
             info.push(
                 { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true, "autoFireInterval": 40 },
                 { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },
+                { "type": "button", "text": "X", "id": "x", "location": "right", "right": 5, "top": -70, "bold": true, "input_value": 8, "autofire": true, "autoFireInterval": 40 },
+                { "type": "button", "text": "Y", "id": "y", "location": "right", "right": 75, "top": -70, "bold": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },
                 { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true, "autoFireInterval": 40 },
                 { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
                 { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
@@ -2716,7 +2718,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v27 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v29 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den, nut X/Y NES gan chuc nang (mac dinh Turbo A/B, doi duoc A/B/Turbo/Len/Xuong/Trai/Phai/Start/Select)
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2815,6 +2817,53 @@ class EJS_Frontend {
         const _gpSaveShape = () => { try { localStorage.setItem(_gpShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShape)); } catch (e) {} };
         const _gpSaveBtnShapeMap = () => { try { localStorage.setItem(_gpBtnShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShapeMap)); } catch (e) {} };
         const _gpShapeOf = (id) => (_gpBtnShapeMap && _gpBtnShapeMap[id]) ? _gpShapeFrom(_gpBtnShapeMap[id]) : _gpBtnShape;
+        // Chuc nang nut X/Y (NES, ABXY nhu ban cu): moi nut X/Y gan duoc 1 chuc nang
+        // (A, B, Turbo A, Turbo B, Len/Xuong/Trai/Phai, Start, Select), mac dinh X = Turbo A,
+        // Y = Turbo B. Luu theo he + xoay man hinh. Touch handler doc bang nay luc bam
+        // (qua this._gpBtnFunc) nen doi chuc nang co hieu luc ngay, khong can nap lai game.
+        const _gpFuncList = [
+            { key: "a", input: 8, autofire: false, label: "A" },
+            { key: "b", input: 0, autofire: false, label: "B" },
+            { key: "ta", input: 8, autofire: true, label: "TA" },
+            { key: "tb", input: 0, autofire: true, label: "TB" },
+            { key: "up", input: 4, autofire: false, label: "↑" },
+            { key: "down", input: 5, autofire: false, label: "↓" },
+            { key: "left", input: 6, autofire: false, label: "←" },
+            { key: "right", input: 7, autofire: false, label: "→" },
+            { key: "start", input: 3, autofire: false, label: "ST" },
+            { key: "select", input: 2, autofire: false, label: "SE" }
+        ];
+        const _gpFuncByKey = (k) => { for (let _i = 0; _i < _gpFuncList.length; _i++) { if (_gpFuncList[_i].key === k) return _gpFuncList[_i]; } return null; };
+        const _gpBtnFuncKeyFor = (o) => "ejs-gamepad-btnfunc-" + _gpScheme + "-" + o;
+        // Chi he NES moi co nut X/Y gan chuc nang (nut X/Y them vao); he khac (SNES/arcade)
+        // co nut X/Y that cua no nen khong dung bang nay (de {} = khong ghi de).
+        this._gpBtnFunc = (_gpScheme === "nes") ? { x: { key: "ta", input: 8, autofire: true, label: "TA" }, y: { key: "tb", input: 0, autofire: true, label: "TB" } } : {};
+        try {
+            const _fv = localStorage.getItem(_gpBtnFuncKeyFor(_gpCurOrient)) || localStorage.getItem("ejs-gamepad-btnfunc-" + _gpScheme);
+            if (_fv) { const _fo = JSON.parse(_fv); if (_fo && typeof _fo === "object") { ["x", "y"].forEach((_bid) => { if (_fo[_bid] && typeof _fo[_bid].input === "number") { const _fl = _gpFuncByKey(_fo[_bid].key); this._gpBtnFunc[_bid] = _fl ? { key: _fl.key, input: _fl.input, autofire: _fl.autofire, label: _fl.label } : { key: "", input: _fo[_bid].input, autofire: !!_fo[_bid].autofire, label: _fo[_bid].label || _bid.toUpperCase() }; } }); } }
+        } catch (e) {}
+        const _gpSaveBtnFunc = () => { try { localStorage.setItem(_gpBtnFuncKeyFor(_gpCurOrient), JSON.stringify(this._gpBtnFunc)); } catch (e) {} };
+        const _gpBtnFuncOf = (id) => (this._gpBtnFunc && this._gpBtnFunc[id]) ? this._gpBtnFunc[id] : null;
+        const _gpSetBtnFunc = (id, funcKey) => {
+            const _f = _gpFuncByKey(funcKey);
+            if (!_f) return;
+            if (!this._gpBtnFunc) this._gpBtnFunc = {};
+            this._gpBtnFunc[id] = { key: _f.key, input: _f.input, autofire: _f.autofire, label: _f.label };
+            _gpSaveBtnFunc();
+            const _el = _gpBtnEl(id);
+            if (_el) _el.innerText = _f.label;
+        };
+        // Ap chuc nang da luu vao nhan nut X/Y trong info (nut tao sau se hien dung nhan).
+        // Chi he NES (nut X/Y them vao); he khac giu nhan goc.
+        try {
+            if (_gpScheme === "nes") {
+                for (let _fi = 0; _fi < info.length; _fi++) {
+                    if ((info[_fi].id === "x" || info[_fi].id === "y") && this._gpBtnFunc[info[_fi].id]) {
+                        info[_fi].text = this._gpBtnFunc[info[_fi].id].label;
+                    }
+                }
+            }
+        } catch (e) {}
         const _gpApplyShapeTo = (_b, _s) => {
             // Nut khoi (combo AB/XY/ABX/BXY, Fast/Slow): von la chu nhat, giu nguyen dang
             // chu nhat — chi doi bo goc. Nhan biet bang line-height 31px tu blockCSS.
@@ -2986,6 +3035,18 @@ class EJS_Frontend {
                         const _id = _gpBtnId(_b);
                         if (!_id || _gpComboIds.includes(_id)) return;
                         _tog(_id, _b.innerText || _id.toUpperCase());
+                    });
+                }
+                // Nut X/Y gan chuc nang (chi he NES): khi dang chon X hoac Y thi hien them hang chon
+                // chuc nang (A, B, Turbo A/B, Len/Xuong/Trai/Phai, Start, Select).
+                if ((_gpSelId === "x" || _gpSelId === "y") && _gpScheme === "nes") {
+                    const _curF = _gpBtnFuncOf(_gpSelId);
+                    const _flabel = document.createElement("span");
+                    _flabel.textContent = "Chức năng " + _gpSelId.toUpperCase() + ":";
+                    _flabel.style.cssText = "font-size:12px;font-weight:700;color:#fff;white-space:nowrap;flex:0 0 auto;";
+                    _row.appendChild(_flabel);
+                    _gpFuncList.forEach((_fn) => {
+                        _row.appendChild(_gpChip(_fn.label, !!_curF && _curF.key === _fn.key, () => { _gpSetBtnFunc(_gpSelId, _fn.key); }));
                     });
                 }
             } else if (_gpMenuTab === "shape") {
@@ -3371,18 +3432,30 @@ class EJS_Frontend {
                 let downValue = info[i].joystickInput === true ? 0x7fff : 1;
                 this.ejs.addEventListener(button, "touchstart touchend touchcancel", (e) => {
                     e.preventDefault();
-                    const isAnalog = this.ejs.analogAxes.includes(value);
+                    // HAI: nut X/Y gan chuc nang — doc chuc nang da luu luc bam (mac dinh Turbo A/B, chi he NES)
+                    let _gpVal = value;
+                    let _gpAuto = (info[i].autofire === true);
+                    let _gpCombo = info[i].combo;
+                    if ((info[i].id === "x" || info[i].id === "y") && this.ejs.getControlScheme() === "nes") {
+                        const _gpF = (this._gpBtnFunc && this._gpBtnFunc[info[i].id]) || null;
+                        if (_gpF && typeof _gpF.input === "number") {
+                            _gpVal = _gpF.input;
+                            _gpAuto = !!_gpF.autofire;
+                            _gpCombo = null;
+                        }
+                    }
+                    const isAnalog = this.ejs.analogAxes.includes(_gpVal);
                     if (e.type === "touchend" || e.type === "touchcancel") {
                         e.target.classList.remove("ejs_virtualGamepad_button_down");
                         window.setTimeout(() => {
-                            (info[i].combo || [value]).forEach((v) => { this.ejs.stopAutofire(0, v); this.ejs.gameManager.simulateInput(0, v, 0); }); // HAI: nut combo
+                            (_gpCombo || [_gpVal]).forEach((v) => { this.ejs.stopAutofire(0, v); this.ejs.gameManager.simulateInput(0, v, 0); }); // HAI: nut combo
                         })
                     } else {
                         e.target.classList.add("ejs_virtualGamepad_button_down");
                         // HAI: nut combo — bam 1 nut ma gui nhieu nut cung luc (arcade AB/XY/ABX/BXY)
-                        (info[i].combo || [value]).forEach((v) => this.ejs.gameManager.simulateInput(0, v, downValue));
-                        if ((info[i].autofire === true || (!info[i].combo && this.ejs.isAutofireEnabled(0, value))) && !isAnalog) { // HAI: nut turbo
-                            (info[i].combo || [value]).forEach((v) => this.ejs.startAutofire(0, v, downValue));
+                        (_gpCombo || [_gpVal]).forEach((v) => this.ejs.gameManager.simulateInput(0, v, downValue));
+                        if ((_gpAuto || (!_gpCombo && this.ejs.isAutofireEnabled(0, _gpVal))) && !isAnalog) { // HAI: nut turbo
+                            (_gpCombo || [_gpVal]).forEach((v) => this.ejs.startAutofire(0, v, downValue));
                         }
                     }
                 })
