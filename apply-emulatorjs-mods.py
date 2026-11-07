@@ -13,9 +13,9 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
         }
         if ("nes" === this.ejs.getControlScheme()) {
             info.push(
-                { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true },
-                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true },
-                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true },
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true, "autoFireInterval": 40 },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true, "autoFireInterval": 40 },
                 { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
                 { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
                 { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
@@ -44,9 +44,9 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
                 { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
                 { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
                 { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] },
-                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "autofire": true },
-                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "autofire": true },
-                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true }
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "autofire": true, "autoFireInterval": 40 },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true, "autoFireInterval": 40 }
             );
         }
         // HAI: can doi loai — them D-pad loai con lai de doi qua lai trong menu chinh sua.
@@ -125,7 +125,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v23 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B, keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v24 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -709,6 +709,12 @@ def main(path):
     if '"dpadx"' not in text and '"dpadz"' not in text and _arc_tab in text:
         text = text.replace(_arc_tab, _arc_tab + "\n" + _dpad_alt, 1)
         changed.append("Can doi loai: migration -> chen D-pad doi loai (dpadx/dpadz) sau khoi arcade")
+    # v24 migration: file da co TA/TB/TAB (chua autoFireInterval) thi them toc do turbo nhanh.
+    # getAutofireInterval uu tien control.autoFireInterval truoc cai dat chung, nen chi
+    # nut turbo nhanh len (~12 phat/giay), nut thuong va cai dat Autofire Interval khong doi.
+    if '"autoFireInterval"' not in text and '"autofire": true' in text:
+        text = text.replace('"autofire": true', '"autofire": true, "autoFireInterval": 40')
+        changed.append("Turbo: migration -> them autoFireInterval 40ms cho TA/TB/TAB (~12 phat/giay)")
 
 
     MENU_SHOW_OLD = '''        const show = () => {
@@ -786,11 +792,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v23" in text:
-        print("Chinh cum nut: da co ban v23 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den), bo qua")
+    if "cum nut v24" in text:
+        print("Chinh cum nut: da co ban v24 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v24", r"        // HAI: chinh vi tri \+ do mo cum nut v24 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B 40ms \(~12 phat/giay\), keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v23", r"        // HAI: chinh vi tri \+ do mo cum nut v23 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu tab co bieu tuong \(✛ Can/◉ Nut/⊕ Ket hop, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu\), TAB turbo A\+B, keo cum giu ti le phong to, man hinh sach luc choi \(khong nut noi\), thanh truot khong nen den\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v22", r"        // HAI: chinh vi tri \+ do mo cum nut v22 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu chinh sua thanh ngang gon \(chip toggle kieu COIN-OPX \+ chon loai can, khong hien thanh cuon\), TAB turbo A\+B, keo cum giu ti le phong to\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v21", r"        // HAI: chinh vi tri \+ do mo cum nut v21 — nhan giu chon nut/cum, nut icon nho \+ truot dung gon \+ nut Tat rieng, truot doi co ca cum \(khung to theo\), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu \+ contextmenu \+ mousemove \+ rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut \+ chu trang, truot D-pad doi co cum \(hien dung co thuc\), menu chinh sua thanh ngang gon \(chip toggle kieu COIN-OPX \+ chon loai can\), TAB turbo A\+B, keo cum giu ti le phong to\n[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -819,13 +826,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v23")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v24")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v23 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den)")
+        changed.append("Chinh cum nut: da them v24 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
