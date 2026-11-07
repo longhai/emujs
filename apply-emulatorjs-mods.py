@@ -2082,16 +2082,56 @@ MENU_OPEN_OLD = "            this.frontend.menu.open();\n"
 MENU_OPEN_NEW = "            // HAI: tat tu mo menu khi load game — chi mo khi bam nut ☰\n"
 
 
+GPAD_TURBO_MARKER = "HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES)"
+GPAD_TURBO_ANCHOR = "        if (this.frontend.isSettingsMenuOpen() || this.frontend.isPopupOpen()) return;\n"
+GPAD_TURBO_NEW = """        // HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES) — nut X/Y tren tay that
+        // thua vi NES chi co A/B, gan X->turbo A (input 8), Y->turbo B (input 0).
+        // Chi ap khi he NES de he khac (SNES/arcade) van dung X/Y nhu nut that cua no.
+        // Toc do 40ms (~12 phat/giay) nhu nut TA/TB tren man hinh: dat
+        // controls[player][input].autoFireInterval = 40 truoc khi goi startAutofire
+        // vi getAutofireInterval uu tien gia tri nay.
+        if ((e.type === "buttondown" || e.type === "buttonup") && this.getControlScheme() === "nes") {
+            const _gpTurboByIndex = { 2: 8, 3: 0 };
+            const _gpTurboByLabel = { "BUTTON_3": 8, "BUTTON_4": 0 };
+            const _gpTurboInput = _gpTurboByIndex[e.index] !== undefined ? _gpTurboByIndex[e.index] : _gpTurboByLabel[e.label];
+            if (_gpTurboInput !== undefined) {
+                if (e.type === "buttonup") {
+                    this.stopAutofire(gamepadIndex, _gpTurboInput);
+                } else {
+                    if (!this.controls[gamepadIndex]) this.controls[gamepadIndex] = [];
+                    if (!this.controls[gamepadIndex][_gpTurboInput]) this.controls[gamepadIndex][_gpTurboInput] = {};
+                    this.controls[gamepadIndex][_gpTurboInput].autoFireInterval = 40;
+                    this.startAutofire(gamepadIndex, _gpTurboInput, 1);
+                }
+                return;
+            }
+        }
+"""
+
+
 def patch_emulator(path):
     text = open(path, encoding="utf-8").read()
+    changed = []
     if "HAI: tat tu mo menu" in text:
         print("Menu tu mo (emulator.js): da tat roi, bo qua")
-        return 0
-    if MENU_OPEN_OLD not in text:
+    elif MENU_OPEN_OLD not in text:
         print("LOI: khong tim thay dong frontend.menu.open() — ban goc doi emulator.js roi", file=sys.stderr)
         return 2
-    open(path, "w", encoding="utf-8").write(text.replace(MENU_OPEN_OLD, MENU_OPEN_NEW, 1))
-    print("DA DOI: Menu: da xoa dong menu.open() khi game bat dau (emulator.js)")
+    else:
+        text = text.replace(MENU_OPEN_OLD, MENU_OPEN_NEW, 1)
+        changed.append("Menu: da xoa dong menu.open() khi game bat dau (emulator.js)")
+    if GPAD_TURBO_MARKER in text:
+        print("Tay cam X/Y turbo (emulator.js): da co roi, bo qua")
+    elif GPAD_TURBO_ANCHOR not in text:
+        print("LOI: khong tim thay dong isSettingsMenuOpen trong gamepadEvent — ban goc doi emulator.js roi", file=sys.stderr)
+        return 2
+    else:
+        text = text.replace(GPAD_TURBO_ANCHOR, GPAD_TURBO_ANCHOR + GPAD_TURBO_NEW, 1)
+        changed.append("Tay cam: X = Turbo A, Y = Turbo B (chi he NES, 40ms ~12 phat/giay)")
+    if changed:
+        open(path, "w", encoding="utf-8").write(text)
+        for _c in changed:
+            print("DA DOI: " + _c)
     return 0
 
 
