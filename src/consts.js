@@ -5,7 +5,7 @@ export const cores = {
     "vb": ["beetle_vb"],
     "nds": ["melonds", "desmume", "desmume2015"],
     "arcade": ["fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "same_cdi"],
-    "nes": ["fceumm", "nestopia", "mesen"], // HAI: them core Mesen (test)
+    "nes": ["fceumm", "nestopia"],
     "gb": ["gambatte"],
     "coleco": ["gearcoleco"],
     "segaMS": ["smsplus", "genesis_plus_gx", "genesis_plus_gx_wide", "picodrive"],
