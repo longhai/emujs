@@ -347,7 +347,7 @@ class EmulatorJS {
         this.downloadType = {
             "rom": { "name": "ROM", "dontCache": false, "dontExtractIfCore": ["arcade", "fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "same_cdi", "mame", "mame2003_plus", "mame2003"] },
             "core": { "name": "Core", "dontCache": false, "cdnFallback": true },
-            "bios": { "name": "BIOS", "dontCache": false, "dontExtractIfCore": ["arcade", "fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "same_cdi", "mame", "mame2003_plus", "mame2003"] },
+            "bios": { "name": "BIOS", "dontCache": false, "dontExtractIfCore": [] }, // HAI: giai nen BIOS de lay du BIOS cac hang (fbneo/mame)
             "parent": { "name": "Parent", "dontCache": false },
             "patch": { "name": "Patch", "dontCache": false },
             "reports": { "name": "Reports", "dontCache": true },
