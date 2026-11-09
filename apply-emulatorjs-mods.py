@@ -2058,6 +2058,9 @@ def patch_shaders(path):
 MENU_OPEN_OLD = "            this.frontend.menu.open();\n"
 MENU_OPEN_NEW = "            // HAI: tat tu mo menu khi load game — chi mo khi bam nut ☰\n"
 
+BIOS_DONTEXTRACT_OLD = '            "bios": { "name": "BIOS", "dontCache": false, "dontExtractIfCore": ["arcade", "fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "same_cdi", "mame", "mame2003_plus", "mame2003"] },\n'
+BIOS_DONTEXTRACT_NEW = '            "bios": { "name": "BIOS", "dontCache": false, "dontExtractIfCore": [] }, // HAI: giai nen BIOS de lay du BIOS cac hang (fbneo/mame)\n'
+
 GPAD_TURBO_MARKER = "HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES)"
 GPAD_TURBO_ANCHOR = "        if (this.frontend.isSettingsMenuOpen() || this.frontend.isPopupOpen()) return;\n"
 GPAD_TURBO_NEW = """        // HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES) — nut X/Y tren tay that
@@ -2095,6 +2098,15 @@ def patch_emulator(path):
     else:
         text = text.replace(MENU_OPEN_OLD, MENU_OPEN_NEW, 1)
         changed.append("Menu: da xoa dong menu.open() khi game bat dau (emulator.js)")
+
+    if "HAI: giai nen BIOS" in text:
+        print("BIOS (emulator.js): da giai nen roi, bo qua")
+    elif BIOS_DONTEXTRACT_OLD not in text:
+        print("LOI: khong tim thay dong bios dontExtractIfCore — ban goc doi emulator.js roi", file=sys.stderr)
+        return 2
+    else:
+        text = text.replace(BIOS_DONTEXTRACT_OLD, BIOS_DONTEXTRACT_NEW, 1)
+        changed.append("BIOS: da cho giai nen BIOS cho fbneo/mame (emulator.js)")
 
     if GPAD_TURBO_MARKER in text:
         if GPAD_TURBO_NEW in text:
