@@ -484,6 +484,8 @@ class EJS_Frontend {
         this.elements.contextmenu.classList.add("ejs_context_menu");
         this.ejs.addEventListener(this.game, "contextmenu", (e) => {
             e.preventDefault();
+            // HAI: giu lau (long-press) tren cam ung khong mo menu chuot phai — chi chuot phai that moi mo
+            if (e.pointerType === "touch") return;
             if ((this.ejs.config.buttonOpts && this.ejs.config.buttonOpts.rightClick === false) || !this.ejs.started || this.ejs.lightgunActive) return;
             const parentRect = this.elements.parent.getBoundingClientRect();
             this.elements.contextmenu.style.display = "block";
