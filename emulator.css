@@ -1891,3 +1891,9 @@
 
 /* HAI: sua nut bat/tat cheat bi tran ra ngoai — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_cheat_row { padding: .2em 0 .2em 2.25rem; }
+
+/* HAI: nut bat/tat cheat dang tron giong chon trong dropdown — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_cheat_row label::before { width: 1.15rem; height: 1.15rem; border-radius: 50%; border: 2px solid #adb5bd; background-color: transparent; }
+.ejs_cheat_row input:checked+label::before { background-color: #22c55e; border-color: #22c55e; }
+.ejs_cheat_row label::after { width: .55rem; height: .55rem; border-radius: 50%; background-color: transparent; left: calc(-2.25rem + .3rem); top: calc(0rem + .3rem); transform: none; transition: none; }
+.ejs_cheat_row input:checked+label::after { background-color: #fff; transform: none; }
