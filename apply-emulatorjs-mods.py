@@ -841,6 +841,27 @@ def main(path):
         text = text.replace(CLICK_MENU_OLD, CLICK_MENU_NEW, 1)
         changed.append("Menu: chi chuot moi mo menu khi bam man hinh (cham khong mo nua, mo bang nut ☰)")
 
+    # 10/11 (tiep): ban v5 len live nhung cham man hinh van mo menu — con duong
+    # thu hai: cham vao vung trong (khong phai nut tay cam) sinh su kien chuot
+    # tuong thich (mousemove) ma mouseListener hieu la di chuot xuong/mep duoi
+    # -> show(). Nut tay cam co preventDefault nen khong sinh su kien nay.
+    # Chan bang sourceCapabilities.firesTouchEvents (Chrome): chi chuot that
+    # moi duoc mo menu bang di chuot; chuot tong hop tu cham thi bo qua.
+    MOUSE_MENU_OLD = '''            const mouseListener = (e) => {
+                if (!this.ejs.started || ignoreEvents || document.pointerLockElement === this.canvas) return;'''
+    MOUSE_MENU_NEW = '''            const mouseListener = (e) => {
+                // HAI: chi chuot that moi mo menu khi di chuot — su kien chuot tong hop tu cham (touch) khong mo nua
+                if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+                if (!this.ejs.started || ignoreEvents || document.pointerLockElement === this.canvas) return;'''
+    if "HAI: chi chuot that moi mo menu khi di chuot" in text:
+        print("Menu di chuot: da tat roi, bo qua")
+    elif MOUSE_MENU_OLD not in text:
+        print("LOI: khong tim thay mouseListener mo menu — ban goc doi frontend.js roi", file=sys.stderr)
+        return 2
+    else:
+        text = text.replace(MOUSE_MENU_OLD, MOUSE_MENU_NEW, 1)
+        changed.append("Menu: chi chuot that moi mo menu khi di chuot (cham khong mo nua, mo bang nut ☰)")
+
     if "info[i].autofire === true" in text:
         print("Turbo: xu ly cham nut da co autofire, bo qua")
     else:
