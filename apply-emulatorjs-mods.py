@@ -883,6 +883,39 @@ def main(path):
         text = text.replace(CTX_MENU_OLD, CTX_MENU_NEW, 1)
         changed.append("Menu chuot phai: giu lau tren cam ung khong mo nua (chi chuot phai that moi mo)")
 
+    # 10/11 (tiep): menu Gian lan mo ra nhung khong co danh sach game/ma du file
+    # nes.json da co tren web. Nguyen nhan: downloadFile tra ve cacheItem
+    # (res.data la doi tuong cache, khong phai chuoi JSON) nhung fetchCheatJson
+    # lai tra thang res.data ve — code sau do hieu cacheItem la kho cheat nen
+    # danh sach game toan ten thuoc tinh (key, files, added...). Sua: giai ma
+    # JSON tu files[0].bytes nhu cho doc bao cao (line 587 emulator.js) roi
+    # tra ve chuoi de code san co JSON.parse tiep.
+    CHEAT_FETCH_OLD = '''                        const fetchCheatJson = async (url) => {
+                            const res = await this.ejs.downloadFile(url, "cheats", null, true, { responseType: "text", method: "GET" });
+                            if (res === -1) return null;
+                            return res.data;
+                        };'''
+    CHEAT_FETCH_NEW = '''                        const fetchCheatJson = async (url) => {
+                            const res = await this.ejs.downloadFile(url, "cheats", null, true, { responseType: "text", method: "GET" });
+                            if (res === -1) return null;
+                            // HAI: downloadFile tra ve cacheItem — giai ma JSON tu files[0].bytes
+                            const payload = res.data;
+                            if (typeof payload === "string") return payload;
+                            if (payload && Array.isArray(payload.files) && payload.files[0] && payload.files[0].bytes) {
+                                return new TextDecoder().decode(payload.files[0].bytes);
+                            }
+                            if (payload && typeof payload === "object") return payload;
+                            return null;
+                        };'''
+    if "HAI: downloadFile tra ve cacheItem" in text:
+        print("Cheat fetch: da giai ma cacheItem roi, bo qua")
+    elif CHEAT_FETCH_OLD not in text:
+        print("LOI: khong tim thay fetchCheatJson — ban goc doi frontend.js roi", file=sys.stderr)
+        return 2
+    else:
+        text = text.replace(CHEAT_FETCH_OLD, CHEAT_FETCH_NEW, 1)
+        changed.append("Cheat: fetchCheatJson giai ma dung JSON tu cacheItem (danh sach game hien dung)")
+
     if "info[i].autofire === true" in text:
         print("Turbo: xu ly cham nut da co autofire, bo qua")
     else:
