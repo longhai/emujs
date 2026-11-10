@@ -893,7 +893,8 @@ class EJS_Frontend {
 
         this.createBottomMenuBarListeners = () => {
             const clickListener = (e) => {
-                if (e.pointerType === "touch") return;
+                // HAI: chi chuot moi mo menu khi bam man hinh — cham (touch) khong mo nua, mo bang nut ☰
+                if (e.pointerType !== "mouse") return;
                 if (!this.ejs.started || ignoreEvents || document.pointerLockElement === this.canvas) return;
                 if (this.isPopupOpen()) return;
                 show();
