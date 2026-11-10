@@ -822,6 +822,25 @@ def main(path):
         text = text.replace(MENU_SHOW_NEW, MENU_SHOW_OLD, 1)
         changed.append("Menu: da tra show() ve ban goc (PC mo menu bang chuot)")
 
+    # 10/11: cham man hinh khi dang choi vo tinh mo menu, bam nham trung "Chay lai"
+    # lam game khoi dong lai. Code goc chi chan pointerType "touch" nhung click
+    # tong hop sau khi nut tay cam chan touchstart co pointerType rong nen van
+    # lot qua show(). Chi cho chuot that mo menu khi bam man hinh; cham thi mo
+    # bang nut ☰ tren goc. Dao nguoc quyet dinh 07/11 (luc do giu cham-mo-menu).
+    CLICK_MENU_OLD = '''            const clickListener = (e) => {
+                if (e.pointerType === "touch") return;'''
+    CLICK_MENU_NEW = '''            const clickListener = (e) => {
+                // HAI: chi chuot moi mo menu khi bam man hinh — cham (touch) khong mo nua, mo bang nut ☰
+                if (e.pointerType !== "mouse") return;'''
+    if "HAI: chi chuot moi mo menu" in text:
+        print("Menu cham man hinh: da tat roi, bo qua")
+    elif CLICK_MENU_OLD not in text:
+        print("LOI: khong tim thay clickListener mo menu — ban goc doi frontend.js roi", file=sys.stderr)
+        return 2
+    else:
+        text = text.replace(CLICK_MENU_OLD, CLICK_MENU_NEW, 1)
+        changed.append("Menu: chi chuot moi mo menu khi bam man hinh (cham khong mo nua, mo bang nut ☰)")
+
     if "info[i].autofire === true" in text:
         print("Turbo: xu ly cham nut da co autofire, bo qua")
     else:
