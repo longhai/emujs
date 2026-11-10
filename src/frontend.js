@@ -900,6 +900,8 @@ class EJS_Frontend {
                 show();
             }
             const mouseListener = (e) => {
+                // HAI: chi chuot that moi mo menu khi di chuot — su kien chuot tong hop tu cham (touch) khong mo nua
+                if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
                 if (!this.ejs.started || ignoreEvents || document.pointerLockElement === this.canvas) return;
                 if (this.isPopupOpen()) return;
                 const deltaX = e.movementX;
