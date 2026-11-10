@@ -862,6 +862,27 @@ def main(path):
         text = text.replace(MOUSE_MENU_OLD, MOUSE_MENU_NEW, 1)
         changed.append("Menu: chi chuot that moi mo menu khi di chuot (cham khong mo nua, mo bang nut ☰)")
 
+    # 10/11 (tiep): menu chinh da het hien khi cham, nhung con menu chuot phai
+    # (Chup man hinh / Start Screen Recording / Luu nhanh / Nap nhanh) mo ra
+    # khi GIU LAU (long-press) tren vung game — do la su kien contextmenu.
+    # Chan bang pointerType "touch"; chuot phai that tren PC van mo duoc.
+    CTX_MENU_OLD = '''        this.ejs.addEventListener(this.game, "contextmenu", (e) => {
+            e.preventDefault();
+            if ((this.ejs.config.buttonOpts && this.ejs.config.buttonOpts.rightClick === false) || !this.ejs.started || this.ejs.lightgunActive) return;'''
+    CTX_MENU_NEW = '''        this.ejs.addEventListener(this.game, "contextmenu", (e) => {
+            e.preventDefault();
+            // HAI: giu lau (long-press) tren cam ung khong mo menu chuot phai — chi chuot phai that moi mo
+            if (e.pointerType === "touch") return;
+            if ((this.ejs.config.buttonOpts && this.ejs.config.buttonOpts.rightClick === false) || !this.ejs.started || this.ejs.lightgunActive) return;'''
+    if "HAI: giu lau (long-press) tren cam ung khong mo menu chuot phai" in text:
+        print("Menu chuot phai: da tat long-press roi, bo qua")
+    elif CTX_MENU_OLD not in text:
+        print("LOI: khong tim thay handler contextmenu — ban goc doi frontend.js roi", file=sys.stderr)
+        return 2
+    else:
+        text = text.replace(CTX_MENU_OLD, CTX_MENU_NEW, 1)
+        changed.append("Menu chuot phai: giu lau tren cam ung khong mo nua (chi chuot phai that moi mo)")
+
     if "info[i].autofire === true" in text:
         print("Turbo: xu ly cham nut da co autofire, bo qua")
     else:
