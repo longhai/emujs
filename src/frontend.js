@@ -4739,7 +4739,14 @@ class EJS_Frontend {
                         const fetchCheatJson = async (url) => {
                             const res = await this.ejs.downloadFile(url, "cheats", null, true, { responseType: "text", method: "GET" });
                             if (res === -1) return null;
-                            return res.data;
+                            // HAI: downloadFile tra ve cacheItem — giai ma JSON tu files[0].bytes
+                            const payload = res.data;
+                            if (typeof payload === "string") return payload;
+                            if (payload && Array.isArray(payload.files) && payload.files[0] && payload.files[0].bytes) {
+                                return new TextDecoder().decode(payload.files[0].bytes);
+                            }
+                            if (payload && typeof payload === "object") return payload;
+                            return null;
                         };
 
                         try {
