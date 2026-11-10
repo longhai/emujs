@@ -218,13 +218,9 @@ async function prepareLanguage() {
 
 (async function() {
     let EmulatorJS;
-    if (debug) {
-        EmulatorJS = await loadScript("emulator.js");
-        await loadStyle("emulator.css");
-    } else {
-        EmulatorJS = await loadScript("emulator.min.js");
-        await loadStyle("emulator.min.css");
-    }
+    // HAI: tai thang file thuong, bo qua file nen (repo khong co emulator.min.js/.css — thu la 404 roi moi roi ve file thuong)
+    EmulatorJS = await loadScript("emulator.js");
+    await loadStyle("emulator.css");
 
     if (!EmulatorJS) {
         console.error("EmulatorJS failed to load. Check for missing files.");

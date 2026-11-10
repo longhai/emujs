@@ -2223,6 +2223,35 @@ GPAD_TURBO_NEW = """        // HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES
         }
 """
 
+LOADER_MINIFIED_OLD = '''    if (debug) {
+        EmulatorJS = await loadScript("emulator.js");
+        await loadStyle("emulator.css");
+    } else {
+        EmulatorJS = await loadScript("emulator.min.js");
+        await loadStyle("emulator.min.css");
+    }'''
+
+LOADER_MINIFIED_NEW = '''    // HAI: tai thang file thuong, bo qua file nen (repo khong co emulator.min.js/.css — thu la 404 roi moi roi ve file thuong)
+    EmulatorJS = await loadScript("emulator.js");
+    await loadStyle("emulator.css");'''
+
+def patch_loader(path):
+    text = open(path, encoding="utf-8").read()
+    changed = []
+    if "HAI: tai thang file thuong" in text:
+        print("Loader (loader.js): da tai thang file thuong roi, bo qua")
+    elif LOADER_MINIFIED_OLD not in text:
+        print("LOI: khong tim thay khoi if/else tai file nen — ban goc doi loader.js roi", file=sys.stderr)
+        return 2
+    else:
+        text = text.replace(LOADER_MINIFIED_OLD, LOADER_MINIFIED_NEW, 1)
+        changed.append("Loader: da bo duong tai file nen, tai thang emulator.js + emulator.css (loader.js)")
+    if changed:
+        open(path, "w", encoding="utf-8").write(text)
+        for _c in changed:
+            print("DA DOI: " + _c)
+    return 0
+
 def patch_emulator(path):
     text = open(path, encoding="utf-8").read()
     changed = []
@@ -2277,6 +2306,8 @@ if __name__ == "__main__":
         sys.exit(patch_css(_p))
     if _b == "emulator.js":
         sys.exit(patch_emulator(_p))
+    if _b == "loader.js":
+        sys.exit(patch_loader(_p))
     if "shaders" in _b:
         sys.exit(patch_shaders(_p))
     sys.exit(main(_p))
