@@ -2061,6 +2061,13 @@ MENU_OPEN_NEW = "            // HAI: tat tu mo menu khi load game — chi mo khi
 BIOS_DONTEXTRACT_OLD = '            "bios": { "name": "BIOS", "dontCache": false, "dontExtractIfCore": ["arcade", "fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "same_cdi", "mame", "mame2003_plus", "mame2003"] },\n'
 BIOS_DONTEXTRACT_NEW = '            "bios": { "name": "BIOS", "dontCache": false, "dontExtractIfCore": [] }, // HAI: giai nen BIOS de lay du BIOS cac hang (fbneo/mame)\n'
 
+# 10/11: file goc (parent) cua game thung: EmulatorJS mac dinh GIAI NEN parent
+# thanh file le, nhung core fbneo/mame tim file goc theo dang file .zip con
+# nguyen (giong nhu tim neogeo.zip cho BIOS) nen khong thay -> bao thieu file.
+# Giu nguyen zip cho cac core thung, he khac van giai nen nhu cu.
+PARENT_DONTEXTRACT_OLD = '            "parent": { "name": "Parent", "dontCache": false },\n'
+PARENT_DONTEXTRACT_NEW = '            "parent": { "name": "Parent", "dontCache": false, "dontExtractIfCore": ["arcade", "fbneo", "fbalpha2012_cps1", "fbalpha2012_cps2", "same_cdi", "mame", "mame2003_plus", "mame2003"] }, // HAI: giu nguyen zip file goc cho game thung (fbneo/mame tim file goc dang .zip)\n'
+
 GPAD_TURBO_MARKER = "HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES)"
 GPAD_TURBO_ANCHOR = "        if (this.frontend.isSettingsMenuOpen() || this.frontend.isPopupOpen()) return;\n"
 GPAD_TURBO_NEW = """        // HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES) — nut X/Y tren tay that
@@ -2107,6 +2114,15 @@ def patch_emulator(path):
     else:
         text = text.replace(BIOS_DONTEXTRACT_OLD, BIOS_DONTEXTRACT_NEW, 1)
         changed.append("BIOS: da cho giai nen BIOS cho fbneo/mame (emulator.js)")
+
+    if "HAI: giu nguyen zip file goc" in text:
+        print("Parent (emulator.js): da giu zip roi, bo qua")
+    elif PARENT_DONTEXTRACT_OLD not in text:
+        print("LOI: khong tim thay dong parent downloadType — ban goc doi emulator.js roi", file=sys.stderr)
+        return 2
+    else:
+        text = text.replace(PARENT_DONTEXTRACT_OLD, PARENT_DONTEXTRACT_NEW, 1)
+        changed.append("Parent: da giu nguyen zip file goc cho fbneo/mame (emulator.js)")
 
     if GPAD_TURBO_MARKER in text:
         if GPAD_TURBO_NEW in text:
