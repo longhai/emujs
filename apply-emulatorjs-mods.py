@@ -1206,6 +1206,20 @@ CHEAT_TOGGLE_CSS = '''
 .ejs_cheat_row { padding: .2em 0 .2em 2.25rem; }
 '''
 
+# 10/11 (tiep): Hai muon nut bat/tat cheat trong danh sach dung cung kieu
+# chon tron nhu trong dropdown chon ma (Android: tron xanh co cham trang la
+# dang chon, tron rong la chua chon) cho dong bo. Doi nut gat goc (thanh truot)
+# thanh nut tron: ::before la vong tron, ::after la cham giua; bat thi vong
+# xanh la (#22c55e) + cham trang, tat thi vong xam rong. Ghi de sau rule goc,
+# cung do uu tien nen se thang; vi tri giu ben trai nhu cu (nut × van o phai).
+CHEAT_RADIO_CSS = '''
+/* HAI: nut bat/tat cheat dang tron giong chon trong dropdown — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_cheat_row label::before { width: 1.15rem; height: 1.15rem; border-radius: 50%; border: 2px solid #adb5bd; background-color: transparent; }
+.ejs_cheat_row input:checked+label::before { background-color: #22c55e; border-color: #22c55e; }
+.ejs_cheat_row label::after { width: .55rem; height: .55rem; border-radius: 50%; background-color: transparent; left: calc(-2.25rem + .3rem); top: calc(0rem + .3rem); transform: none; transition: none; }
+.ejs_cheat_row input:checked+label::after { background-color: #fff; transform: none; }
+'''
+
 def patch_css(path):
     text = open(path, encoding="utf-8").read()
     if ".ejs_virtualGamepad_button" not in text:
@@ -1248,6 +1262,11 @@ def patch_css(path):
     else:
         out += CHEAT_TOGGLE_CSS
         changed.append("Cheat toggle: sua padding-left de nut bat/tat nam gon trong hang, nhin ro bat/tat")
+    if "HAI: nut bat/tat cheat dang tron giong chon trong dropdown" in text:
+        print("Cheat radio: da doi dang tron roi, bo qua")
+    else:
+        out += CHEAT_RADIO_CSS
+        changed.append("Cheat radio: nut bat/tat dang tron xanh giong chon trong dropdown (bat: xanh co cham trang, tat: tron xam rong)")
     if changed:
         open(path, "w", encoding="utf-8").write(out)
         print("DA DOI: " + "; ".join(changed))
