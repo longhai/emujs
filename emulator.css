@@ -1888,3 +1888,6 @@
 .ejs_volume_parent input[type='range']::-webkit-slider-runnable-track { background-image: linear-gradient(to right, #1e88e5 var(--value, 50%), rgba(255,255,255,0.25) var(--value, 50%)) !important; }
 .ejs_volume_parent input[type='range']::-webkit-slider-thumb { background: #fff !important; border: 1px solid #999 !important; }
 .ejs_volume_parent input[type='range']::-moz-range-progress { background: #1e88e5 !important; }
+
+/* HAI: sua nut bat/tat cheat bi tran ra ngoai — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_cheat_row { padding: .2em 0 .2em 2.25rem; }
