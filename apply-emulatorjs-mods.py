@@ -1195,6 +1195,17 @@ VOLUME_CSS = '''
 .ejs_volume_parent input[type='range']::-moz-range-progress { background: #1e88e5 !important; }
 '''
 
+# 10/11: nut bat/tat cheat (nut gat) bi tran ra ngoai mep trai, chi thay vien
+# nen kho biet da bat hay chua. Nguyen nhan goc: .ejs_cheat_row ghi
+# padding-left: 2.25rem roi dong padding: .2em 0; (shorthand) ghi de mat
+# padding-left ve 0, nen nut gat (label::before, left: -2.25rem) loi ra ngoai
+# hang 36px — tren dien thoai 360px thi nut nam ngoai man hinh. Sua bang cach
+# ghi lai padding day du de sau rule goc, cung do uu tien nen se thang.
+CHEAT_TOGGLE_CSS = '''
+/* HAI: sua nut bat/tat cheat bi tran ra ngoai — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
+.ejs_cheat_row { padding: .2em 0 .2em 2.25rem; }
+'''
+
 def patch_css(path):
     text = open(path, encoding="utf-8").read()
     if ".ejs_virtualGamepad_button" not in text:
@@ -1232,6 +1243,11 @@ def patch_css(path):
     else:
         out += VOLUME_CSS
         changed.append("Volume: da chen mau xanh + nut tron trang cho thanh truot volume")
+    if "HAI: sua nut bat/tat cheat bi tran ra ngoai" in text:
+        print("Cheat toggle: da sua roi, bo qua")
+    else:
+        out += CHEAT_TOGGLE_CSS
+        changed.append("Cheat toggle: sua padding-left de nut bat/tat nam gon trong hang, nhin ro bat/tat")
     if changed:
         open(path, "w", encoding="utf-8").write(out)
         print("DA DOI: " + "; ".join(changed))
