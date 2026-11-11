@@ -97,10 +97,12 @@ jobs:
           python3 apply-emulatorjs-mods.py src/emulator.js
           python3 apply-emulatorjs-mods.py emulator.css
           python3 apply-emulatorjs-mods.py src/shaders.js
+          python3 apply-emulatorjs-mods.py loader.js
           node --check src/frontend.js
           node --check src/gamepad.js
           node --check src/emulator.js
           node --check src/shaders.js
+          node --check loader.js
 
       - name: Tai day du core ve tu host (khong phu thuoc CDN)
         if: env.NEEDS_SYNC == 'true'
