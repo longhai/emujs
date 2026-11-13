@@ -2724,7 +2724,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v1 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi combo/Fast/Slow giu chu nhat mac dinh chi doi bo goc), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v4 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi cung doi duoc moi hinh dang; bo cuc doc/ngang rieng; nut Xep ngang xep luoi 3x3), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2824,14 +2824,8 @@ class EJS_Frontend {
         const _gpSaveBtnShapeMap = () => { try { localStorage.setItem(_gpBtnShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShapeMap)); } catch (e) {} };
         const _gpShapeOf = (id) => (_gpBtnShapeMap && _gpBtnShapeMap[id]) ? _gpShapeFrom(_gpBtnShapeMap[id]) : _gpBtnShape;
         const _gpApplyShapeTo = (_b, _s) => {
-            // Nut khoi (combo AB/XY/ABX/BXY, Fast/Slow): von la chu nhat, giu nguyen dang
-            // chu nhat — chi doi bo goc. Nhan biet bang line-height 31px tu blockCSS.
-            if (_b.style.lineHeight === "31px") {
-                _b.style.width = "";
-                _b.style.height = "31px";
-                _b.style.borderRadius = (_s.form === "circle") ? "5px" : (_s.round + "%");
-                return;
-            }
+            // Moi nut (ca nut A/B/X/Y lan nut khoi combo AB/XY/ABX/BXY, Fast/Slow)
+            // deu doi duoc tron/vuong/chu nhat nhu nhau.
             const _h = _b.offsetHeight || 56;
             if (_s.form === "rect") {
                 _b.style.width = Math.round(_h * 1.6) + "px";
@@ -2866,6 +2860,57 @@ class EJS_Frontend {
                 _gpSaveBtnShapeMap();
             }
             _gpApplyShape();
+        };
+        // Xep nut cum phai thanh luoi ngang (man hinh ngang): 3 hang x 3 cot.
+        // Hang tren: (trong) ABX BXY; hang giua: XY X Y; hang duoi: AB A B.
+        // ABX thang cot voi X, A; BXY thang cot voi Y, B. Luu theo huong hien tai.
+        const _gpArrangeRows = () => {
+            const _right = _gpClusters["right"];
+            if (!_right) return;
+            const _grid = [["", "abc", "bcd"], ["cd", "x", "y"], ["ab", "a", "b"]];
+            const _cell = 64;
+            const _items = [];
+            let _minX = 1e9, _minY = 1e9, _maxX = -1e9, _maxY = -1e9;
+            _grid.forEach((_row) => _row.forEach((_id) => {
+                if (!_id) return;
+                const _el = _gpBtnEl(_id);
+                if (!_el || _el.style.display === "none") return;
+                const _r = _el.getBoundingClientRect();
+                const _cr = _right.getBoundingClientRect();
+                const _cx = _r.left - _cr.left + _r.width / 2;
+                const _cy = _r.top - _cr.top + _r.height / 2;
+                _items.push({id: _id, el: _el, cx: _cx, cy: _cy});
+                _minX = Math.min(_minX, _cx); _maxX = Math.max(_maxX, _cx);
+                _minY = Math.min(_minY, _cy); _maxY = Math.max(_maxY, _cy);
+            }));
+            if (!_items.length) return;
+            const _ccx = (_minX + _maxX) / 2, _ccy = (_minY + _maxY) / 2;
+            const _gw = 3 * _cell, _gh = 3 * _cell;
+            const _ox = _ccx - _gw / 2, _oy = _ccy - _gh / 2;
+            _grid.forEach((_row, _ri) => {
+                _row.forEach((_id, _ci) => {
+                    if (!_id) return;
+                    const _it = _items.find((_q) => _q.id === _id);
+                    if (!_it) return;
+                    const _el = _it.el;
+                    const _tcx = _ox + _ci * _cell + _cell / 2;
+                    const _tcy = _oy + _ri * _cell + _cell / 2;
+                    const _w = _el.offsetWidth || 50, _h = _el.offsetHeight || 50;
+                    const _tx = _tcx - _w / 2, _ty = _tcy - _h / 2;
+                    let _ox0 = _el.offsetLeft, _oy0 = _el.offsetTop;
+                    if (_el.offsetParent !== _right) {
+                        const _r = _el.getBoundingClientRect();
+                        const _cr = _right.getBoundingClientRect();
+                        const _cur = _gpBtnPos[_id] || {x: 0, y: 0};
+                        _ox0 = (_r.left - _cr.left) - _cur.x;
+                        _oy0 = (_r.top - _cr.top) - _cur.y;
+                    }
+                    const _old = _gpBtnPos[_id] || {x: 0, y: 0, s: 1};
+                    _gpBtnPos[_id] = {x: Math.round(_tx - _ox0), y: Math.round(_ty - _oy0), s: _old.s || 1};
+                });
+            });
+            try { localStorage.setItem(_gpBtnKeyFor(_gpCurOrient), JSON.stringify(_gpBtnPos)); } catch (e) {}
+            _gpApplyAll();
         };
         const _gpApplyAll = () => {
             for (const _k in _gpClusters) {
@@ -2989,6 +3034,7 @@ class EJS_Frontend {
                     _tog(id, _el.innerText || id.toUpperCase());
                 });
             } else if (_gpMenuTab === "btn") {
+                _row.appendChild(_gpChip("☰ Xếp ngang", false, () => { _gpArrangeRows(); }));
                 if (this.virtualGamepad) {
                     this.virtualGamepad.querySelectorAll(".ejs_virtualGamepad_button").forEach((_b) => {
                         const _id = _gpBtnId(_b);
@@ -3317,6 +3363,21 @@ class EJS_Frontend {
             _gpCurOrient = _o;
             _gpPos = _gpLoad(_gpKeyFor(_o), "ejs-gamepad-layout-" + _gpScheme);
             _gpBtnPos = _gpLoad(_gpBtnKeyFor(_o), "ejs-gamepad-buttons-" + _gpScheme);
+            // Bo cuc doc/ngang rieng nhau: nap lai ca hinh dang, nut an, loai can theo huong moi.
+            _gpBtnShape = {form: "circle", round: 50};
+            try {
+                const _sv = localStorage.getItem(_gpShapeKeyFor(_o)) || localStorage.getItem("ejs-gamepad-shape-" + _gpScheme);
+                if (_sv) { let _parsed = null; try { _parsed = JSON.parse(_sv); } catch (e) { _parsed = null; } _gpBtnShape = _gpShapeFrom(_parsed !== null ? _parsed : _sv); }
+            } catch (e) {}
+            _gpBtnShapeMap = {};
+            try {
+                const _mv = localStorage.getItem(_gpBtnShapeKeyFor(_o)) || localStorage.getItem("ejs-gamepad-btnshape-" + _gpScheme);
+                if (_mv) { const _om = JSON.parse(_mv); if (_om && typeof _om === "object") _gpBtnShapeMap = _om; }
+            } catch (e) {}
+            _gpHidden = _gpLoad(_gpHiddenKeyFor(_o), "ejs-gamepad-hidden-" + _gpScheme);
+            try { if (!localStorage.getItem(_gpHiddenKeyFor(_o))) _gpDefaultHiddenIds().forEach((id) => { _gpHidden[id] = true; }); } catch (e) {}
+            _gpDpadType = _gpNativeDpadType;
+            try { const _sv = localStorage.getItem(_gpDpadTypeKeyFor(_o)) || localStorage.getItem("ejs-gamepad-dpadtype-" + _gpScheme); if (_sv === "dpad" || _sv === "zone") _gpDpadType = _sv; } catch (e) {}
             _gpSelect(null, null);
             _gpApplyAll();
         });
