@@ -1868,6 +1868,7 @@
 .ejs_virtualGamepad_button.b_cd { color: #ab47bc !important; }
 .ejs_virtualGamepad_button.b_abc { color: #ec407a !important; }
 .ejs_virtualGamepad_button.b_bcd { color: #26a69a !important; }
+.ejs_virtualGamepad_button.b_tab { color: #00bcd4 !important; }
 
 /* HAI: nut md mau — chen boi apply-emulatorjs-mods.py, chay lai khong them trung */
 .ejs_virtualGamepad_button.b_c { color: #ff9800 !important; }
