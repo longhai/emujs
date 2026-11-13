@@ -2683,6 +2683,20 @@ class EJS_Frontend {
                 { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
             );
         }
+        // HAI: nut turbo dung chung — 1 bo TA/TB/TAB cho moi he (menu chinh
+        // nut dung chung cho tat ca, hien trong tab Ket hop). TA/TB tu lay
+        // so input tu nut A/B goc cua he dang choi, khong phan biet he.
+        if (["nes", "arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
+            const _aBtn = info.find((b) => b.id === "a");
+            const _bBtn = info.find((b) => b.id === "b");
+            const _taIn = _aBtn ? _aBtn.input_value : 0;
+            const _tbIn = _bBtn ? _bBtn.input_value : 8;
+            info.push(
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _taIn, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _tbIn, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _taIn, "combo": [_taIn, _tbIn], "autofire": true }
+            );
+        }
         // HAI: can doi loai — them D-pad loai con lai de doi qua lai trong menu chinh sua.
         // Game thung dung vung tron (zone, nipplejs) -> them chu thap (dpad). NES dung chu
         // thap -> them vung tron. Chi 1 trong 2 hien tuy theo lua chon (luu localStorage),
@@ -2718,7 +2732,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v12 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut ket hop an mac dinh (lay ra o tab Ket hop); nut chuc nang giu mac dinh; turbo dung chung cai dat), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v13 — nut turbo TA/TB/TAB dung chung cho moi he (tab Ket hop), nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut ket hop an mac dinh (lay ra o tab Ket hop); nut chuc nang giu mac dinh; turbo dung chung cai dat), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2752,14 +2766,12 @@ class EJS_Frontend {
         };
         const _gpHiddenKeyFor = (o) => "ejs-gamepad-hidden-" + _gpScheme + "-" + o;
         let _gpHidden = _gpLoad(_gpHiddenKeyFor(_gpCurOrient), "ejs-gamepad-hidden-" + _gpScheme);
-        const _gpComboIds = ["ab", "cd", "abc", "bcd"];
+        const _gpComboIds = ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
         const _gpDefaultHiddenIds = () => {
-            // Nut ket hop (AB/XY/ABX/BXY) an mac dinh o moi he; khi nao muon
-            // them thi vao Cai dat (tab Ket hop) lay ra. Turbo (TA/TB/TAB)
-            // da bo, dung chung qua Cai dat (Autofire) nen khong con trong
-            // danh sach an mac dinh nua.
-            if (_gpScheme === "nes") return ["ab", "cd", "abc", "bcd"];
-            if (["arcade", "mame", "fbneo"].includes(_gpScheme)) return ["ab", "cd", "abc", "bcd"];
+            // Nut ket hop (AB/XY/ABX/BXY) va turbo (TA/TB/TAB) an mac dinh o
+            // moi he; khi nao muon them thi vao Cai dat (tab Ket hop) lay ra.
+            if (_gpScheme === "nes") return ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
+            if (["arcade", "mame", "fbneo"].includes(_gpScheme)) return ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
             return [];
         };
         try { if (!localStorage.getItem(_gpHiddenKeyFor(_gpCurOrient))) _gpDefaultHiddenIds().forEach((id) => { _gpHidden[id] = true; }); } catch (e) {}
