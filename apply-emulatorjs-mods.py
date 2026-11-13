@@ -42,6 +42,20 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
                 { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
             );
         }
+        // HAI: nut turbo dung chung — 1 bo TA/TB/TAB cho moi he (menu chinh
+        // nut dung chung cho tat ca, hien trong tab Ket hop). TA/TB tu lay
+        // so input tu nut A/B goc cua he dang choi, khong phan biet he.
+        if (["nes", "arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
+            const _aBtn = info.find((b) => b.id === "a");
+            const _bBtn = info.find((b) => b.id === "b");
+            const _taIn = _aBtn ? _aBtn.input_value : 0;
+            const _tbIn = _bBtn ? _bBtn.input_value : 8;
+            info.push(
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _taIn, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _tbIn, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _taIn, "combo": [_taIn, _tbIn], "autofire": true }
+            );
+        }
         // HAI: can doi loai — them D-pad loai con lai de doi qua lai trong menu chinh sua.
         // Game thung dung vung tron (zone, nipplejs) -> them chu thap (dpad). NES dung chu
         // thap -> them vung tron. Chi 1 trong 2 hien tuy theo lua chon (luu localStorage),
@@ -115,7 +129,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v12 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut ket hop an mac dinh (lay ra o tab Ket hop); nut chuc nang giu mac dinh; turbo dung chung cai dat), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v13 — nut turbo TA/TB/TAB dung chung cho moi he (tab Ket hop), nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut ket hop an mac dinh (lay ra o tab Ket hop); nut chuc nang giu mac dinh; turbo dung chung cai dat), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -149,14 +163,12 @@ GP_LAYOUT_JS = '''
         };
         const _gpHiddenKeyFor = (o) => "ejs-gamepad-hidden-" + _gpScheme + "-" + o;
         let _gpHidden = _gpLoad(_gpHiddenKeyFor(_gpCurOrient), "ejs-gamepad-hidden-" + _gpScheme);
-        const _gpComboIds = ["ab", "cd", "abc", "bcd"];
+        const _gpComboIds = ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
         const _gpDefaultHiddenIds = () => {
-            // Nut ket hop (AB/XY/ABX/BXY) an mac dinh o moi he; khi nao muon
-            // them thi vao Cai dat (tab Ket hop) lay ra. Turbo (TA/TB/TAB)
-            // da bo, dung chung qua Cai dat (Autofire) nen khong con trong
-            // danh sach an mac dinh nua.
-            if (_gpScheme === "nes") return ["ab", "cd", "abc", "bcd"];
-            if (["arcade", "mame", "fbneo"].includes(_gpScheme)) return ["ab", "cd", "abc", "bcd"];
+            // Nut ket hop (AB/XY/ABX/BXY) va turbo (TA/TB/TAB) an mac dinh o
+            // moi he; khi nao muon them thi vao Cai dat (tab Ket hop) lay ra.
+            if (_gpScheme === "nes") return ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
+            if (["arcade", "mame", "fbneo"].includes(_gpScheme)) return ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
             return [];
         };
         try { if (!localStorage.getItem(_gpHiddenKeyFor(_gpCurOrient))) _gpDefaultHiddenIds().forEach((id) => { _gpHidden[id] = true; }); } catch (e) {}
@@ -850,23 +862,47 @@ def main(path):
         text = text.replace(LOCALIZE_ANCHOR, APPEND_BLOCK + LOCALIZE_ANCHOR, 1)
         changed.append("PS1: da them L1/R1/L2/R2; NES: da them combo AB/XY/ABX/BXY")
 
-    # Migration: khong dung nut TA/TB/TAB rieng nua (Hai 13/11) — moi he dung
-    # chung turbo qua muc Cai dat (Autofire), chi giu combo AB/XY/ABX/BXY
-    # (menu chinh nut dung chung cho tat ca). Xoa cac dong TA/TB/TAB khoi file
-    # da patch: NES nhan biet bang "right": 5 / "right": 75 va TAB
-    # "left": -70, "top": -45; arcade nhan biet bang "left": -70/-20/30,
-    # "top": -90. Ca hai kieu input_value (0/8) deu xoa.
-    import re as _re
-    _turbo_pat = _re.compile(
-        r'[ \t]*\{ "type": "button", "text": "T(?:A|B)", "id": "t[ab]", "location": "right", "right": (?:5|75), "top": 0, "bold": true, "input_value": [08], "autofire": true \},\n'
-        r'|[ \t]*\{ "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": \[8, 0\], "autofire": true \},\n'
-        r'|[ \t]*\{ "type": "button", "text": "T(?:A|B)", "id": "t[ab]", "location": "right", "left": (?:-70|-20), "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": [08], "autofire": true \},\n'
-        r'|[ \t]*\{ "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": \[8, 0\], "autofire": true \},?\n'
-    )
-    _new_text, _n_removed = _turbo_pat.subn('', text)
-    if _n_removed:
-        text = _new_text
-        changed.append("Turbo: da bo %d nut TA/TB/TAB rieng, moi he dung chung turbo qua Cai dat" % _n_removed)
+    # Migration: them khoi nut turbo dung chung (TA/TB/TAB) neu file da patch
+    # ma chua co. Khoi dung chung 1 bo cho moi he (NES/arcade), input theo he
+    # dang choi — chen truoc dong "// HAI: can doi loai".
+    _turbo_shared_anchor = '        // HAI: can doi loai'
+    _turbo_shared_block = '''        // HAI: nut turbo dung chung — 1 bo TA/TB/TAB cho moi he (menu chinh
+        // nut dung chung cho tat ca, hien trong tab Ket hop). TA/TB tu lay
+        // so input tu nut A/B goc cua he dang choi, khong phan biet he.
+        if (["nes", "arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
+            const _aBtn = info.find((b) => b.id === "a");
+            const _bBtn = info.find((b) => b.id === "b");
+            const _taIn = _aBtn ? _aBtn.input_value : 0;
+            const _tbIn = _bBtn ? _bBtn.input_value : 8;
+            info.push(
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _taIn, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _tbIn, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _taIn, "combo": [_taIn, _tbIn], "autofire": true }
+            );
+        }
+'''
+    # Neu file da co khoi v18 (dung _isNes phan biet he), thay bang khoi v19
+    # (tu lay input tu nut A/B goc, khong phan biet he).
+    _turbo_v18_block = '''        // HAI: nut turbo dung chung — 1 bo TA/TB/TAB cho moi he (menu chinh
+        // nut dung chung cho tat ca, hien trong tab Ket hop). Input theo he
+        // dang choi: NES A=8/B=0, arcade A=0/B=8.
+        if (["nes", "arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
+            const _isNes = "nes" === this.ejs.getControlScheme();
+            const _taIn = _isNes ? 8 : 0;
+            const _tbIn = _isNes ? 0 : 8;
+            info.push(
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _taIn, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _tbIn, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _taIn, "combo": [_taIn, _tbIn], "autofire": true }
+            );
+        }
+'''
+    if _turbo_v18_block in text:
+        text = text.replace(_turbo_v18_block, _turbo_shared_block, 1)
+        changed.append("Turbo: da doi khoi TA/TB/TAB sang tu lay input tu nut A/B goc (khong phan biet he)")
+    elif "HAI: nut turbo dung chung" not in text and _turbo_shared_anchor in text:
+        text = text.replace(_turbo_shared_anchor, _turbo_shared_block + _turbo_shared_anchor, 1)
+        changed.append("Turbo: da them khoi TA/TB/TAB dung chung cho moi he (tab Ket hop)")
 
     _nes_old = '''        if ("nes" === this.ejs.getControlScheme()) {
             info.push(
@@ -1101,11 +1137,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v12" in text:
-        print("Chinh cum nut: da co ban v12, bo qua")
+    if "cum nut v13" in text:
+        print("Chinh cum nut: da co ban v13, bo qua")
     else:
         import re
         _gp_vers = [
+            ("v13", r"        // HAI: chinh vi tri \+ do mo cum nut v13[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v12", r"        // HAI: chinh vi tri \+ do mo cum nut v12[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v11", r"        // HAI: chinh vi tri \+ do mo cum nut v11[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v10", r"        // HAI: chinh vi tri \+ do mo cum nut v10[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -1128,13 +1165,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v12")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v13")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v12 (bo nut TA/TB/TAB rieng, turbo dung chung qua Cai dat; nut ket hop an mac dinh)")
+        changed.append("Chinh cum nut: da them v13 (nut turbo TA/TB/TAB dung chung cho moi he, tab Ket hop)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
