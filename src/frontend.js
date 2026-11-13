@@ -2724,7 +2724,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v5 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi cung doi duoc moi hinh dang; bo cuc doc/ngang rieng; luoi ngang 3x3 tu dong lan dau vao landscape), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v6 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi cung doi duoc moi hinh dang; bo cuc doc/ngang rieng; luoi ngang 3x3 tu dong lan dau vao landscape; nut Dat lai ve luoi moi; nut khoi mac dinh chu nhat, cung co 50px nhu nut thuong), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2820,13 +2820,25 @@ class EJS_Frontend {
             const _mv = localStorage.getItem(_gpBtnShapeKeyFor(_gpCurOrient)) || localStorage.getItem("ejs-gamepad-btnshape-" + _gpScheme);
             if (_mv) { const _o = JSON.parse(_mv); if (_o && typeof _o === "object") _gpBtnShapeMap = _o; }
         } catch (e) {}
+        // Nut combo mac dinh hinh chu nhat nhu nut goc (khi chua tung doi hinh dang).
+        // Chi ap dung khi chua co hinh dang nao duoc luu; khi nguoi choi doi hinh dang
+        // (toan cuc hay rieng nut) thi nut combo doi theo nhu nut thuong.
+        let _gpHasSavedShape = false;
+        try { _gpHasSavedShape = !!(localStorage.getItem(_gpShapeKeyFor(_gpCurOrient)) || localStorage.getItem("ejs-gamepad-shape-" + _gpScheme) || localStorage.getItem(_gpBtnShapeKeyFor(_gpCurOrient)) || localStorage.getItem("ejs-gamepad-btnshape-" + _gpScheme)); } catch (e) {}
         const _gpSaveShape = () => { try { localStorage.setItem(_gpShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShape)); } catch (e) {} };
         const _gpSaveBtnShapeMap = () => { try { localStorage.setItem(_gpBtnShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShapeMap)); } catch (e) {} };
-        const _gpShapeOf = (id) => (_gpBtnShapeMap && _gpBtnShapeMap[id]) ? _gpShapeFrom(_gpBtnShapeMap[id]) : _gpBtnShape;
+        const _gpShapeOf = (id) => {
+            if (_gpBtnShapeMap && _gpBtnShapeMap[id]) return _gpShapeFrom(_gpBtnShapeMap[id]);
+            if (!_gpHasSavedShape && _gpComboIds.indexOf(id) >= 0) return {form: "rect", round: 0};
+            return _gpBtnShape;
+        };
         const _gpApplyShapeTo = (_b, _s) => {
             // Moi nut (ca nut A/B/X/Y lan nut khoi combo AB/XY/ABX/BXY, Fast/Slow)
-            // deu doi duoc tron/vuong/chu nhat nhu nhau.
-            const _h = _b.offsetHeight || 56;
+            // deu doi duoc tron/vuong/chu nhat nhu nhau, va nut khoi co cung co voi
+            // nut A/B/X/Y (50px) thay vi 31px nhu goc.
+            const _id = _gpBtnId(_b);
+            const _isCombo = _id && _gpComboIds.indexOf(_id) >= 0;
+            const _h = _isCombo ? 50 : (_b.offsetHeight || 56);
             if (_s.form === "rect") {
                 _b.style.width = Math.round(_h * 1.6) + "px";
                 _b.style.height = _h + "px";
@@ -2859,6 +2871,7 @@ class EJS_Frontend {
                 _gpBtnShapeMap = {};
                 _gpSaveBtnShapeMap();
             }
+            _gpHasSavedShape = true;
             _gpApplyShape();
         };
         // Xep nut cum phai thanh luoi ngang (man hinh ngang): 3 hang x 3 cot.
@@ -2868,9 +2881,9 @@ class EJS_Frontend {
             const _right = _gpClusters["right"];
             if (!_right) return;
             const _grid = [["", "abc", "bcd"], ["cd", "x", "y"], ["ab", "a", "b"]];
-            const _cell = 64;
+            const _cell = 60;
             const _items = [];
-            let _minX = 1e9, _minY = 1e9, _maxX = -1e9, _maxY = -1e9;
+            let _minX = 1e9, _minY = 1e9, _maxX = -1e9, _maxY = -1e9, _maxR = -1e9;
             _grid.forEach((_row) => _row.forEach((_id) => {
                 if (!_id) return;
                 const _el = _gpBtnEl(_id);
@@ -2882,11 +2895,14 @@ class EJS_Frontend {
                 _items.push({id: _id, el: _el, cx: _cx, cy: _cy});
                 _minX = Math.min(_minX, _cx); _maxX = Math.max(_maxX, _cx);
                 _minY = Math.min(_minY, _cy); _maxY = Math.max(_maxY, _cy);
+                _maxR = Math.max(_maxR, _cx + _r.width / 2);
             }));
             if (!_items.length) return;
-            const _ccx = (_minX + _maxX) / 2, _ccy = (_minY + _maxY) / 2;
+            const _ccy = (_minY + _maxY) / 2;
             const _gw = 3 * _cell, _gh = 3 * _cell;
-            const _ox = _ccx - _gw / 2, _oy = _ccy - _gh / 2;
+            // Neo mep phai luoi vao mep phai nut dang co (khong can giua) de cot trai
+            // (XY, AB) khong bi man hinh game che mat.
+            const _ox = Math.max(0, _maxR - _gw), _oy = _ccy - _gh / 2;
             _grid.forEach((_row, _ri) => {
                 _row.forEach((_id, _ci) => {
                     if (!_id) return;
@@ -3192,6 +3208,13 @@ class EJS_Frontend {
                 }
             } catch (err) {}
             _gpApplyAll();
+            // Dat lai o man hinh ngang (arcade) thi ve luoi moi, khong ve mac dinh cu (hinh thoi).
+            try {
+                if (["arcade", "mame", "fbneo"].indexOf(_gpScheme) >= 0 && _gpOrient() === "landscape") {
+                    const _gridIds = ["ab", "cd", "abc", "bcd", "a", "b", "x", "y"];
+                    if (_gpSelId === "right" || _gridIds.indexOf(_gpSelId) >= 0) _gpArrangeRows();
+                }
+            } catch (e) {}
             _gpSelect(_gpSel, _gpSelId);
         });
         _gpMiniRange.addEventListener("input", () => {
@@ -3389,6 +3412,7 @@ class EJS_Frontend {
                 const _mv = localStorage.getItem(_gpBtnShapeKeyFor(_o)) || localStorage.getItem("ejs-gamepad-btnshape-" + _gpScheme);
                 if (_mv) { const _om = JSON.parse(_mv); if (_om && typeof _om === "object") _gpBtnShapeMap = _om; }
             } catch (e) {}
+            try { _gpHasSavedShape = !!(localStorage.getItem(_gpShapeKeyFor(_o)) || localStorage.getItem("ejs-gamepad-shape-" + _gpScheme) || localStorage.getItem(_gpBtnShapeKeyFor(_o)) || localStorage.getItem("ejs-gamepad-btnshape-" + _gpScheme)); } catch (e) {}
             _gpHidden = _gpLoad(_gpHiddenKeyFor(_o), "ejs-gamepad-hidden-" + _gpScheme);
             try { if (!localStorage.getItem(_gpHiddenKeyFor(_o))) _gpDefaultHiddenIds().forEach((id) => { _gpHidden[id] = true; }); } catch (e) {}
             _gpDpadType = _gpNativeDpadType;
