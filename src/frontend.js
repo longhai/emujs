@@ -2651,51 +2651,35 @@ class EJS_Frontend {
                 { "type": "button", "text": "R2", "id": "r2", "location": "right", "right": 3, "top": -50, "bold": true, "block": true, "input_value": 13 }
             );
         }
-        if ("nes" === this.ejs.getControlScheme()) {
-            info.push(
-                { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
-                { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
-                { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
-                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
-            );
-        }
-        // HAI: nut combo arcade — 1 nut bam nhieu nut cung luc (kieu nut
-        // khach o trang online). Ten combo theo ten nut chinh A/B/X/Y:
-        // nut X goc = Neo Geo C (input 1), nut Y goc = Neo Geo D
-        // (input 9) — nen combo la AB/XY/ABX/BXY, khong phai AB/CD/
-        // ABC/BCD (Hai chi ra sai ten 06/11). Mapping: A=0, B=8.
-        // "combo" la truong moi do script them, xu ly o cho cham nut
-        // ben duoi (khong phai API goc cua EmulatorJS).
-        if (["arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
-            // Vi tri: 1 hang 4 nut nam NGAY TREN cum nut phai (top:-45),
-            // ngon cai voi toi ma khong phai voi len cao. Ban dau xep 2
-            // hang (hang tren top:-100) thi nut ABC/BCD nam giua man
-            // hinh, che game va kho bam — Hai bao kho choi 06/11 nen
-            // doi thanh 1 hang. Khong xep xuong duoi cum nut vi se
-            // de len nut Fast/Slow o man hinh hep.
-            // Hinh dang: "block": true nen nut combo la hinh chu nhat
-            // bo goc (cao 31px) giong nut Start/Select, khac voi nut
-            // tron A/B/X/Y — de phan biet nut ket hop voi nut don.
-            info.push(
-                { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
-                { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
-                { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
-                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
-            );
-        }
-        // HAI: nut turbo dung chung — 1 bo TA/TB/TAB cho moi he (menu chinh
-        // nut dung chung cho tat ca, hien trong tab Ket hop). TA/TB tu lay
-        // so input tu nut A/B goc cua he dang choi, khong phan biet he.
-        if (["nes", "arcade", "mame", "fbneo"].includes(this.ejs.getControlScheme())) {
+        // HAI: nut ket hop + turbo dung chung cho MOI he — 1 bo AB/XY/ABX/
+        // BXY/TA/TB/TAB, tu lay so input tu nut A/B/X/Y goc cua he dang choi
+        // (menu chinh nut dung chung cho tat ca, hien trong tab Ket hop).
+        // He nao co A/B thi co AB/TA/TB/TAB; he nao them X/Y thi co XY/ABX/
+        // BXY. Vi tri: 1 hang nam NGAY TREN cum nut phai (top:-45).
+        {
             const _aBtn = info.find((b) => b.id === "a");
             const _bBtn = info.find((b) => b.id === "b");
-            const _taIn = _aBtn ? _aBtn.input_value : 0;
-            const _tbIn = _bBtn ? _bBtn.input_value : 8;
-            info.push(
-                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _taIn, "autofire": true },
-                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _tbIn, "autofire": true },
-                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _taIn, "combo": [_taIn, _tbIn], "autofire": true }
-            );
+            const _xBtn = info.find((b) => b.id === "x");
+            const _yBtn = info.find((b) => b.id === "y");
+            const _aIn = _aBtn ? _aBtn.input_value : null;
+            const _bIn = _bBtn ? _bBtn.input_value : null;
+            const _xIn = _xBtn ? _xBtn.input_value : null;
+            const _yIn = _yBtn ? _yBtn.input_value : null;
+            if (_aIn !== null && _bIn !== null) {
+                info.push(
+                    { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": _aIn, "combo": [_aIn, _bIn] },
+                    { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _aIn, "autofire": true },
+                    { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _bIn, "autofire": true },
+                    { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": _aIn, "combo": [_aIn, _bIn], "autofire": true }
+                );
+            }
+            if (_aIn !== null && _bIn !== null && _xIn !== null && _yIn !== null) {
+                info.push(
+                    { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": _xIn, "combo": [_xIn, _yIn] },
+                    { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": _aIn, "combo": [_aIn, _bIn, _xIn] },
+                    { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": _bIn, "combo": [_bIn, _xIn, _yIn] }
+                );
+            }
         }
         // HAI: can doi loai — them D-pad loai con lai de doi qua lai trong menu chinh sua.
         // Game thung dung vung tron (zone, nipplejs) -> them chu thap (dpad). NES dung chu
@@ -2732,7 +2716,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v13 — nut turbo TA/TB/TAB dung chung cho moi he (tab Ket hop), nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut ket hop an mac dinh (lay ra o tab Ket hop); nut chuc nang giu mac dinh; turbo dung chung cai dat), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v14 — nut ket hop + turbo dung chung cho MOI he (tab Ket hop), nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut ket hop an mac dinh (lay ra o tab Ket hop); nut chuc nang giu mac dinh; turbo dung chung cai dat), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2769,10 +2753,9 @@ class EJS_Frontend {
         const _gpComboIds = ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
         const _gpDefaultHiddenIds = () => {
             // Nut ket hop (AB/XY/ABX/BXY) va turbo (TA/TB/TAB) an mac dinh o
-            // moi he; khi nao muon them thi vao Cai dat (tab Ket hop) lay ra.
-            if (_gpScheme === "nes") return ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
-            if (["arcade", "mame", "fbneo"].includes(_gpScheme)) return ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
-            return [];
+            // MOI he; khi nao muon them thi vao Cai dat (tab Ket hop) lay ra.
+            // (Bo nut dung chung cho tat ca cac he, khong phan biet he.)
+            return ["ab", "cd", "abc", "bcd", "ta", "tb", "tab"];
         };
         try { if (!localStorage.getItem(_gpHiddenKeyFor(_gpCurOrient))) _gpDefaultHiddenIds().forEach((id) => { _gpHidden[id] = true; }); } catch (e) {}
         const _gpBtnEl = (id) => (this.virtualGamepad ? this.virtualGamepad.querySelector(".b_" + id) : null);
