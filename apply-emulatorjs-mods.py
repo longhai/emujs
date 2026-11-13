@@ -121,7 +121,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v4 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi cung doi duoc moi hinh dang; bo cuc doc/ngang rieng; nut Xep ngang xep luoi 3x3), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v5 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi cung doi duoc moi hinh dang; bo cuc doc/ngang rieng; luoi ngang 3x3 tu dong lan dau vao landscape), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -752,8 +752,23 @@ GP_LAYOUT_JS = '''
                 e.stopPropagation();
             } catch (_err) {}
         }, true);
+        // Tu dong xep luoi ngang 1 lan duy nhat khi vao man hinh ngang (arcade):
+        // neu chua xep bao gio thi xep luoi 3x3 roi danh dau, lan sau khong xep lai
+        // de khong de len cho chinh tay cua nguoi choi. Xep lai tay bang nut Xep ngang.
+        const _gpMaybeAutoRows = () => {
+            try {
+                if (!_gpClusters["right"]) return;
+                if (["arcade", "mame", "fbneo"].indexOf(_gpScheme) < 0) return;
+                if (_gpOrient() !== "landscape") return;
+                const _fk = "ejs-gamepad-grid-v1-" + _gpScheme;
+                if (localStorage.getItem(_fk)) return;
+                localStorage.setItem(_fk, "1");
+                _gpArrangeRows();
+            } catch (e) {}
+        };
         setTimeout(_gpApplyAll, 100);
         setTimeout(_gpSyncOffBtn, 100);
+        setTimeout(_gpMaybeAutoRows, 300);
         window.addEventListener("resize", () => {
             const _o = _gpOrient();
             if (_o === _gpCurOrient) return;
@@ -777,6 +792,7 @@ GP_LAYOUT_JS = '''
             try { const _sv = localStorage.getItem(_gpDpadTypeKeyFor(_o)) || localStorage.getItem("ejs-gamepad-dpadtype-" + _gpScheme); if (_sv === "dpad" || _sv === "zone") _gpDpadType = _sv; } catch (e) {}
             _gpSelect(null, null);
             _gpApplyAll();
+            setTimeout(_gpMaybeAutoRows, 150);
         });
         } catch (_gpErr) {}
 '''
@@ -1058,11 +1074,12 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v4" in text:
-        print("Chinh cum nut: da co ban v4 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi cung doi duoc moi hinh dang; nut Xep ngang xep luoi 3x3) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den), bo qua")
+    if "cum nut v5" in text:
+        print("Chinh cum nut: da co ban v5 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi cung doi duoc moi hinh dang; luoi ngang 3x3 tu dong lan dau vao landscape) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v5", r"        // HAI: chinh vi tri \+ do mo cum nut v5[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v4", r"        // HAI: chinh vi tri \+ do mo cum nut v4[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v3", r"        // HAI: chinh vi tri \+ do mo cum nut v3[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v2", r"        // HAI: chinh vi tri \+ do mo cum nut v2[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -1077,13 +1094,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v4")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v5")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v4 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi cung doi duoc moi hinh dang; bo cuc doc/ngang rieng; nut Xep ngang xep luoi 3x3) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den)")
+        changed.append("Chinh cum nut: da them v5 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi cung doi duoc moi hinh dang; bo cuc doc/ngang rieng; luoi ngang 3x3 tu dong lan dau vao landscape) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
