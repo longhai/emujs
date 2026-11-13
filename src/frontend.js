@@ -2724,7 +2724,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v4 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi cung doi duoc moi hinh dang; bo cuc doc/ngang rieng; nut Xep ngang xep luoi 3x3), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v5 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi cung doi duoc moi hinh dang; bo cuc doc/ngang rieng; luoi ngang 3x3 tu dong lan dau vao landscape), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -3355,8 +3355,23 @@ class EJS_Frontend {
                 e.stopPropagation();
             } catch (_err) {}
         }, true);
+        // Tu dong xep luoi ngang 1 lan duy nhat khi vao man hinh ngang (arcade):
+        // neu chua xep bao gio thi xep luoi 3x3 roi danh dau, lan sau khong xep lai
+        // de khong de len cho chinh tay cua nguoi choi. Xep lai tay bang nut Xep ngang.
+        const _gpMaybeAutoRows = () => {
+            try {
+                if (!_gpClusters["right"]) return;
+                if (["arcade", "mame", "fbneo"].indexOf(_gpScheme) < 0) return;
+                if (_gpOrient() !== "landscape") return;
+                const _fk = "ejs-gamepad-grid-v1-" + _gpScheme;
+                if (localStorage.getItem(_fk)) return;
+                localStorage.setItem(_fk, "1");
+                _gpArrangeRows();
+            } catch (e) {}
+        };
         setTimeout(_gpApplyAll, 100);
         setTimeout(_gpSyncOffBtn, 100);
+        setTimeout(_gpMaybeAutoRows, 300);
         window.addEventListener("resize", () => {
             const _o = _gpOrient();
             if (_o === _gpCurOrient) return;
@@ -3380,6 +3395,7 @@ class EJS_Frontend {
             try { const _sv = localStorage.getItem(_gpDpadTypeKeyFor(_o)) || localStorage.getItem("ejs-gamepad-dpadtype-" + _gpScheme); if (_sv === "dpad" || _sv === "zone") _gpDpadType = _sv; } catch (e) {}
             _gpSelect(null, null);
             _gpApplyAll();
+            setTimeout(_gpMaybeAutoRows, 150);
         });
         } catch (_gpErr) {}
 
