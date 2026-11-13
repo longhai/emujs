@@ -2724,7 +2724,7 @@ class EJS_Frontend {
         this.virtualGamepad.appendChild(down);
         this.virtualGamepad.appendChild(left);
         this.virtualGamepad.appendChild(right);
-        // HAI: chinh vi tri + do mo cum nut v6 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi cung doi duoc moi hinh dang; bo cuc doc/ngang rieng; luoi ngang 3x3 tu dong lan dau vao landscape; nut Dat lai ve luoi moi; nut khoi mac dinh chu nhat, cung co 50px nhu nut thuong), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v8 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut khoi cung doi duoc moi hinh dang; bo cuc doc/ngang rieng; luoi 3x3 tu dong lan dau vao moi chieu (doc/ngang); nut Dat lai ve luoi moi; nut khoi giong bo nut A/B/X/Y, cung co 50px), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -2829,7 +2829,9 @@ class EJS_Frontend {
         const _gpSaveBtnShapeMap = () => { try { localStorage.setItem(_gpBtnShapeKeyFor(_gpCurOrient), JSON.stringify(_gpBtnShapeMap)); } catch (e) {} };
         const _gpShapeOf = (id) => {
             if (_gpBtnShapeMap && _gpBtnShapeMap[id]) return _gpShapeFrom(_gpBtnShapeMap[id]);
-            if (!_gpHasSavedShape && _gpComboIds.indexOf(id) >= 0) return {form: "rect", round: 0};
+            // Nut ket hop (AB/XY/ABX/BXY, Fast/Slow) lay giao dien giong bo nut
+            // A/B/X/Y: cung hinh dang chung, mac dinh tron, doi duoc tron/vuong/
+            // chu nhat nhu nut thuong.
             return _gpBtnShape;
         };
         const _gpApplyShapeTo = (_b, _s) => {
@@ -3208,9 +3210,10 @@ class EJS_Frontend {
                 }
             } catch (err) {}
             _gpApplyAll();
-            // Dat lai o man hinh ngang (arcade) thi ve luoi moi, khong ve mac dinh cu (hinh thoi).
+            // Dat lai (arcade, ca doc lan ngang) thi ve luoi moi, khong ve mac
+            // dinh cu (hinh thoi + hang chu nhat tren dau).
             try {
-                if (["arcade", "mame", "fbneo"].indexOf(_gpScheme) >= 0 && _gpOrient() === "landscape") {
+                if (["arcade", "mame", "fbneo"].indexOf(_gpScheme) >= 0) {
                     const _gridIds = ["ab", "cd", "abc", "bcd", "a", "b", "x", "y"];
                     if (_gpSelId === "right" || _gridIds.indexOf(_gpSelId) >= 0) _gpArrangeRows();
                 }
@@ -3385,8 +3388,9 @@ class EJS_Frontend {
             try {
                 if (!_gpClusters["right"]) return;
                 if (["arcade", "mame", "fbneo"].indexOf(_gpScheme) < 0) return;
-                if (_gpOrient() !== "landscape") return;
-                const _fk = "ejs-gamepad-grid-v1-" + _gpScheme;
+                // Luoi 3x3 tu dong lan dau vao moi chieu (doc/ngang): bo nut mod
+                // (AB/XY/ABX/BXY) xep theo bo cuc cua A/B/X/Y, cung co 50px.
+                const _fk = "ejs-gamepad-grid-v1-" + _gpScheme + "-" + _gpOrient();
                 if (localStorage.getItem(_fk)) return;
                 localStorage.setItem(_fk, "1");
                 _gpArrangeRows();
