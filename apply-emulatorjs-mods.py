@@ -12,9 +12,9 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
         }
         if ("nes" === this.ejs.getControlScheme()) {
             info.push(
-                { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true, "autoFireInterval": 40 },
-                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },
-                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true, "autoFireInterval": 40 },
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 8, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true },
                 { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
                 { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
                 { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
@@ -43,9 +43,9 @@ APPEND_BLOCK = '''        // HAI: chi them nut thieu, nut goc giu nguyen — xem
                 { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -45, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
                 { "type": "button", "text": "ABX", "id": "abc", "location": "right", "left": 30, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "combo": [0, 8, 1] },
                 { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] },
-                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "autofire": true, "autoFireInterval": 40 },
-                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },
-                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true, "autoFireInterval": 40 }
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "autofire": true },
+                { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true }
             );
         }
         // HAI: can doi loai — them D-pad loai con lai de doi qua lai trong menu chinh sua.
@@ -121,7 +121,7 @@ GP_LAYOUT_ANCHOR = '''        this.virtualGamepad.appendChild(up);
         this.virtualGamepad.appendChild(right);'''
 
 GP_LAYOUT_JS = '''
-        // HAI: chinh vi tri + do mo cum nut v9 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut ket hop an mac dinh (lay ra o tab Ket hop); nut chuc nang giu mac dinh), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
+        // HAI: chinh vi tri + do mo cum nut v11 — nhan giu chon nut/cum, nut icon nho + truot dung gon + nut Tat rieng, truot doi co ca cum (khung to theo), Dat lai cum xoa het nut trong cum, Dat lai D-pad/cum ve mac dinh, xoa vien khi bo chon, chan menu + contextmenu + mousemove + rightClick khi dang chinh, hien duoc khi fullscreen, bam nut to mau cua nut + chu trang, truot D-pad doi co cum (hien dung co thuc), menu tab co bieu tuong (✛ Can/◉ Nut/⊕ Ket hop/▣ Hinh dang, bam tab moi hien nut bo do, nut ✕ thoat ben phai thanh menu), TAB turbo A+B 40ms (~12 phat/giay), chon hinh dang nut (Tron/Vuong/Chu nhat + thanh truot bo goc, ap tat ca hoac rieng nut dang chon; nut ket hop an mac dinh (lay ra o tab Ket hop); nut chuc nang giu mac dinh; turbo dung chung cai dat), keo cum giu ti le phong to, man hinh sach luc choi (khong nut noi), thanh truot khong nen den
         try {
         const _gpScheme = this.ejs.getControlScheme();
         const _gpOrient = () => (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
@@ -856,14 +856,14 @@ def main(path):
 
     _nes_old = '''        if ("nes" === this.ejs.getControlScheme()) {
             info.push(
-                { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true },
-                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true }
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 8, "autofire": true }
             );
         }'''
     _nes_new = '''        if ("nes" === this.ejs.getControlScheme()) {
             info.push(
-                { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 8, "autofire": true },
-                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "right": 5, "top": 0, "bold": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "right": 75, "top": 0, "bold": true, "input_value": 8, "autofire": true },
                 { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": -70, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true },
                 { "type": "button", "text": "AB", "id": "ab", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 0, "combo": [0, 8] },
                 { "type": "button", "text": "XY", "id": "cd", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 15, "block": true, "input_value": 1, "combo": [1, 9] },
@@ -874,8 +874,8 @@ def main(path):
     _arc_old = '''                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] }
             );'''
     _arc_new = '''                { "type": "button", "text": "BXY", "id": "bcd", "location": "right", "left": 80, "top": -45, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 1, 9] },
-                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "autofire": true },
-                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TA", "id": "ta", "location": "right", "left": -70, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 0, "autofire": true },
+                { "type": "button", "text": "TB", "id": "tb", "location": "right", "left": -20, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "autofire": true },
                 { "type": "button", "text": "TAB", "id": "tab", "location": "right", "left": 30, "top": -90, "bold": true, "fontSize": 14, "block": true, "input_value": 8, "combo": [8, 0], "autofire": true }
             );'''
     if _nes_old in text and '"TAB"' not in text:
@@ -891,14 +891,10 @@ def main(path):
         text = text.replace(_arc_tab, _arc_tab + "\n" + _dpad_alt, 1)
         changed.append("Can doi loai: migration -> chen D-pad doi loai (dpadx/dpadz) sau khoi arcade")
 
-    if '"autoFireInterval"' not in text and '"autofire": true' in text:
-        text = text.replace('"autofire": true', '"autofire": true, "autoFireInterval": 40')
-        changed.append("Turbo: migration -> them autoFireInterval 40ms cho TA/TB/TAB (~12 phat/giay)")
-
     _xy_remove_lines = [
-        '                { "type": "button", "text": "X", "id": "x", "location": "right", "right": 5, "top": -70, "bold": true, "input_value": 8, "autofire": true, "autoFireInterval": 40 },\n',
+        '                { "type": "button", "text": "X", "id": "x", "location": "right", "right": 5, "top": -70, "bold": true, "input_value": 8, "autofire": true },\n',
         '                { "type": "button", "text": "X", "id": "x", "location": "right", "right": 5, "top": -70, "bold": true, "input_value": 8 },\n',
-        '                { "type": "button", "text": "Y", "id": "y", "location": "right", "right": 75, "top": -70, "bold": true, "input_value": 0, "autofire": true, "autoFireInterval": 40 },\n',
+        '                { "type": "button", "text": "Y", "id": "y", "location": "right", "right": 75, "top": -70, "bold": true, "input_value": 0, "autofire": true },\n',
         '                { "type": "button", "text": "Y", "id": "y", "location": "right", "right": 75, "top": -70, "bold": true, "input_value": 0 },\n',
     ]
     _xy_removed = False
@@ -1097,11 +1093,13 @@ def main(path):
         text = text.replace("value2 = this.localization(value2);", "value2 = this.getGamepadDisplayLabel(value2, i);")
         changed.append("Ky hieu nut: hien ✕○□△/ABXY theo loai tay cam o man hinh Cai dat")
 
-    if "cum nut v9" in text:
-        print("Chinh cum nut: da co ban v9 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi cung doi duoc moi hinh dang; luoi 3x3 tu dong lan dau vao moi chieu (doc/ngang); nut Dat lai ve luoi moi; nut khoi giong bo nut A/B/X/Y, cung co 50px) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den), bo qua")
+    if "cum nut v11" in text:
+        print("Chinh cum nut: da co ban v11 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + fullscreen + bam nut to mau + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut khoi cung doi duoc moi hinh dang; luoi 3x3 tu dong lan dau vao moi chieu (doc/ngang); nut Dat lai ve luoi moi; nut khoi giong bo nut A/B/X/Y, cung co 50px) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den), bo qua")
     else:
         import re
         _gp_vers = [
+            ("v11", r"        // HAI: chinh vi tri \+ do mo cum nut v11[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
+            ("v10", r"        // HAI: chinh vi tri \+ do mo cum nut v10[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v9", r"        // HAI: chinh vi tri \+ do mo cum nut v9[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v8", r"        // HAI: chinh vi tri \+ do mo cum nut v8[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
             ("v7", r"        // HAI: chinh vi tri \+ do mo cum nut v7[\s\S]*?        \} catch \(_gpErr\) \{\}\n"),
@@ -1121,13 +1119,13 @@ def main(path):
             _mm = re.compile(_pat).search(text)
             if _mm:
                 text = text[:_mm.start()] + text[_mm.end():]
-                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v9")
+                print("Chinh cum nut: da go ban " + _lbl + ", chen ban v11")
                 break
         if GP_LAYOUT_ANCHOR not in text:
             print("LOI: khong tim thay cho append 4 cum nut — ban goc doi setVirtualGamepad roi", file=sys.stderr)
             return 2
         text = text.replace(GP_LAYOUT_ANCHOR, GP_LAYOUT_ANCHOR + GP_LAYOUT_JS, 1)
-        changed.append("Chinh cum nut: da them v9 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut ket hop an mac dinh (lay ra o tab Ket hop); nut chuc nang giu mac dinh) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den)")
+        changed.append("Chinh cum nut: da them v11 (nhan giu chon nut/cum + nut icon nho + truot dung gon + nut Tat rieng + truot doi co ca cum khung to theo + Dat lai cum xoa het nut trong cum + chan menu + contextmenu + mousemove + rightClick + hien khi fullscreen + bam nut to mau cua nut + truot D-pad doi co cum + menu tab co bieu tuong + nut ✕ thoat ben phai + chon loai can + TAB 40ms + tab Hinh dang (Tron/Vuong/Chu nhat + truot bo goc, ap tat ca hoac rieng nut; nut ket hop an mac dinh (lay ra o tab Ket hop); nut chuc nang giu mac dinh; turbo dung chung cai dat) + keo cum giu ti le + man hinh sach luc choi + thanh truot khong nen den)")
 
     if "HAI: do mo cum nut" in text:
         print("Menu do mo: da co roi, bo qua")
@@ -1275,6 +1273,7 @@ COMBO_COLOR_CSS = '''
 .ejs_virtualGamepad_button.b_cd { color: #ab47bc !important; }
 .ejs_virtualGamepad_button.b_abc { color: #ec407a !important; }
 .ejs_virtualGamepad_button.b_bcd { color: #26a69a !important; }
+.ejs_virtualGamepad_button.b_tab { color: #00bcd4 !important; }
 '''
 
 MD_COLOR_CSS = '''
@@ -1347,9 +1346,17 @@ def patch_css(path):
         changed.append("Mau nut: da chen mau chu A xanh la / B do / X xanh duong / Y vang")
     if "HAI: nut combo mau" in text:
         print("Mau nut combo: da co roi, bo qua")
+        # Migration: them mau chu cho nut TAB neu ban cu chua co; neu TAB dang
+        # mau cam (v14) thi doi sang cyan cho khoi trung voi AB/Y.
+        if ".b_tab" not in text:
+            out = out.replace(".ejs_virtualGamepad_button.b_bcd { color: #26a69a !important; }", ".ejs_virtualGamepad_button.b_bcd { color: #26a69a !important; }\n.ejs_virtualGamepad_button.b_tab { color: #00bcd4 !important; }", 1)
+            changed.append("Mau nut combo: da them mau chu cho nut TAB (cyan)")
+        elif ".ejs_virtualGamepad_button.b_tab { color: #ff9800 !important; }" in text:
+            out = out.replace(".ejs_virtualGamepad_button.b_tab { color: #ff9800 !important; }", ".ejs_virtualGamepad_button.b_tab { color: #00bcd4 !important; }", 1)
+            changed.append("Mau nut combo: da doi mau chu nut TAB tu cam sang cyan (khoi trung AB/Y)")
     else:
         out += COMBO_COLOR_CSS
-        changed.append("Mau nut combo: da chen mau chu AB/XY/ABX/BXY")
+        changed.append("Mau nut combo: da chen mau chu AB/XY/ABX/BXY/TAB")
     if "HAI: nut md mau" in text:
         print("Mau nut MD: da co roi, bo qua")
     else:
@@ -2310,9 +2317,8 @@ GPAD_TURBO_ANCHOR = "        if (this.frontend.isSettingsMenuOpen() || this.fron
 GPAD_TURBO_NEW = """        // HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES) — nut X/Y tren tay that
         // thua vi NES chi co A/B, gan X->turbo A (input 8), Y->turbo B (input 0).
         // Chi ap khi he NES de he khac (SNES/arcade) van dung X/Y nhu nut that cua no.
-        // Toc do 40ms (~12 phat/giay) nhu nut TA/TB tren man hinh: dat
-        // controls[player][input].autoFireInterval = 40 truoc khi goi startAutofire
-        // vi getAutofireInterval uu tien gia tri nay.
+        // Toc do turbo dung chung cai dat trong Settings (getAutofireInterval),
+        // khong dat rieng nua.
         if ((e.type === "buttondown" || e.type === "buttonup") && this.getControlScheme() === "nes") {
             const _gpTurboByIndex = { 2: 8, 3: 0 };
             const _gpTurboByLabel = { "BUTTON_3": 8, "BUTTON_4": 0 };
@@ -2323,7 +2329,6 @@ GPAD_TURBO_NEW = """        // HAI: tay cam X = Turbo A, Y = Turbo B (chi he NES
                 } else {
                     if (!this.controls[gamepadIndex]) this.controls[gamepadIndex] = [];
                     if (!this.controls[gamepadIndex][_gpTurboInput]) this.controls[gamepadIndex][_gpTurboInput] = {};
-                    this.controls[gamepadIndex][_gpTurboInput].autoFireInterval = 40;
                     this.startAutofire(gamepadIndex, _gpTurboInput, 1);
                 }
                 return;
